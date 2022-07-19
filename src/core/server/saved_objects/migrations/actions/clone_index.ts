@@ -81,7 +81,7 @@ export const cloneIndex = ({
               },
             },
           },
-          timeout,
+          timeout: `${timeout}ms`,
         },
         { maxRetries: 0 /** handle retry ourselves for now */ }
       )
