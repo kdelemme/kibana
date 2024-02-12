@@ -8,18 +8,15 @@
 import { i18n } from '@kbn/i18n';
 import { useBreadcrumbs } from '@kbn/observability-shared-plugin/public';
 import React from 'react';
-import { useParams } from 'react-router-dom';
 import { paths } from '../../../common/locators/paths';
+import { SloHeaderMenu } from '../../components/slo/slo_header_menu/slo_header_menu';
 import { useCapabilities } from '../../hooks/slo/use_capabilities';
 import { useFetchSloGlobalDiagnosis } from '../../hooks/slo/use_fetch_global_diagnosis';
-import { useFetchSloDetails } from '../../hooks/slo/use_fetch_slo_details';
 import { useLicense } from '../../hooks/use_license';
 import { usePluginContext } from '../../hooks/use_plugin_context';
 import { useKibana } from '../../utils/kibana_react';
-import { HeaderMenu } from '../../components/header_menu/header_menu';
-import { SloEditForm } from './components/slo_edit_form';
 
-export function SloEditPage() {
+export function SloSettings() {
   const {
     application: { navigateToUrl },
     http: { basePath },
@@ -27,11 +24,8 @@ export function SloEditPage() {
   const { hasWriteCapabilities } = useCapabilities();
   const { isError: hasErrorInGlobalDiagnosis } = useFetchSloGlobalDiagnosis();
   const { ObservabilityPageTemplate } = usePluginContext();
-
-  const { sloId } = useParams<{ sloId: string | undefined }>();
   const { hasAtLeast } = useLicense();
   const hasRightLicense = hasAtLeast('platinum');
-  const { data: slo } = useFetchSloDetails({ sloId });
 
   useBreadcrumbs([
     {
@@ -41,22 +35,11 @@ export function SloEditPage() {
       }),
       deepLinkId: 'observability-overview:slos',
     },
-    ...(!!slo
-      ? [
-          {
-            href: basePath.prepend(paths.observability.sloDetails(slo!.id)),
-            text: slo!.name,
-          },
-        ]
-      : []),
+
     {
-      text: slo
-        ? i18n.translate('xpack.observability.breadcrumbs.sloEditLabel', {
-            defaultMessage: 'Edit',
-          })
-        : i18n.translate('xpack.observability.breadcrumbs.sloCreateLabel', {
-            defaultMessage: 'Create',
-          }),
+      text: i18n.translate('xpack.observability.breadcrumbs.sloSettingsLabel', {
+        defaultMessage: 'Settings',
+      }),
     },
   ]);
 
@@ -67,19 +50,16 @@ export function SloEditPage() {
   return (
     <ObservabilityPageTemplate
       pageHeader={{
-        pageTitle: slo
-          ? i18n.translate('xpack.observability.sloEditPageTitle', {
-              defaultMessage: 'Edit SLO',
-            })
-          : i18n.translate('xpack.observability.sloCreatePageTitle', {
-              defaultMessage: 'Create new SLO',
-            }),
+        pageTitle: i18n.translate('xpack.observability.sloSettingsPageTitle', {
+          defaultMessage: 'SLO Settings',
+        }),
         bottomBorder: false,
       }}
-      data-test-subj="slosEditPage"
+      data-test-subj="slosSettingsPage"
     >
-      <HeaderMenu />
-      <SloEditForm slo={slo} />
+      <SloHeaderMenu />
+
+      <h1>SLO Settings</h1>
     </ObservabilityPageTemplate>
   );
 }

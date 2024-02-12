@@ -18,8 +18,9 @@ import { useLicense } from '../../hooks/use_license';
 import { useFetchSloList } from '../../hooks/slo/use_fetch_slo_list';
 import { SloList } from './components/slo_list';
 import { paths } from '../../../common/locators/paths';
-import { HeaderMenu } from '../overview/components/header_menu/header_menu';
+import { HeaderMenu } from '../../components/header_menu/header_menu';
 import { SloOutdatedCallout } from '../../components/slo/slo_outdated_callout';
+import { SloHeaderMenu } from '../../components/slo/slo_header_menu/slo_header_menu';
 
 export const SLO_PAGE_ID = 'slo-page-container';
 
@@ -67,7 +68,7 @@ export function SlosPage() {
       }}
       topSearchBar={<SloListSearchBar />}
     >
-      <HeaderMenu />
+      <SloHeaderMenu />
       <SloOutdatedCallout />
       <SloList />
     </ObservabilityPageTemplate>

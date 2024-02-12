@@ -5,11 +5,12 @@
  * 2.0.
  */
 
+import { AppMountParameters } from '@kbn/core/public';
+import { toMountPoint } from '@kbn/react-kibana-mount';
 import React, { ReactNode, useEffect, useMemo } from 'react';
 import { createHtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
-import { toMountPoint } from '@kbn/react-kibana-mount';
-import { AppMountParameters } from '@kbn/core/public';
-import { useKibana } from '../../../../utils/kibana_react';
+import { useKibana } from '../../utils/kibana_react';
+
 export interface HeaderMenuPortalProps {
   children: ReactNode;
   setHeaderActionMenu: AppMountParameters['setHeaderActionMenu'];

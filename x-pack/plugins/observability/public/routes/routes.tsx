@@ -37,9 +37,11 @@ import {
   SLO_CREATE_PATH,
   SLO_DETAIL_PATH,
   SLO_EDIT_PATH,
+  SLO_SETTINGS_PATH,
 } from '../../common/locators/paths';
 import { HasDataContextProvider } from '../context/has_data_context/has_data_context';
 import { SlosOutdatedDefinitions } from '../pages/slo_outdated_definitions';
+import { SloSettings } from '../pages/slo_settings/slo_settings';
 
 // Note: React Router DOM <Redirect> component was not working here
 // so I've recreated this simple version for this purpose.
@@ -163,6 +165,13 @@ export const routes = {
   [SLOS_OUTDATED_DEFINITIONS_PATH]: {
     handler: () => {
       return <SlosOutdatedDefinitions />;
+    },
+    params: {},
+    exact: true,
+  },
+  [SLO_SETTINGS_PATH]: {
+    handler: () => {
+      return <SloSettings />;
     },
     params: {},
     exact: true,

@@ -24,7 +24,7 @@ import { buildEsQuery } from '../../utils/build_es_query';
 import { DataAssistantFlyout } from './components/data_assistant_flyout';
 import { DataSections } from './components/data_sections';
 import { HeaderActions } from './components/header_actions/header_actions';
-import { HeaderMenu } from './components/header_menu/header_menu';
+import { HeaderMenu } from '../../components/header_menu/header_menu';
 import { getNewsFeed } from './components/news_feed/helpers/get_news_feed';
 import { NewsFeed } from './components/news_feed/news_feed';
 import { ObservabilityOnboardingCallout } from './components/observability_onboarding_callout';

@@ -19,7 +19,7 @@ import { RULES_LOGS_PATH, RULES_PATH } from '../../../common/locators/paths';
 import { useGetFilteredRuleTypes } from '../../hooks/use_get_filtered_rule_types';
 import { usePluginContext } from '../../hooks/use_plugin_context';
 import { useKibana } from '../../utils/kibana_react';
-import { HeaderMenu } from '../overview/components/header_menu/header_menu';
+import { HeaderMenu } from '../../components/header_menu/header_menu';
 import { RulesTab } from './rules_tab';
 
 const GlobalLogsTab = lazy(() => import('./global_logs_tab'));

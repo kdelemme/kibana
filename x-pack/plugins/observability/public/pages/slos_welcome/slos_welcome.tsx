@@ -26,8 +26,9 @@ import { useFetchSloList } from '../../hooks/slo/use_fetch_slo_list';
 import { paths } from '../../../common/locators/paths';
 import illustration from './assets/illustration.svg';
 import { useFetchSloGlobalDiagnosis } from '../../hooks/slo/use_fetch_global_diagnosis';
-import { HeaderMenu } from '../overview/components/header_menu/header_menu';
+import { HeaderMenu } from '../../components/header_menu/header_menu';
 import { SloOutdatedCallout } from '../../components/slo/slo_outdated_callout';
+import { SloHeaderMenu } from '../../components/slo/slo_header_menu/slo_header_menu';
 
 export function SlosWelcomePage() {
   const {
@@ -62,7 +63,7 @@ export function SlosWelcomePage() {
 
   return hasSlosAndHasPermissions || isLoading ? null : (
     <ObservabilityPageTemplate data-test-subj="slosPageWelcomePrompt">
-      <HeaderMenu />
+      <SloHeaderMenu />
       <SloOutdatedCallout />
       <EuiPageTemplate.EmptyPrompt
         title={

@@ -8,11 +8,15 @@
 import { EuiHeaderLink, EuiHeaderLinks } from '@elastic/eui';
 import { i18n } from '@kbn/i18n';
 import React from 'react';
-import { usePluginContext } from '../../../../hooks/use_plugin_context';
-import { useKibana } from '../../../../utils/kibana_react';
+import { usePluginContext } from '../../hooks/use_plugin_context';
+import { useKibana } from '../../utils/kibana_react';
 import HeaderMenuPortal from './header_menu_portal';
 
-export function HeaderMenu(): React.ReactElement | null {
+export function HeaderMenu({
+  children,
+}: {
+  children?: React.ReactNode;
+}): React.ReactElement | null {
   const {
     http,
     theme,
@@ -26,6 +30,7 @@ export function HeaderMenu(): React.ReactElement | null {
   return (
     <HeaderMenuPortal setHeaderActionMenu={setHeaderActionMenu} theme$={theme.theme$}>
       <EuiHeaderLinks>
+        {children}
         <EuiHeaderLink
           color="primary"
           href={http.basePath.prepend('/app/integrations/browse')}

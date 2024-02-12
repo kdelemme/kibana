@@ -15,7 +15,7 @@ import { useLicense } from '../../hooks/use_license';
 import { usePluginContext } from '../../hooks/use_plugin_context';
 import { useCapabilities } from '../../hooks/slo/use_capabilities';
 import { useFetchSloGlobalDiagnosis } from '../../hooks/slo/use_fetch_global_diagnosis';
-import { HeaderMenu } from '../overview/components/header_menu/header_menu';
+import { HeaderMenu } from '../../components/header_menu/header_menu';
 import { useFetchSloDefinitions } from '../../hooks/slo/use_fetch_slo_definitions';
 import { paths } from '../../../common/locators/paths';
 import { SloListEmpty } from '../slos/components/slo_list_empty';
