@@ -7,19 +7,6 @@
 
 import React from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
-import { DatePickerContextProvider } from '../context/date_picker_context/date_picker_context';
-import { useKibana } from '../utils/kibana_react';
-import { AlertsPage } from '../pages/alerts/alerts';
-import { AlertDetails } from '../pages/alert_details/alert_details';
-import { CasesPage } from '../pages/cases/cases';
-import { LandingPage } from '../pages/landing/landing';
-import { OverviewPage } from '../pages/overview/overview';
-import { RulesPage } from '../pages/rules/rules';
-import { RuleDetailsPage } from '../pages/rule_details/rule_details';
-import { SlosPage } from '../pages/slos/slos';
-import { SlosWelcomePage } from '../pages/slos_welcome/slos_welcome';
-import { SloDetailsPage } from '../pages/slo_details/slo_details';
-import { SloEditPage } from '../pages/slo_edit/slo_edit';
 import {
   ALERTS_PATH,
   ALERT_DETAIL_PATH,
@@ -39,9 +26,22 @@ import {
   SLO_EDIT_PATH,
   SLO_SETTINGS_PATH,
 } from '../../common/locators/paths';
+import { DatePickerContextProvider } from '../context/date_picker_context/date_picker_context';
 import { HasDataContextProvider } from '../context/has_data_context/has_data_context';
+import { AlertsPage } from '../pages/alerts/alerts';
+import { AlertDetails } from '../pages/alert_details/alert_details';
+import { CasesPage } from '../pages/cases/cases';
+import { LandingPage } from '../pages/landing/landing';
+import { OverviewPage } from '../pages/overview/overview';
+import { RulesPage } from '../pages/rules/rules';
+import { RuleDetailsPage } from '../pages/rule_details/rule_details';
+import { SlosPage } from '../pages/slos/slos';
+import { SlosWelcomePage } from '../pages/slos_welcome/slos_welcome';
+import { SloDetailsPage } from '../pages/slo_details/slo_details';
+import { SloEditPage } from '../pages/slo_edit/slo_edit';
 import { SlosOutdatedDefinitions } from '../pages/slo_outdated_definitions';
-import { SloSettings } from '../pages/slo_settings/slo_settings';
+import { SloSettingsPage } from '../pages/slo_settings/slo_settings_page';
+import { useKibana } from '../utils/kibana_react';
 
 // Note: React Router DOM <Redirect> component was not working here
 // so I've recreated this simple version for this purpose.
@@ -171,7 +171,7 @@ export const routes = {
   },
   [SLO_SETTINGS_PATH]: {
     handler: () => {
-      return <SloSettings />;
+      return <SloSettingsPage />;
     },
     params: {},
     exact: true,

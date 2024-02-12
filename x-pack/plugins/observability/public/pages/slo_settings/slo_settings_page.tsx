@@ -15,8 +15,9 @@ import { useFetchSloGlobalDiagnosis } from '../../hooks/slo/use_fetch_global_dia
 import { useLicense } from '../../hooks/use_license';
 import { usePluginContext } from '../../hooks/use_plugin_context';
 import { useKibana } from '../../utils/kibana_react';
+import { SloSettings } from './components/slo_settings';
 
-export function SloSettings() {
+export function SloSettingsPage() {
   const {
     application: { navigateToUrl },
     http: { basePath },
@@ -58,8 +59,7 @@ export function SloSettings() {
       data-test-subj="slosSettingsPage"
     >
       <SloHeaderMenu />
-
-      <h1>SLO Settings</h1>
+      <SloSettings />
     </ObservabilityPageTemplate>
   );
 }
