@@ -28,6 +28,7 @@ interface SloGroupListFilter {
 
 export const sloKeys = {
   all: ['slo'] as const,
+  settings: () => [...sloKeys.all, 'settings'] as const,
   lists: () => [...sloKeys.all, 'list'] as const,
   list: (filters: SloListFilter) => [...sloKeys.lists(), filters] as const,
   group: (filters: SloGroupListFilter) => [...sloKeys.groups(), filters] as const,

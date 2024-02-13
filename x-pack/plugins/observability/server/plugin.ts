@@ -58,7 +58,7 @@ import { registerSloUsageCollector } from './lib/collectors/register';
 import { registerRuleTypes } from './lib/rules/register_rule_types';
 import { getObservabilityServerRouteRepository } from './routes/get_global_observability_server_route_repository';
 import { registerRoutes } from './routes/register_routes';
-import { slo, SO_SLO_TYPE } from './saved_objects';
+import { slo, sloSettings, SO_SLO_TYPE } from './saved_objects';
 import { threshold } from './saved_objects/threshold';
 import { DefaultResourceInstaller, DefaultSLOInstaller } from './services/slo';
 
@@ -342,6 +342,7 @@ export class ObservabilityPlugin implements Plugin<ObservabilityPluginSetup> {
     });
 
     core.savedObjects.registerType(slo);
+    core.savedObjects.registerType(sloSettings);
     core.savedObjects.registerType(threshold);
 
     registerRuleTypes(plugins.alerting, core.http.basePath, config, this.logger, ruleDataService, {

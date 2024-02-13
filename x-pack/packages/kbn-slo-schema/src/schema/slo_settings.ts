@@ -5,5 +5,13 @@
  * 2.0.
  */
 
-export { slo, SO_SLO_TYPE } from './slo';
-export { sloSettings, SO_SLO_SETTINGS_TYPE } from './slo_settings';
+import * as t from 'io-ts';
+
+const sloSettingsStoredSchema = t.type({
+  stale: t.type({
+    enabled: t.boolean,
+    duration: t.number,
+  }),
+});
+
+export { sloSettingsStoredSchema };

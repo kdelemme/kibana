@@ -276,6 +276,26 @@ const getSLOInstancesResponseSchema = t.type({
   instances: t.array(t.string),
 });
 
+const getSLOSettingsParamsSchema = t.type({});
+const getSLOSettingsResponseSchema = t.type({
+  stale: t.type({
+    enabled: t.boolean,
+    duration: t.number,
+  }),
+});
+
+const updateSLOSettingsParamsSchema = t.type({
+  body: t.type({
+    stale: t.type({
+      enabled: t.boolean,
+      duration: t.number,
+    }),
+  }),
+});
+
+type UpdateSLOSettingsParams = t.TypeOf<typeof updateSLOSettingsParamsSchema.props.body>;
+type GetSLOSettingsResponse = t.OutputOf<typeof getSLOSettingsResponseSchema>;
+
 type SLOResponse = t.OutputOf<typeof sloResponseSchema>;
 type SLOWithSummaryResponse = t.OutputOf<typeof sloWithSummaryResponseSchema>;
 
@@ -363,6 +383,9 @@ export {
   getSLOBurnRatesResponseSchema,
   getSLOInstancesParamsSchema,
   getSLOInstancesResponseSchema,
+  getSLOSettingsParamsSchema,
+  getSLOSettingsResponseSchema,
+  updateSLOSettingsParamsSchema,
 };
 export type {
   BudgetingMethod,
@@ -409,4 +432,6 @@ export type {
   KQLCustomIndicator,
   TimeWindow,
   GroupSummary,
+  GetSLOSettingsResponse,
+  UpdateSLOSettingsParams,
 };

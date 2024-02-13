@@ -7,6 +7,7 @@
 
 import { errors } from '@elastic/elasticsearch';
 import { failedDependency, forbidden } from '@hapi/boom';
+
 import {
   createSLOParamsSchema,
   deleteSLOInstancesParamsSchema,
@@ -22,8 +23,14 @@ import {
   manageSLOParamsSchema,
   resetSLOParamsSchema,
   updateSLOParamsSchema,
+  getSLOSettingsParamsSchema,
+  SLOSettingsStored,
+  getSLOSettingsResponseSchema,
+  updateSLOSettingsParamsSchema,
 } from '@kbn/slo-schema';
+import { ALL_SPACES_ID } from '@kbn/spaces-plugin/common/constants';
 import type { IndicatorTypes } from '../../domain/models';
+import { SO_SLO_SETTINGS_TYPE } from '../../saved_objects';
 import {
   CreateSLO,
   DefaultSummaryClient,
@@ -43,6 +50,7 @@ import { getBurnRates } from '../../services/slo/get_burn_rates';
 import { getGlobalDiagnosis } from '../../services/slo/get_diagnosis';
 import { GetPreviewData } from '../../services/slo/get_preview_data';
 import { GetSLOInstances } from '../../services/slo/get_slo_instances';
+import { SLOSettingsRepository } from '../../services/slo/slo_settings_repository';
 import { DefaultHistoricalSummaryClient } from '../../services/slo/historical_summary_client';
 import { ManageSLO } from '../../services/slo/manage_slo';
 import { ResetSLO } from '../../services/slo/reset_slo';
@@ -536,6 +544,42 @@ const getPreviewData = createObservabilityServerRoute({
   },
 });
 
+const getSloSettings = createObservabilityServerRoute({
+  endpoint: 'GET /internal/observability/slos/_settings',
+  options: {
+    tags: ['access:slo_read'],
+    access: 'internal',
+  },
+  params: getSLOSettingsParamsSchema,
+  handler: async ({ context, dependencies, request }) => {
+    await assertPlatinumLicense(context);
+
+    const spaceId =
+      (await dependencies.spaces?.spacesService?.getActiveSpace(request))?.id ?? 'default';
+    const soClient = (await context.core).savedObjects.client;
+    const repository = new SLOSettingsRepository(soClient);
+    return await repository.get(spaceId);
+  },
+});
+
+const updateSloSettings = createObservabilityServerRoute({
+  endpoint: 'PUT /internal/observability/slos/_settings',
+  options: {
+    tags: ['access:slo_write'],
+    access: 'internal',
+  },
+  params: updateSLOSettingsParamsSchema,
+  handler: async ({ context, params, logger, dependencies, request }) => {
+    await assertPlatinumLicense(context);
+
+    const spaceId =
+      (await dependencies.spaces?.spacesService?.getActiveSpace(request))?.id ?? 'default';
+    const soClient = (await context.core).savedObjects.client;
+    const repository = new SLOSettingsRepository(soClient);
+    await repository.save(spaceId, params.body);
+  },
+});
+
 export const sloRouteRepository = {
   ...createSLORoute,
   ...inspectSLORoute,
@@ -554,4 +598,6 @@ export const sloRouteRepository = {
   ...getSLOInstancesRoute,
   ...resetSLORoute,
   ...findSLOGroupsRoute,
+  ...getSloSettings,
+  ...updateSloSettings,
 };

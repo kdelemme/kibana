@@ -1,10 +1,8 @@
+import { GetSLOSettingsResponse, UpdateSLOSettingsParams } from '@kbn/slo-schema';
 import { SLOSettingsForm } from '../types';
 
-// TODO: replace with io-ts schema type
-type GetSLOSettings = { stale: { enabled: boolean; duration: number } };
-
 export function transformSloSettingsResponseToFormValues(
-  settings?: GetSLOSettings
+  settings?: GetSLOSettingsResponse
 ): SLOSettingsForm | undefined {
   if (!settings) return undefined;
 
@@ -12,6 +10,17 @@ export function transformSloSettingsResponseToFormValues(
     stale: {
       enabled: settings.stale.enabled,
       duration: settings.stale.duration,
+    },
+  };
+}
+
+export function transformFormValuesToUpdateSloSettingsParams(
+  values: SLOSettingsForm
+): UpdateSLOSettingsParams {
+  return {
+    stale: {
+      enabled: values.stale.enabled,
+      duration: values.stale.duration,
     },
   };
 }
