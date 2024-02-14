@@ -73,7 +73,7 @@ export function SloSettings() {
                 reporting data. Until the main SLO definition is deleted, these instances will exist
                 and can cluster the SLO dashboard page. You can configure auto removal of stale
                 instances for this current Kibana space, as well as configure the duration required
-                for an instance to be considered stale
+                for an instance to be considered stale.
               </p>
             </EuiText>
           </EuiFlexItem>
@@ -124,7 +124,8 @@ export function SloSettings() {
             <EuiFormRow
               isInvalid={getFieldState('stale.duration').invalid}
               label={i18n.translate('xpack.observability.slo.sloSettings.stale.durationRowLabel', {
-                defaultMessage: 'Duration in minutes before a summary document is considered stale',
+                defaultMessage:
+                  'Duration in minutes before a summary document is considered stale (minimum 60min)',
               })}
             >
               <Controller
@@ -133,7 +134,7 @@ export function SloSettings() {
                 defaultValue={2880}
                 rules={{
                   required: true,
-                  min: 1,
+                  min: 60,
                 }}
                 render={({ field: { ref, onChange, ...field }, fieldState }) => (
                   <EuiFieldNumber
