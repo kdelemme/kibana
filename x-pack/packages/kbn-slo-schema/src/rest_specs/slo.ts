@@ -279,7 +279,6 @@ const getSLOInstancesResponseSchema = t.type({
 const getSLOSettingsParamsSchema = t.type({});
 const getSLOSettingsResponseSchema = t.type({
   stale: t.type({
-    enabled: t.boolean,
     duration: t.number,
   }),
 });
@@ -287,7 +286,6 @@ const getSLOSettingsResponseSchema = t.type({
 const updateSLOSettingsParamsSchema = t.type({
   body: t.type({
     stale: t.type({
-      enabled: t.boolean,
       duration: t.number,
     }),
   }),

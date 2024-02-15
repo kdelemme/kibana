@@ -5,7 +5,6 @@ import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiFormRow,
-  EuiSwitch,
   EuiText,
   EuiTitle,
 } from '@elastic/eui';
@@ -69,11 +68,7 @@ export function SloSettings() {
           <EuiFlexItem>
             <EuiText grow={false}>
               <p>
-                Some SLO instances can become stale when the underlying group does not exist or stop
-                reporting data. Until the main SLO definition is deleted, these instances will exist
-                and can cluster the SLO dashboard page. You can configure auto removal of stale
-                instances for this current Kibana space, as well as configure the duration required
-                for an instance to be considered stale.
+                Configure the duration with no data required for a SLO instance to become stale.
               </p>
             </EuiText>
           </EuiFlexItem>
@@ -88,44 +83,9 @@ export function SloSettings() {
           </EuiFlexItem>
           <EuiFlexItem>
             <EuiFormRow
-              fullWidth
-              isDisabled={isLoadingSettings}
-              label={i18n.translate('xpack.observability.slo.sloSettings.stale.enabledRowLabel', {
-                defaultMessage: 'Enable stale summary documents automatic removal',
-              })}
-            >
-              <Controller
-                name="stale.enabled"
-                control={control}
-                defaultValue={false}
-                render={({ field: { ref, onChange, ...field } }) => (
-                  <EuiSwitch
-                    disabled={isLoadingSettings}
-                    label={
-                      field.value
-                        ? i18n.translate('xpack.observability.slo.sloSettings.stale.enabledLabel', {
-                            defaultMessage: 'Enabled',
-                          })
-                        : i18n.translate(
-                            'xpack.observability.slo.sloSettings.stale.disabledLabel',
-                            {
-                              defaultMessage: 'Disabled',
-                            }
-                          )
-                    }
-                    checked={field.value}
-                    onChange={(e) => onChange(e.target.checked)}
-                  />
-                )}
-              />
-            </EuiFormRow>
-          </EuiFlexItem>
-          <EuiFlexItem>
-            <EuiFormRow
               isInvalid={getFieldState('stale.duration').invalid}
               label={i18n.translate('xpack.observability.slo.sloSettings.stale.durationRowLabel', {
-                defaultMessage:
-                  'Duration in minutes before a summary document is considered stale (minimum 60min)',
+                defaultMessage: 'Duration in minutes before a SLO instance is considered stale',
               })}
             >
               <Controller

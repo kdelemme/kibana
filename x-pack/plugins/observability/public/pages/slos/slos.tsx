@@ -5,22 +5,21 @@
  * 2.0.
  */
 
-import React, { useEffect } from 'react';
 import { useBreadcrumbs } from '@kbn/observability-shared-plugin/public';
+import React, { useEffect } from 'react';
 
 import { i18n } from '@kbn/i18n';
-import { FeedbackButton } from './components/common/feedback_button';
-import { CreateSloBtn } from './components/common/create_slo_btn';
-import { SloListSearchBar } from './components/slo_list_search_bar';
-import { useKibana } from '../../utils/kibana_react';
-import { usePluginContext } from '../../hooks/use_plugin_context';
-import { useLicense } from '../../hooks/use_license';
-import { useFetchSloList } from '../../hooks/slo/use_fetch_slo_list';
-import { SloList } from './components/slo_list';
 import { paths } from '../../../common/locators/paths';
-import { HeaderMenu } from '../../components/header_menu/header_menu';
-import { SloOutdatedCallout } from '../../components/slo/slo_outdated_callout';
 import { SloHeaderMenu } from '../../components/slo/slo_header_menu/slo_header_menu';
+import { SloOutdatedCallout } from '../../components/slo/slo_outdated_callout';
+import { useFetchSloList } from '../../hooks/slo/use_fetch_slo_list';
+import { useLicense } from '../../hooks/use_license';
+import { usePluginContext } from '../../hooks/use_plugin_context';
+import { useKibana } from '../../utils/kibana_react';
+import { CreateSloBtn } from './components/common/create_slo_btn';
+import { FeedbackButton } from './components/common/feedback_button';
+import { SloList } from './components/slo_list';
+import { SloListSearchBar } from './components/slo_list_search_bar';
 
 export const SLO_PAGE_ID = 'slo-page-container';
 

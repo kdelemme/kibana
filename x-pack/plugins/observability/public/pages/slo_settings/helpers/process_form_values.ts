@@ -8,7 +8,6 @@ export function transformSloSettingsResponseToFormValues(
 
   return {
     stale: {
-      enabled: settings.stale.enabled,
       duration: settings.stale.duration,
     },
   };
@@ -19,7 +18,6 @@ export function transformFormValuesToUpdateSloSettingsParams(
 ): UpdateSLOSettingsParams {
   return {
     stale: {
-      enabled: values.stale.enabled,
       duration: values.stale.duration,
     },
   };
