@@ -56,6 +56,15 @@ export function SloSettings() {
       <div css={{ maxInlineSize: 600 }}>
         <EuiFlexGroup direction="column" gutterSize="l">
           <EuiFlexItem>
+            <EuiCallOut
+              title={i18n.translate('xpack.observability.slo.sloSettings.stale.enabledRowLabel', {
+                defaultMessage: 'These settings only apply for the current space: {space}',
+                values: { space: space?.name },
+              })}
+              iconType="spaces"
+            />
+          </EuiFlexItem>
+          <EuiFlexItem>
             <EuiTitle size="m">
               <h1>
                 {i18n.translate('xpack.observability.slo.sloSettings.stale.title', {
@@ -68,24 +77,17 @@ export function SloSettings() {
           <EuiFlexItem>
             <EuiText grow={false}>
               <p>
-                Configure the duration with no data required for a SLO instance to become stale.
+                When no data are reported into an SLO for a while, it becomes stale. This is
+                frequent on SLO grouped by ephemeral keys.
               </p>
             </EuiText>
           </EuiFlexItem>
-          <EuiFlexItem>
-            <EuiCallOut
-              title={i18n.translate('xpack.observability.slo.sloSettings.stale.enabledRowLabel', {
-                defaultMessage: 'These settings only apply for the current space: {space}',
-                values: { space: space?.name },
-              })}
-              iconType="spaces"
-            />
-          </EuiFlexItem>
+
           <EuiFlexItem>
             <EuiFormRow
               isInvalid={getFieldState('stale.duration').invalid}
               label={i18n.translate('xpack.observability.slo.sloSettings.stale.durationRowLabel', {
-                defaultMessage: 'Duration in minutes before a SLO instance is considered stale',
+                defaultMessage: 'Stale duration (minutes)',
               })}
             >
               <Controller
@@ -104,7 +106,7 @@ export function SloSettings() {
                     required
                     isInvalid={fieldState.invalid}
                     value={String(field.value)}
-                    min={1}
+                    min={60}
                     step={1}
                     onChange={(event) => onChange(Number(event.target.value))}
                   />
