@@ -14,23 +14,11 @@ interface Props {
 }
 
 export const buildCombinedKqlQuery = ({ groups, groupBy, kqlQuery }: Props) => {
-  let groupsKqlQuery = '';
-  if (groups.length > 0) {
-    groupsKqlQuery += `(`;
-
-    groups.map((group, index) => {
-      const shouldAddOr = index < groups.length - 1;
-      groupsKqlQuery += `${groupBy}:"${group}"`;
-      if (shouldAddOr) {
-        groupsKqlQuery += ' or ';
-      }
-    });
-    groupsKqlQuery += `)`;
-  }
+  const groupsKqlQuery = groups.map((group) => `${groupBy}:"${group}"`).join(' or ');
 
   let combinedKqlQuery = '';
   if (kqlQuery && groupsKqlQuery) {
-    combinedKqlQuery = `${groupsKqlQuery} and ${kqlQuery}`;
+    combinedKqlQuery = `(${groupsKqlQuery}) and (${kqlQuery})`;
   } else if (groupsKqlQuery) {
     combinedKqlQuery = groupsKqlQuery;
   } else if (kqlQuery) {

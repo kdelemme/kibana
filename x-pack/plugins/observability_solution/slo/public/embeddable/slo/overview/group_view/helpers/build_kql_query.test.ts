@@ -30,6 +30,14 @@ describe('buildCombinedKqlQuery', () => {
       },
     },
     {
+      title: 'selected groups, with kql containing or',
+      props: {
+        groups: ['production', 'dev'],
+        groupBy: 'slo.tags',
+        kqlQuery: 'status:"VIOLATED" or status:"DEGRADING"',
+      },
+    },
+    {
       title: 'selected groups, no kql',
       props: {
         groups: ['production', 'dev'],
