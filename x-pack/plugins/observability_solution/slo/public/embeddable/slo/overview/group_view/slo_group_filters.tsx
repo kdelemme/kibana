@@ -69,6 +69,12 @@ export function SloGroupFilters({ selectedFilters, onSelected }: Props) {
       value: 'status',
     },
     {
+      text: i18n.translate('xpack.slo.sloGroupConfiguration.groupBy.instanceId', {
+        defaultMessage: 'Instance id',
+      }),
+      value: 'slo.instanceId',
+    },
+    {
       text: i18n.translate('xpack.slo.sloGroupConfiguration.groupBy.sliType', {
         defaultMessage: 'SLI type',
       }),
@@ -98,15 +104,12 @@ export function SloGroupFilters({ selectedFilters, onSelected }: Props) {
     Array<EuiComboBoxOptionOption<string>>
   >(mapGroupsToOptions(selectedFilters.groups, selectedGroupBy));
   const [searchValue, setSearchValue] = useState<string>('');
-  const sliTypeSearch = SLI_OPTIONS.find((option) =>
-    option.text.toLowerCase().includes(searchValue.toLowerCase())
-  )?.value;
   const query = `${searchValue}*`;
 
   const { data, isLoading } = useFetchSloGroups({
     perPage: 100,
     groupBy: selectedGroupBy,
-    kqlQuery: `slo.tags: (${query}) or status: (${query.toUpperCase()}) or slo.indicator.type: (${sliTypeSearch})`,
+    kqlQuery: `${selectedGroupBy}:${query}`,
   });
 
   useEffect(() => {
@@ -141,6 +144,12 @@ export function SloGroupFilters({ selectedFilters, onSelected }: Props) {
       setSelectedGroupByLabel(
         i18n.translate('xpack.slo.sloGroupConfiguration.remoteClusterLabel', {
           defaultMessage: 'Remote cluster',
+        })
+      );
+    } else if (selectedGroupBy === 'slo.instanceId') {
+      setSelectedGroupByLabel(
+        i18n.translate('xpack.slo.sloGroupConfiguration.instanceIdLabel', {
+          defaultMessage: 'Instance id',
         })
       );
     }
