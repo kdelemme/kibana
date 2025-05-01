@@ -6,19 +6,21 @@
  */
 
 import {
-  EuiButton,
   EuiButtonEmpty,
-  EuiButtonIcon,
   EuiCallOut,
   EuiCopy,
   EuiFlexGroup,
   EuiFlexItem,
+  EuiLink,
+  EuiText,
 } from '@elastic/eui';
 import { i18n } from '@kbn/i18n';
 import { FormattedMessage } from '@kbn/i18n-react';
+import { encode } from '@kbn/rison';
 import { SLOWithSummaryResponse } from '@kbn/slo-schema';
 import React, { useState } from 'react';
 import { getSLOSummaryTransformId, getSLOTransformId } from '../../../../../common/constants';
+import { paths } from '../../../../../common/locators/paths';
 import { useFetchSloHealth } from '../../../../hooks/use_fetch_slo_health';
 import { useKibana } from '../../../../hooks/use_kibana';
 
@@ -91,61 +93,111 @@ export function HealthCallout({ sloList }: { sloList: SLOWithSummaryResponse[] }
             />
             <ul>
               {unhealthyRollupTransforms.map((result) => (
-                <li>
-                  {getSLOTransformId(result.sloId, result.sloRevision)}
-                  <EuiCopy textToCopy={getSLOTransformId(result.sloId, result.sloRevision)}>
-                    {(copy) => (
-                      <EuiButtonIcon
-                        data-test-subj="sloHealthCalloutCopyButton"
-                        aria-label={i18n.translate(
-                          'xpack.slo.sloList.healthCallout.copyToClipboard',
-                          { defaultMessage: 'Copy to clipboard' }
-                        )}
-                        color="text"
-                        iconType="copy"
-                        onClick={copy}
-                      />
-                    )}
-                  </EuiCopy>
+                <li key={`rollup-${result.sloId}-${result.sloRevision}`}>
+                  <EuiFlexGroup
+                    direction="row"
+                    alignItems="flexStart"
+                    justifyContent="flexStart"
+                    gutterSize="s"
+                  >
+                    <EuiText size="xs">
+                      {getSLOTransformId(result.sloId, result.sloRevision)}
+                    </EuiText>
+                    <EuiCopy textToCopy={getSLOTransformId(result.sloId, result.sloRevision)}>
+                      {(copy) => (
+                        <EuiLink data-test-subj="sloHealthCalloutCopyLink" onClick={copy}>
+                          {i18n.translate('xpack.slo.healthCallout.copyLinkLabel', {
+                            defaultMessage: 'Copy',
+                          })}
+                        </EuiLink>
+                      )}
+                    </EuiCopy>
+                    <EuiLink
+                      data-test-subj="sloHealthCalloutViewSloButton"
+                      target="_blank"
+                      href={http.basePath.prepend(
+                        paths.sloDetails(result.sloId, result.sloInstanceId)
+                      )}
+                    >
+                      {i18n.translate('xpack.slo.healthCallout.viewSLOLinkLabel', {
+                        defaultMessage: 'View SLO',
+                      })}
+                    </EuiLink>
+                    <EuiLink
+                      data-test-subj="sloHealthCalloutViewTransformButton"
+                      target="_blank"
+                      href={http.basePath.prepend(
+                        `/app/management/data/transform?_a=${encode({
+                          transform: {
+                            queryText: getSLOTransformId(result.sloId, result.sloRevision),
+                          },
+                        })}`
+                      )}
+                    >
+                      {i18n.translate('xpack.slo.healthCallout.viewTransformLinkLabel', {
+                        defaultMessage: 'View Transform',
+                      })}
+                    </EuiLink>
+                  </EuiFlexGroup>
                 </li>
               ))}
 
               {unhealthySummaryTransforms.map((result) => (
-                <li>
-                  {getSLOSummaryTransformId(result.sloId, result.sloRevision)}
-                  <EuiCopy textToCopy={getSLOSummaryTransformId(result.sloId, result.sloRevision)}>
-                    {(copy) => (
-                      <EuiButtonIcon
-                        data-test-subj="sloHealthCalloutCopyButton"
-                        aria-label={i18n.translate(
-                          'xpack.slo.sloList.healthCallout.copyToClipboard',
-                          { defaultMessage: 'Copy to clipboard' }
-                        )}
-                        color="text"
-                        iconType="copy"
-                        onClick={copy}
-                      />
-                    )}
-                  </EuiCopy>
+                <li key={`summary-${result.sloId}-${result.sloRevision}`}>
+                  <EuiFlexGroup
+                    direction="row"
+                    alignItems="flexStart"
+                    justifyContent="spaceBetween"
+                    gutterSize="s"
+                  >
+                    <EuiText size="xs">
+                      {getSLOSummaryTransformId(result.sloId, result.sloRevision)}
+                    </EuiText>
+
+                    <EuiCopy
+                      textToCopy={getSLOSummaryTransformId(result.sloId, result.sloRevision)}
+                    >
+                      {(copy) => (
+                        <EuiLink data-test-subj="sloHealthCalloutCopyLink" onClick={copy}>
+                          {i18n.translate('xpack.slo.healthCallout.copyLinkLabel', {
+                            defaultMessage: 'Copy',
+                          })}
+                        </EuiLink>
+                      )}
+                    </EuiCopy>
+                    <EuiLink
+                      data-test-subj="sloHealthCalloutGoToSloButton"
+                      target="_blank"
+                      href={http.basePath.prepend(
+                        paths.sloDetails(result.sloId, result.sloInstanceId)
+                      )}
+                    >
+                      {i18n.translate('xpack.slo.healthCallout.viewSLOLinkLabel', {
+                        defaultMessage: 'View SLO',
+                      })}
+                    </EuiLink>
+                    <EuiLink
+                      data-test-subj="sloHealthCalloutViewTransformButton"
+                      target="_blank"
+                      href={http.basePath.prepend(
+                        `/app/management/data/transform?_a=${encode({
+                          transform: {
+                            queryText: getSLOSummaryTransformId(result.sloId, result.sloRevision),
+                          },
+                        })}`
+                      )}
+                    >
+                      {i18n.translate('xpack.slo.healthCallout.viewTransformLinkLabel', {
+                        defaultMessage: 'View Transform',
+                      })}
+                    </EuiLink>
+                  </EuiFlexGroup>
                 </li>
               ))}
             </ul>
           </EuiFlexItem>
+
           <EuiFlexGroup direction="row">
-            <EuiFlexItem grow={false}>
-              <EuiButton
-                data-test-subj="sloHealthCalloutInspectTransformButton"
-                color="danger"
-                size="s"
-                fill
-                href={http?.basePath.prepend('/app/management/data/transform')}
-              >
-                <FormattedMessage
-                  id="xpack.slo.sloList.healthCallout.buttonTransformLabel"
-                  defaultMessage="Inspect transform"
-                />
-              </EuiButton>
-            </EuiFlexItem>
             <EuiFlexItem grow={false}>
               <EuiButtonEmpty
                 data-test-subj="sloHealthCalloutDimissButton"
