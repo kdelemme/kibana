@@ -13,10 +13,18 @@ import {
   EuiPopover,
 } from '@elastic/eui';
 import { i18n } from '@kbn/i18n';
-import { sloFeatureId } from '@kbn/observability-plugin/common';
+import {
+  sloFeatureId,
+  syntheticsMonitorDetailLocatorID,
+  syntheticsMonitorLocationQueryLocatorID,
+} from '@kbn/observability-plugin/common';
 import { RuleFormFlyout } from '@kbn/response-ops-rule-form/flyout';
 import { SLO_BURN_RATE_RULE_TYPE_ID } from '@kbn/rule-data-utils';
-import { SLOWithSummaryResponse } from '@kbn/slo-schema';
+import {
+  SLOWithSummaryResponse,
+  apmIndicatorSchema,
+  syntheticsAvailabilityIndicatorSchema,
+} from '@kbn/slo-schema';
 import React, { useCallback, useEffect, useState } from 'react';
 import { paths } from '../../../../common/locators/paths';
 import { useActionModal } from '../../../context/action_modal';
@@ -24,7 +32,6 @@ import { useFetchRulesForSlo } from '../../../hooks/use_fetch_rules_for_slo';
 import { useKibana } from '../../../hooks/use_kibana';
 import { usePermissions } from '../../../hooks/use_permissions';
 import { convertSliApmParamsToApmAppDeeplinkUrl } from '../../../utils/slo/convert_sli_apm_params_to_apm_app_deeplink_url';
-import { isApmIndicatorType } from '../../../utils/slo/indicator';
 import { EditBurnRateRuleFlyout } from '../../slos/components/common/edit_burn_rate_rule_flyout';
 import { useGetQueryParams } from '../hooks/use_get_query_params';
 import { useSloActions } from '../hooks/use_slo_actions';
@@ -36,6 +43,9 @@ export interface Props {
 export function HeaderControl({ slo }: Props) {
   const { services } = useKibana();
   const {
+    share: {
+      url: { locators },
+    },
     application: { navigateToUrl, capabilities },
     http: { basePath },
     triggersActionsUi: { ruleTypeRegistry, actionTypeRegistry },
@@ -126,6 +136,22 @@ export function HeaderControl({ slo }: Props) {
     const url = convertSliApmParamsToApmAppDeeplinkUrl(slo);
     if (url) {
       navigateToUrl(basePath.prepend(url));
+    }
+  };
+
+  const handleNavigateToSyntheticsMonitor = () => {
+    const monitorLocator = locators.get(syntheticsMonitorDetailLocatorID);
+    const { locationId, monitorId } = slo.meta?.synthetics ?? {};
+    if (monitorId && locationId) {
+      monitorLocator?.navigate({ configId: monitorId, locationId });
+    }
+  };
+
+  const handleNavigateToSyntheticsLocation = () => {
+    const regionLocator = locators.get(syntheticsMonitorLocationQueryLocatorID);
+    const { locationId } = slo.meta?.synthetics ?? {};
+    if (locationId) {
+      regionLocator?.navigate({ locationId });
     }
   };
 
@@ -277,7 +303,7 @@ export function HeaderControl({ slo }: Props) {
             </EuiContextMenuItem>,
           ]
             .concat(
-              !!slo && isApmIndicatorType(slo.indicator) ? (
+              !!slo && apmIndicatorSchema.is(slo.indicator) ? (
                 <EuiContextMenuItem
                   key="exploreInApm"
                   icon="bullseye"
@@ -293,6 +319,36 @@ export function HeaderControl({ slo }: Props) {
               ) : (
                 []
               )
+            )
+            .concat(
+              !!slo && syntheticsAvailabilityIndicatorSchema.is(slo.indicator)
+                ? [
+                    <EuiContextMenuItem
+                      key="exploreInSyntheticsMonitor"
+                      icon="bullseye"
+                      disabled={isRemote}
+                      onClick={handleNavigateToSyntheticsMonitor}
+                      data-test-subj="sloDetailsHeaderControlPopoverExploreInSynthetics"
+                      toolTipContent={isRemote ? NOT_AVAILABLE_FOR_REMOTE : ''}
+                    >
+                      {i18n.translate('xpack.slo.sloDetails.headerControl.exploreInSynthetics', {
+                        defaultMessage: 'Synthetics monitor',
+                      })}
+                    </EuiContextMenuItem>,
+                    <EuiContextMenuItem
+                      key="exploreInSyntheticsLocation"
+                      icon="bullseye"
+                      disabled={isRemote}
+                      onClick={handleNavigateToSyntheticsLocation}
+                      data-test-subj="sloDetailsHeaderControlPopoverExploreInSynthetics"
+                      toolTipContent={isRemote ? NOT_AVAILABLE_FOR_REMOTE : ''}
+                    >
+                      {i18n.translate('xpack.slo.sloDetails.headerControl.exploreInSynthetics', {
+                        defaultMessage: 'Synthetics Location',
+                      })}
+                    </EuiContextMenuItem>,
+                  ]
+                : []
             )
             .concat(
               slo.enabled ? (

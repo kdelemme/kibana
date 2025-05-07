@@ -19,7 +19,6 @@ import {
   apmIndicatorSchema,
   occurrencesBudgetingMethodSchema,
   querySchema,
-  syntheticsAvailabilityIndicatorSchema,
 } from '@kbn/slo-schema';
 import { map } from 'lodash';
 import React from 'react';

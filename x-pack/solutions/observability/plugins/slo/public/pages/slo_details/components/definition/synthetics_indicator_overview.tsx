@@ -40,7 +40,7 @@ export function SyntheticsIndicatorOverview({ slo }: Props) {
   }
 
   const onMonitorClick = () => monitorLocator?.navigate({ configId: monitorId, locationId });
-  const onLocationClick = () => regionLocator?.navigate({ locationId: location });
+  const onLocationClick = () => regionLocator?.navigate({ locationId });
   const showDefinitionItem = name || location;
 
   if (!showDefinitionItem) {
