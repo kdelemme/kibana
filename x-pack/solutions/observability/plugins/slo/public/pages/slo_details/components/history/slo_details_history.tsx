@@ -30,7 +30,7 @@ export interface Props {
   selectedTabId: SloTabId;
 }
 
-export function SLODetailsHistory({ slo, isAutoRefreshing, selectedTabId }: Props) {
+export function SloDetailsHistory({ slo, isAutoRefreshing, selectedTabId }: Props) {
   const { uiSettings } = useKibana().services;
   const [start, setStart] = useState(`now-${slo.timeWindow.duration}`);
   const [end, setEnd] = useState('now');
