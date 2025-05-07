@@ -16,8 +16,10 @@ import numeral from '@elastic/numeral';
 import { i18n } from '@kbn/i18n';
 import {
   SLOWithSummaryResponse,
+  apmIndicatorSchema,
   occurrencesBudgetingMethodSchema,
   querySchema,
+  syntheticsAvailabilityIndicatorSchema,
 } from '@kbn/slo-schema';
 import { map } from 'lodash';
 import React from 'react';
@@ -47,7 +49,7 @@ export function SloDetailsDefinitionTable({ slo }: Props) {
   const items: Row[] = map(
     {
       name: <EuiText size="s">{slo.name}</EuiText>,
-      description: <EuiText size="s">{slo.description}</EuiText>,
+      description: <EuiText size="s">{slo.description ?? '-'}</EuiText>,
       tags: <EuiText size="s">{slo.tags.join(', ')}</EuiText>,
       budgetingMethod: occurrencesBudgetingMethodSchema.is(slo.budgetingMethod) ? (
         <EuiText size="s">{BUDGETING_METHOD_OCCURRENCES}</EuiText>
@@ -87,27 +89,43 @@ export function SloDetailsDefinitionTable({ slo }: Props) {
       timeWindow: <EuiText size="s">{toTimeWindowLabel(slo.timeWindow)}</EuiText>,
       instanceId: slo.instanceId,
       groupBy: <EuiText size="s">{[slo.groupBy].flat().join(', ')}</EuiText>,
-
       'indicator.type': <EuiText size="s">{toIndicatorTypeLabel(slo.indicator.type)}</EuiText>,
       'indicator.params.index': <EuiText size="s">{slo.indicator.params.index}</EuiText>,
-      'indicator.params.filter':
-        'filter' in slo.indicator.params && querySchema.is(slo.indicator.params.filter) ? (
-          <DisplayQuery query={slo.indicator.params.filter} index={slo.indicator.params.index} />
-        ) : (
-          '-'
+      ...('timestampField' in slo.indicator.params && {
+        'indicator.params.timestampField': (
+          <EuiText size="s">{slo.indicator.params.timestampField}</EuiText>
         ),
-      'indicator.params.good':
-        'good' in slo.indicator.params && querySchema.is(slo.indicator.params.good) ? (
-          <DisplayQuery query={slo.indicator.params.good} index={slo.indicator.params.index} />
-        ) : (
-          '-'
+      }),
+      ...('filter' in slo.indicator.params &&
+        querySchema.is(slo.indicator.params.filter) && {
+          'indicator.params.filter': (
+            <DisplayQuery query={slo.indicator.params.filter} index={slo.indicator.params.index} />
+          ),
+        }),
+      ...('good' in slo.indicator.params &&
+        querySchema.is(slo.indicator.params.good) && {
+          'indicator.params.good': (
+            <DisplayQuery query={slo.indicator.params.good} index={slo.indicator.params.index} />
+          ),
+        }),
+      ...('total' in slo.indicator.params &&
+        querySchema.is(slo.indicator.params.total) && {
+          'indicator.params.total': (
+            <DisplayQuery query={slo.indicator.params.total} index={slo.indicator.params.index} />
+          ),
+        }),
+      ...(apmIndicatorSchema.is(slo.indicator) && {
+        'indicator.params.service': <EuiText size="s">{slo.indicator.params.service}</EuiText>,
+        'indicator.params.environment': (
+          <EuiText size="s">{slo.indicator.params.environment}</EuiText>
         ),
-      'indicator.params.total':
-        'total' in slo.indicator.params && querySchema.is(slo.indicator.params.total) ? (
-          <DisplayQuery query={slo.indicator.params.total} index={slo.indicator.params.index} />
-        ) : (
-          '-'
+        'indicator.params.transactionName': (
+          <EuiText size="s">{slo.indicator.params.transactionName}</EuiText>
         ),
+        'indicator.params.transactionType': (
+          <EuiText size="s">{slo.indicator.params.transactionType}</EuiText>
+        ),
+      }),
       'settings.syncDelay': (
         <EuiText size="s">
           {slo.settings.syncDelay ? toDurationLabel(slo.settings.syncDelay) : '-'}

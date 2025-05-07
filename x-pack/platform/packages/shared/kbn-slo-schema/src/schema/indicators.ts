@@ -82,6 +82,11 @@ const apmTransactionErrorRateIndicatorSchema = t.type({
   ]),
 });
 
+const apmIndicatorSchema = t.union([
+  apmTransactionDurationIndicatorSchema,
+  apmTransactionErrorRateIndicatorSchema,
+]);
+
 const kqlCustomIndicatorTypeSchema = t.literal('sli.kql.custom');
 const kqlCustomIndicatorSchema = t.type({
   type: kqlCustomIndicatorTypeSchema,
@@ -330,6 +335,7 @@ export {
   kqlWithFiltersSchema,
   querySchema,
   filtersSchema,
+  apmIndicatorSchema,
   apmTransactionDurationIndicatorSchema,
   apmTransactionDurationIndicatorTypeSchema,
   apmTransactionErrorRateIndicatorSchema,
