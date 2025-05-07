@@ -32,7 +32,7 @@ export interface Props {
   slo: SLOWithSummaryResponse;
 }
 
-export function Definition({ slo }: Props) {
+export function SloDetailsDefinition({ slo }: Props) {
   const isMobile = useIsWithinBreakpoints(['xs', 's']);
   const { uiSettings } = useKibana().services;
   const percentFormat = uiSettings.get('format:percent:defaultPattern');

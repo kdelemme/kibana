@@ -7,11 +7,11 @@
 
 import { KibanaReactStorybookDecorator } from '../../../../utils/kibana_react.storybook_decorator';
 import { buildSlo } from '../../../../data/slo/slo';
-import { Definition as Component, Props } from './definition';
+import { SloDetailsDefinition as Component, Props } from './slo_details_definition';
 
 export default {
   component: Component,
-  title: 'app/SLO/DetailsPage/Definition',
+  title: 'app/SLO/DetailsPage/SLODetailsDefinition',
   decorators: [KibanaReactStorybookDecorator],
 };
 
