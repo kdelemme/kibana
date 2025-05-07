@@ -5,173 +5,188 @@
  * 2.0.
  */
 
-import { EuiFlexGrid, EuiPanel, EuiText, useIsWithinBreakpoints } from '@elastic/eui';
+import {
+  EuiBasicTableColumn,
+  EuiInMemoryTable,
+  EuiPanel,
+  EuiSearchBarProps,
+  EuiText,
+} from '@elastic/eui';
 import numeral from '@elastic/numeral';
 import { i18n } from '@kbn/i18n';
 import {
   SLOWithSummaryResponse,
+  apmIndicatorSchema,
   occurrencesBudgetingMethodSchema,
   querySchema,
-  rollingTimeWindowTypeSchema,
 } from '@kbn/slo-schema';
+import { map } from 'lodash';
 import React from 'react';
 import { useKibana } from '../../../../hooks/use_kibana';
 import {
   BUDGETING_METHOD_OCCURRENCES,
   BUDGETING_METHOD_TIMESLICES,
-  toDurationAdverbLabel,
   toDurationLabel,
   toIndicatorTypeLabel,
+  toTimeWindowLabel,
 } from '../../../../utils/slo/labels';
-import { ApmIndicatorOverview } from './apm_indicator_overview';
 import { DisplayQuery } from './display_query';
-import { DefinitionItem } from './definition_item';
-import { SyntheticsIndicatorOverview } from './synthetics_indicator_overview';
 
 export interface Props {
   slo: SLOWithSummaryResponse;
 }
 
+interface Row {
+  field: string;
+  value: React.ReactElement | string;
+}
+
 export function SloDetailsDefinition({ slo }: Props) {
-  const isMobile = useIsWithinBreakpoints(['xs', 's']);
   const { uiSettings } = useKibana().services;
   const percentFormat = uiSettings.get('format:percent:defaultPattern');
 
-  let IndicatorOverview = null;
-  switch (slo.indicator.type) {
-    case 'sli.apm.transactionDuration':
-    case 'sli.apm.transactionErrorRate':
-      IndicatorOverview = <ApmIndicatorOverview slo={slo} />;
-      break;
-    case 'sli.synthetics.availability':
-      IndicatorOverview = <SyntheticsIndicatorOverview slo={slo} />;
-  }
+  const items: Row[] = map(
+    {
+      name: <EuiText size="s">{slo.name}</EuiText>,
+      description: <EuiText size="s">{slo.description ?? '-'}</EuiText>,
+      tags: <EuiText size="s">{slo.tags.join(', ')}</EuiText>,
+      budgetingMethod: occurrencesBudgetingMethodSchema.is(slo.budgetingMethod) ? (
+        <EuiText size="s">{BUDGETING_METHOD_OCCURRENCES}</EuiText>
+      ) : (
+        <EuiText size="s">
+          {BUDGETING_METHOD_TIMESLICES} (
+          {slo.indicator.type === 'sli.metric.timeslice'
+            ? i18n.translate(
+                'xpack.slo.sloDetails.overview.timeslicesBudgetingMethodDetailsForTimesliceMetric',
+                {
+                  defaultMessage: '{duration} slices',
+                  values: {
+                    duration: toDurationLabel(slo.objective.timesliceWindow!),
+                  },
+                }
+              )
+            : i18n.translate('xpack.slo.sloDetails.overview.timeslicesBudgetingMethodDetails', {
+                defaultMessage: '{duration} slices, {target} target',
+                values: {
+                  duration: toDurationLabel(slo.objective.timesliceWindow!),
+                  target: numeral(slo.objective.timesliceTarget!).format(percentFormat),
+                },
+              })}
+          )
+        </EuiText>
+      ),
+      objective: (
+        <EuiText size="s">
+          {i18n.translate('xpack.slo.sloDetails.definitionTable.objective', {
+            defaultMessage: '{target} objective',
+            values: {
+              target: numeral(slo.objective.target).format(percentFormat),
+            },
+          })}
+        </EuiText>
+      ),
+      timeWindow: <EuiText size="s">{toTimeWindowLabel(slo.timeWindow)}</EuiText>,
+      instanceId: slo.instanceId,
+      groupBy: <EuiText size="s">{[slo.groupBy].flat().join(', ')}</EuiText>,
+      'indicator.type': <EuiText size="s">{toIndicatorTypeLabel(slo.indicator.type)}</EuiText>,
+      'indicator.params.index': <EuiText size="s">{slo.indicator.params.index}</EuiText>,
+      ...('timestampField' in slo.indicator.params && {
+        'indicator.params.timestampField': (
+          <EuiText size="s">{slo.indicator.params.timestampField}</EuiText>
+        ),
+      }),
+      ...('filter' in slo.indicator.params &&
+        querySchema.is(slo.indicator.params.filter) && {
+          'indicator.params.filter': (
+            <DisplayQuery query={slo.indicator.params.filter} index={slo.indicator.params.index} />
+          ),
+        }),
+      ...('good' in slo.indicator.params &&
+        querySchema.is(slo.indicator.params.good) && {
+          'indicator.params.good': (
+            <DisplayQuery query={slo.indicator.params.good} index={slo.indicator.params.index} />
+          ),
+        }),
+      ...('total' in slo.indicator.params &&
+        querySchema.is(slo.indicator.params.total) && {
+          'indicator.params.total': (
+            <DisplayQuery query={slo.indicator.params.total} index={slo.indicator.params.index} />
+          ),
+        }),
+      ...(apmIndicatorSchema.is(slo.indicator) && {
+        'indicator.params.service': <EuiText size="s">{slo.indicator.params.service}</EuiText>,
+        'indicator.params.environment': (
+          <EuiText size="s">{slo.indicator.params.environment}</EuiText>
+        ),
+        'indicator.params.transactionName': (
+          <EuiText size="s">{slo.indicator.params.transactionName}</EuiText>
+        ),
+        'indicator.params.transactionType': (
+          <EuiText size="s">{slo.indicator.params.transactionType}</EuiText>
+        ),
+      }),
+      'settings.syncDelay': (
+        <EuiText size="s">
+          {slo.settings.syncDelay ? toDurationLabel(slo.settings.syncDelay) : '-'}
+        </EuiText>
+      ),
+      'settings.syncField': (
+        <EuiText size="s">{!!slo.settings.syncField ? slo.settings.syncField : '-'}</EuiText>
+      ),
+      'settings.frequency': (
+        <EuiText size="s">
+          {slo.settings.frequency ? toDurationLabel(slo.settings.frequency) : '-'}
+        </EuiText>
+      ),
+      'settings.preventInitialBackfill': (
+        <EuiText size="s">
+          {slo.settings.preventInitialBackfill !== undefined
+            ? JSON.stringify(slo.settings.preventInitialBackfill)
+            : '-'}
+        </EuiText>
+      ),
+    },
+    (value, key) => ({ field: key, value })
+  );
+
+  const columns: Array<EuiBasicTableColumn<Row>> = [
+    {
+      field: 'field',
+      name: i18n.translate('xpack.slo.sloDetails.definitionTable.field', {
+        defaultMessage: 'Field',
+      }),
+      width: '30%',
+    },
+    {
+      field: 'value',
+      name: i18n.translate('xpack.slo.sloDetails.definitionTable.value', {
+        defaultMessage: 'Value',
+      }),
+      render: (value: string) => {
+        return value;
+      },
+    },
+  ];
+
+  const search: EuiSearchBarProps = {
+    box: {
+      incremental: true,
+      schema: true,
+    },
+  };
 
   return (
     <EuiPanel paddingSize="none" color="transparent" data-test-subj="definition">
-      <EuiFlexGrid columns={isMobile ? 2 : 4} gutterSize="l" responsive={false}>
-        <DefinitionItem
-          title={i18n.translate('xpack.slo.sloDetails.overview.indicatorTypeTitle', {
-            defaultMessage: 'Indicator type',
-          })}
-          subtitle={<EuiText size="s">{toIndicatorTypeLabel(slo.indicator.type)}</EuiText>}
-        />
-        <DefinitionItem
-          title={i18n.translate('xpack.slo.sloDetails.overview.timeWindowTitle', {
-            defaultMessage: 'Time window',
-          })}
-          subtitle={toTimeWindowLabel(slo.timeWindow)}
-        />
-        <DefinitionItem
-          title={i18n.translate('xpack.slo.sloDetails.overview.budgetingMethodTitle', {
-            defaultMessage: 'Budgeting method',
-          })}
-          subtitle={
-            occurrencesBudgetingMethodSchema.is(slo.budgetingMethod) ? (
-              <EuiText size="s">{BUDGETING_METHOD_OCCURRENCES}</EuiText>
-            ) : (
-              <EuiText size="s">
-                {BUDGETING_METHOD_TIMESLICES} (
-                {slo.indicator.type === 'sli.metric.timeslice'
-                  ? i18n.translate(
-                      'xpack.slo.sloDetails.overview.timeslicesBudgetingMethodDetailsForTimesliceMetric',
-                      {
-                        defaultMessage: '{duration} slices',
-                        values: {
-                          duration: toDurationLabel(slo.objective.timesliceWindow!),
-                        },
-                      }
-                    )
-                  : i18n.translate(
-                      'xpack.slo.sloDetails.overview.timeslicesBudgetingMethodDetails',
-                      {
-                        defaultMessage: '{duration} slices, {target} target',
-                        values: {
-                          duration: toDurationLabel(slo.objective.timesliceWindow!),
-                          target: numeral(slo.objective.timesliceTarget!).format(percentFormat),
-                        },
-                      }
-                    )}
-                )
-              </EuiText>
-            )
-          }
-        />
-
-        {IndicatorOverview}
-        {'index' in slo.indicator.params && (
-          <DefinitionItem
-            title={i18n.translate('xpack.slo.sloDetails.overview.indexTitle', {
-              defaultMessage: 'Index pattern',
-            })}
-            subtitle={slo.indicator.params.index}
-          />
-        )}
-        {'filter' in slo.indicator.params && (
-          <DefinitionItem
-            title={i18n.translate('xpack.slo.sloDetails.overview.overallQueryTitle', {
-              defaultMessage: 'Overall query',
-            })}
-            subtitle={
-              <DisplayQuery
-                query={slo.indicator.params.filter}
-                index={slo.indicator.params.index}
-              />
-            }
-          />
-        )}
-        {'good' in slo.indicator.params && querySchema.is(slo.indicator.params.good) && (
-          <DefinitionItem
-            title={i18n.translate('xpack.slo.sloDetails.overview.goodQueryTitle', {
-              defaultMessage: 'Good query',
-            })}
-            subtitle={
-              <DisplayQuery query={slo.indicator.params.good} index={slo.indicator.params.index} />
-            }
-          />
-        )}
-        {'total' in slo.indicator.params && querySchema.is(slo.indicator.params.total) && (
-          <DefinitionItem
-            title={i18n.translate('xpack.slo.sloDetails.overview.totalQueryTitle', {
-              defaultMessage: 'Total query',
-            })}
-            subtitle={
-              <DisplayQuery query={slo.indicator.params.total} index={slo.indicator.params.index} />
-            }
-          />
-        )}
-
-        <DefinitionItem
-          title={i18n.translate('xpack.slo.sloDetails.overview.settings.syncDelay', {
-            defaultMessage: 'Sync delay',
-          })}
-          subtitle={slo.settings.syncDelay}
-        />
-        <DefinitionItem
-          title={i18n.translate('xpack.slo.sloDetails.overview.settings.frequency', {
-            defaultMessage: 'Frequency',
-          })}
-          subtitle={slo.settings.frequency}
-        />
-      </EuiFlexGrid>
+      <EuiInMemoryTable
+        tableCaption="SLO Definition"
+        responsiveBreakpoint={false}
+        items={items}
+        columns={columns}
+        search={search}
+        searchFormat={'text'}
+        pagination={false}
+        sorting={true}
+      />
     </EuiPanel>
   );
-}
-
-function toTimeWindowLabel(timeWindow: SLOWithSummaryResponse['timeWindow']): string {
-  if (rollingTimeWindowTypeSchema.is(timeWindow.type)) {
-    return i18n.translate('xpack.slo.sloDetails.overview.rollingTimeWindow', {
-      defaultMessage: '{duration} rolling',
-      values: {
-        duration: toDurationLabel(timeWindow.duration),
-      },
-    });
-  }
-
-  return i18n.translate('xpack.slo.sloDetails.overview.calendarAlignedTimeWindow', {
-    defaultMessage: '{duration} calendar aligned',
-    values: {
-      duration: toDurationAdverbLabel(timeWindow.duration),
-    },
-  });
 }

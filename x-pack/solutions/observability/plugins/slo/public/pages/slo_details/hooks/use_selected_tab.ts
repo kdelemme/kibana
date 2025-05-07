@@ -11,6 +11,7 @@ import { SloDetailsPathParams } from '../types';
 import {
   ALERTS_TAB_ID,
   HISTORY_TAB_ID,
+  DEFINITION_TAB_ID,
   OVERVIEW_TAB_ID,
   SloTabId,
 } from '../components/slo_details';
@@ -19,7 +20,8 @@ export const useSelectedTab = () => {
   const { tabId } = useParams<SloDetailsPathParams>();
 
   const [selectedTabId, setSelectedTabId] = useState(() => {
-    return tabId && [OVERVIEW_TAB_ID, ALERTS_TAB_ID, HISTORY_TAB_ID].includes(tabId)
+    return tabId &&
+      [OVERVIEW_TAB_ID, DEFINITION_TAB_ID, ALERTS_TAB_ID, HISTORY_TAB_ID].includes(tabId)
       ? (tabId as SloTabId)
       : OVERVIEW_TAB_ID;
   });

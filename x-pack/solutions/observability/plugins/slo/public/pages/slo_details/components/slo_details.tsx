@@ -9,15 +9,14 @@ import { EuiFlexGroup } from '@elastic/eui';
 import { SLOWithSummaryResponse } from '@kbn/slo-schema';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
+import { SloDetailsAlerts } from './alert/slo_detail_alerts';
 import { BurnRatePanel } from './burn_rate_panel/burn_rate_panel';
+import { SloDetailsDefinition } from './definition/slo_details_definition';
 import { EventsChartPanel } from './events_chart_panel/events_chart_panel';
 import { HistoricalDataCharts } from './historical_data_charts';
 import { SloDetailsHistory } from './history/slo_details_history';
-import { SloDetailsDefinition } from './definition/slo_details_definition';
-import { SloDetailsAlerts } from './alert/slo_detail_alerts';
 import { SloHealthCallout } from './slo_health_callout';
 import { SloRemoteCallout } from './slo_remote_callout';
-import { SloDetailsDefinitionTable } from './definition/slo_details_definition_table';
 
 export const TAB_ID_URL_PARAM = 'tabId';
 export const OVERVIEW_TAB_ID = 'overview';
@@ -64,8 +63,7 @@ export function SloDetails({ slo, isAutoRefreshing, selectedTabId }: Props) {
   }
 
   if (selectedTabId === DEFINITION_TAB_ID) {
-    return <SloDetailsDefinitionTable slo={slo} />;
-    // return <SloDetailsDefinition slo={slo} />;
+    return <SloDetailsDefinition slo={slo} />;
   }
 
   if (selectedTabId === ALERTS_TAB_ID) {
