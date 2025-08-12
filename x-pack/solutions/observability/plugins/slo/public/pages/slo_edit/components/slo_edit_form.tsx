@@ -66,13 +66,9 @@ export function SloEditForm({ slo, initialValues, onSave }: Props) {
 }
 
 function SloEditFormSteps({ isEditMode }: { isEditMode: boolean }) {
-  const { getFieldState, getValues, formState, watch } = useFormContext<CreateSLOForm>();
+  const { formState } = useFormContext<CreateSLOForm>();
   const { isIndicatorSectionValid, isObjectiveSectionValid, isDescriptionSectionValid } =
-    useSectionFormValidation({
-      getFieldState,
-      getValues,
-      watch,
-    });
+    useSectionFormValidation();
 
   const { showDescriptionSection, showObjectiveSection } = useShowSections(
     isEditMode,

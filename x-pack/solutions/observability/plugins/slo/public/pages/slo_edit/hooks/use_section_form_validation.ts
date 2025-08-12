@@ -14,16 +14,11 @@ import {
   timesliceMetricPercentileMetric,
 } from '@kbn/slo-schema';
 import { isObject } from 'lodash';
-import { UseFormGetFieldState, UseFormGetValues, UseFormWatch } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { CreateSLOForm } from '../types';
 
-interface Props {
-  getFieldState: UseFormGetFieldState<CreateSLOForm>;
-  getValues: UseFormGetValues<CreateSLOForm>;
-  watch: UseFormWatch<CreateSLOForm>;
-}
-
-export function useSectionFormValidation({ getFieldState, getValues, watch }: Props) {
+export function useSectionFormValidation() {
+  const { getFieldState, getValues, watch } = useFormContext<CreateSLOForm>();
   let isIndicatorSectionValid: boolean = false;
 
   switch (watch('indicator.type')) {
