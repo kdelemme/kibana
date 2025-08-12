@@ -60,12 +60,11 @@ export function DataPreviewChart({
   thresholdMessage,
   ignoreMoreThan100,
 }: DataPreviewChartProps) {
-  const { watch, getFieldState, formState, getValues } = useFormContext<CreateSLOForm>();
+  const { watch, getFieldState, getValues } = useFormContext<CreateSLOForm>();
   const { charts, uiSettings } = useKibana().services;
   const { isIndicatorSectionValid } = useSectionFormValidation({
     getFieldState,
     getValues,
-    formState,
     watch,
   });
 

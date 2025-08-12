@@ -71,7 +71,6 @@ function SloEditFormSteps({ isEditMode }: { isEditMode: boolean }) {
     useSectionFormValidation({
       getFieldState,
       getValues,
-      formState,
       watch,
     });
 

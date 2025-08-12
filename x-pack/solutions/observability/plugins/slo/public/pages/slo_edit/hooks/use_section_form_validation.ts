@@ -13,18 +13,17 @@ import {
   TimesliceMetricIndicator,
   timesliceMetricPercentileMetric,
 } from '@kbn/slo-schema';
-import { FormState, UseFormGetFieldState, UseFormGetValues, UseFormWatch } from 'react-hook-form';
 import { isObject } from 'lodash';
+import { UseFormGetFieldState, UseFormGetValues, UseFormWatch } from 'react-hook-form';
 import { CreateSLOForm } from '../types';
 
 interface Props {
   getFieldState: UseFormGetFieldState<CreateSLOForm>;
   getValues: UseFormGetValues<CreateSLOForm>;
-  formState: FormState<CreateSLOForm>;
   watch: UseFormWatch<CreateSLOForm>;
 }
 
-export function useSectionFormValidation({ getFieldState, getValues, formState, watch }: Props) {
+export function useSectionFormValidation({ getFieldState, getValues, watch }: Props) {
   let isIndicatorSectionValid: boolean = false;
 
   switch (watch('indicator.type')) {
@@ -182,8 +181,8 @@ export function useSectionFormValidation({ getFieldState, getValues, formState, 
             'indicator.params.transactionName',
             'indicator.params.threshold',
           ] as const
-        ).every((field) => !getFieldState(field, formState).invalid && getValues(field) !== '') &&
-        !getFieldState('indicator.params.index', formState).invalid;
+        ).every((field) => !getFieldState(field).invalid && getValues(field) !== '') &&
+        !getFieldState('indicator.params.index').invalid;
       break;
     case 'sli.apm.transactionErrorRate':
       isIndicatorSectionValid =
@@ -194,19 +193,17 @@ export function useSectionFormValidation({ getFieldState, getValues, formState, 
             'indicator.params.transactionType',
             'indicator.params.transactionName',
           ] as const
-        ).every((field) => !getFieldState(field, formState).invalid && getValues(field) !== '') &&
-        (['indicator.params.index'] as const).every(
-          (field) => !getFieldState(field, formState).invalid
-        );
+        ).every((field) => !getFieldState(field).invalid && getValues(field) !== '') &&
+        (['indicator.params.index'] as const).every((field) => !getFieldState(field).invalid);
       break;
     case 'sli.synthetics.availability':
       isIndicatorSectionValid =
         (['indicator.params.monitorIds'] as const).every(
-          (field) => !getFieldState(field, formState).invalid && getValues(field)?.length
+          (field) => !getFieldState(field).invalid && getValues(field)?.length
         ) &&
         (
           ['indicator.params.index', 'indicator.params.tags', 'indicator.params.projects'] as const
-        ).every((field) => !getFieldState(field, formState).invalid);
+        ).every((field) => !getFieldState(field).invalid);
       break;
     default:
       isIndicatorSectionValid = false;
