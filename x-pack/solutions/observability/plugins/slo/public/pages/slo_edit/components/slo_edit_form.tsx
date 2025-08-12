@@ -10,7 +10,7 @@ import { i18n } from '@kbn/i18n';
 import type { CreateSLOInput, GetSLOResponse } from '@kbn/slo-schema';
 import { RecursivePartial } from '@kbn/utility-types';
 import React from 'react';
-import { FormProvider, useForm, useFormContext } from 'react-hook-form';
+import { FormProvider, useForm } from 'react-hook-form';
 import { SLO_EDIT_FORM_DEFAULT_VALUES } from '../constants';
 import {
   transformPartialSLOStateToFormState,
@@ -66,16 +66,10 @@ export function SloEditForm({ slo, initialValues, onSave }: Props) {
 }
 
 function SloEditFormSteps({ isEditMode }: { isEditMode: boolean }) {
-  const { formState } = useFormContext<CreateSLOForm>();
   const { isIndicatorSectionValid, isObjectiveSectionValid, isDescriptionSectionValid } =
     useSectionFormValidation();
+  const { showDescriptionSection, showObjectiveSection } = useShowSections(isEditMode);
 
-  const { showDescriptionSection, showObjectiveSection } = useShowSections(
-    isEditMode,
-    formState.isValidating,
-    isIndicatorSectionValid,
-    isObjectiveSectionValid
-  );
   return (
     <EuiSteps
       steps={[

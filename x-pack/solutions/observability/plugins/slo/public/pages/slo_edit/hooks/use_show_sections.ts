@@ -6,15 +6,17 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useFormContext } from 'react-hook-form';
+import type { CreateSLOForm } from '../types';
+import { useSectionFormValidation } from './use_section_form_validation';
 
-export function useShowSections(
-  isEditMode: boolean,
-  isFormValidating: boolean,
-  isIndicatorSectionValid: boolean,
-  isObjectiveSectionValid: boolean
-) {
+export function useShowSections(isEditMode: boolean) {
+  const { formState } = useFormContext<CreateSLOForm>();
+  const { isIndicatorSectionValid, isObjectiveSectionValid } = useSectionFormValidation();
   const [showDescriptionSection, setShowDescriptionSection] = useState<boolean>(isEditMode);
   const [showObjectiveSection, setShowObjectiveSection] = useState<boolean>(isEditMode);
+
+  const isFormValidating = formState.isValidating;
 
   useEffect(() => {
     if (!isFormValidating && !showObjectiveSection && isIndicatorSectionValid) {
