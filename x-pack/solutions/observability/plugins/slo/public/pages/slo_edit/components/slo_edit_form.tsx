@@ -10,7 +10,7 @@ import { i18n } from '@kbn/i18n';
 import type { CreateSLOInput, GetSLOResponse } from '@kbn/slo-schema';
 import { RecursivePartial } from '@kbn/utility-types';
 import React from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
+import { FormProvider, useForm, useFormContext } from 'react-hook-form';
 import { SLO_EDIT_FORM_DEFAULT_VALUES } from '../constants';
 import {
   transformPartialSLOStateToFormState,
@@ -54,8 +54,19 @@ export function SloEditForm({ slo, initialValues, onSave }: Props) {
       : sloFormValuesFromSloResponse,
     mode: 'all',
   });
-  const { watch, getFieldState, getValues, formState } = form;
 
+  return (
+    <FormProvider {...form}>
+      <EuiFlexGroup direction="column" gutterSize="m" data-test-subj="sloForm">
+        <SloEditFormSteps isEditMode={isEditMode} />
+        <SloEditFormFooter slo={slo} onSave={onSave} />
+      </EuiFlexGroup>
+    </FormProvider>
+  );
+}
+
+function SloEditFormSteps({ isEditMode }: { isEditMode: boolean }) {
+  const { getFieldState, getValues, formState, watch } = useFormContext<CreateSLOForm>();
   const { isIndicatorSectionValid, isObjectiveSectionValid, isDescriptionSectionValid } =
     useSectionFormValidation({
       getFieldState,
@@ -70,39 +81,31 @@ export function SloEditForm({ slo, initialValues, onSave }: Props) {
     isIndicatorSectionValid,
     isObjectiveSectionValid
   );
-
   return (
-    <FormProvider {...form}>
-      <EuiFlexGroup direction="column" gutterSize="m" data-test-subj="sloForm">
-        <EuiSteps
-          steps={[
-            {
-              title: i18n.translate('xpack.slo.sloEdit.definition.title', {
-                defaultMessage: 'Define SLI',
-              }),
-              children: <SloEditFormIndicatorSection isEditMode={isEditMode} />,
-              status: isIndicatorSectionValid ? 'complete' : 'incomplete',
-            },
-            {
-              title: i18n.translate('xpack.slo.sloEdit.objectives.title', {
-                defaultMessage: 'Set objectives',
-              }),
-              children: showObjectiveSection ? <SloEditFormObjectiveSection /> : null,
-              status: showObjectiveSection && isObjectiveSectionValid ? 'complete' : 'incomplete',
-            },
-            {
-              title: i18n.translate('xpack.slo.sloEdit.description.title', {
-                defaultMessage: 'Describe SLO',
-              }),
-              children: showDescriptionSection ? <SloEditFormDescriptionSection /> : null,
-              status:
-                showDescriptionSection && isDescriptionSectionValid ? 'complete' : 'incomplete',
-            },
-          ]}
-        />
-
-        <SloEditFormFooter slo={slo} onSave={onSave} />
-      </EuiFlexGroup>
-    </FormProvider>
+    <EuiSteps
+      steps={[
+        {
+          title: i18n.translate('xpack.slo.sloEdit.definition.title', {
+            defaultMessage: 'Define SLI',
+          }),
+          children: <SloEditFormIndicatorSection isEditMode={isEditMode} />,
+          status: isIndicatorSectionValid ? 'complete' : 'incomplete',
+        },
+        {
+          title: i18n.translate('xpack.slo.sloEdit.objectives.title', {
+            defaultMessage: 'Set objectives',
+          }),
+          children: showObjectiveSection ? <SloEditFormObjectiveSection /> : null,
+          status: showObjectiveSection && isObjectiveSectionValid ? 'complete' : 'incomplete',
+        },
+        {
+          title: i18n.translate('xpack.slo.sloEdit.description.title', {
+            defaultMessage: 'Describe SLO',
+          }),
+          children: showDescriptionSection ? <SloEditFormDescriptionSection /> : null,
+          status: showDescriptionSection && isDescriptionSectionValid ? 'complete' : 'incomplete',
+        },
+      ]}
+    />
   );
 }
