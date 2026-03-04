@@ -26,6 +26,7 @@ export class StoreActionsStep implements DispatcherStep {
 
   public async execute(state: Readonly<DispatcherPipelineState>): Promise<DispatcherStepOutput> {
     const { suppressed = [], throttled = [], dispatch = [] } = state;
+    console.dir(state, { depth: null });
     if (suppressed.length === 0 && throttled.length === 0 && dispatch.length === 0) {
       return { type: 'halt', reason: 'no_actions' };
     }

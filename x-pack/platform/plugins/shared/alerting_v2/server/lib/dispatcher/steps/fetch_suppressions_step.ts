@@ -6,16 +6,16 @@
  */
 
 import { inject, injectable } from 'inversify';
-import type {
-  AlertEpisodeSuppression,
-  DispatcherStep,
-  DispatcherPipelineState,
-  DispatcherStepOutput,
-} from '../types';
+import { queryResponseToRecords } from '../../services/query_service/query_response_to_records';
 import type { QueryServiceContract } from '../../services/query_service/query_service';
 import { QueryServiceInternalToken } from '../../services/query_service/tokens';
-import { queryResponseToRecords } from '../../services/query_service/query_response_to_records';
 import { getAlertEpisodeSuppressionsQuery } from '../queries';
+import type {
+  AlertEpisodeSuppression,
+  DispatcherPipelineState,
+  DispatcherStep,
+  DispatcherStepOutput,
+} from '../types';
 
 @injectable()
 export class FetchSuppressionsStep implements DispatcherStep {
@@ -31,8 +31,14 @@ export class FetchSuppressionsStep implements DispatcherStep {
       return { type: 'continue', data: { suppressions: [] } };
     }
 
+    const query = getAlertEpisodeSuppressionsQuery(episodes);
+
     const result = await this.queryService.executeQuery({
-      query: getAlertEpisodeSuppressionsQuery(episodes).query,
+      query: query.toRequest().query,
+      // @ts-expect-error - the types of the composer query are not compatible with the types of the esql client
+      params: query.toRequest().params,
+      // @ts-expect-error - the types of the composer query are not compatible with the types of the esql client
+      filter: query.toRequest().filter,
     });
 
     const suppressions = queryResponseToRecords<AlertEpisodeSuppression>(result);

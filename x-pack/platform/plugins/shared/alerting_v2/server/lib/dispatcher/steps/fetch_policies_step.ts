@@ -6,15 +6,15 @@
  */
 
 import { inject, injectable } from 'inversify';
-import type {
-  NotificationPolicy,
-  NotificationPolicyId,
-  DispatcherStep,
-  DispatcherPipelineState,
-  DispatcherStepOutput,
-} from '../types';
 import type { NotificationPolicySavedObjectServiceContract } from '../../services/notification_policy_saved_object_service/notification_policy_saved_object_service';
 import { NotificationPolicySavedObjectServiceInternalToken } from '../../services/notification_policy_saved_object_service/tokens';
+import type {
+  DispatcherPipelineState,
+  DispatcherStep,
+  DispatcherStepOutput,
+  NotificationPolicy,
+  NotificationPolicyId,
+} from '../types';
 
 @injectable()
 export class FetchPoliciesStep implements DispatcherStep {
