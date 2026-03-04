@@ -25,9 +25,14 @@ export class StoreActionsStep implements DispatcherStep {
   ) {}
 
   public async execute(state: Readonly<DispatcherPipelineState>): Promise<DispatcherStepOutput> {
-    const { suppressed = [], throttled = [], dispatch = [] } = state;
-    console.dir(state, { depth: null });
-    if (suppressed.length === 0 && throttled.length === 0 && dispatch.length === 0) {
+    const { suppressed = [], throttled = [], dispatch = [], dispatchable = [] } = state;
+
+    if (
+      suppressed.length === 0 &&
+      throttled.length === 0 &&
+      dispatch.length === 0 &&
+      dispatchable.length === 0
+    ) {
       return { type: 'halt', reason: 'no_actions' };
     }
 
@@ -36,6 +41,16 @@ export class StoreActionsStep implements DispatcherStep {
     await this.storageService.bulkIndexDocs<AlertAction>({
       index: ALERT_ACTIONS_DATA_STREAM,
       docs: [
+        ...dispatchable
+          .filter(
+            (episode) =>
+              !suppressed.some((s) => s.episode_id === episode.episode_id) &&
+              !throttled.some((g) => g.episodes.some((e) => e.episode_id === episode.episode_id)) &&
+              !dispatch.some((g) => g.episodes.some((e) => e.episode_id === episode.episode_id))
+          )
+          .map((episode) =>
+            toAction({ episode, actionType: 'fire', now, reason: 'no handler for this episode' })
+          ),
         ...suppressed.map((episode) =>
           toAction({ episode, actionType: 'suppress', now, reason: episode.reason })
         ),
