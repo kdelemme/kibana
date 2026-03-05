@@ -77,21 +77,24 @@ describe('getAlertEpisodeSuppressionsQuery', () => {
     ];
 
     const req = getAlertEpisodeSuppressionsQuery(episodes);
+    const query = req.toRequest().query;
 
-    expect(req.query).toContain('rule_id == "rule-1" AND group_hash == "hash-1"');
-    expect(req.query).toContain('rule_id == "rule-2" AND group_hash == "hash-2"');
+    expect(query).toContain('rule_id IN ("rule-1", "rule-2")');
+    expect(query).toContain('group_hash IN ("hash-1", "hash-2")');
   });
 
   it('queries the alert actions data stream', () => {
     const req = getAlertEpisodeSuppressionsQuery([createAlertEpisode()]);
+    const query = req.toRequest().query;
 
-    expect(req.query).toContain('.alerting-actions');
+    expect(query).toContain('.alerting-actions');
   });
 
   it('filters for suppression action types', () => {
     const req = getAlertEpisodeSuppressionsQuery([createAlertEpisode()]);
+    const query = req.toRequest().query;
 
-    expect(req.query).toContain(
+    expect(query).toContain(
       'action_type IN ("ack", "unack", "deactivate", "activate", "snooze", "unsnooze")'
     );
   });
@@ -103,16 +106,18 @@ describe('getAlertEpisodeSuppressionsQuery', () => {
     ];
 
     const req = getAlertEpisodeSuppressionsQuery(episodes);
+    const query = req.toRequest().query;
 
-    expect(req.query).toContain('expiry > "2026-01-22T08:00:00.000Z"::DATETIME');
+    expect(query).toContain('expiry > "2026-01-22T08:00:00.000Z"::DATETIME');
   });
 
   it('falls back to epoch when all timestamps are invalid', () => {
     const episodes = [createAlertEpisode({ last_event_timestamp: 'not-a-date' })];
 
     const req = getAlertEpisodeSuppressionsQuery(episodes);
+    const query = req.toRequest().query;
 
-    expect(req.query).toContain('expiry > "1970-01-01T00:00:00.000Z"::DATETIME');
+    expect(query).toContain('expiry > "1970-01-01T00:00:00.000Z"::DATETIME');
   });
 
   it('skips invalid timestamps when computing minimum', () => {
@@ -122,23 +127,26 @@ describe('getAlertEpisodeSuppressionsQuery', () => {
     ];
 
     const req = getAlertEpisodeSuppressionsQuery(episodes);
+    const query = req.toRequest().query;
 
-    expect(req.query).toContain('expiry > "2026-01-22T09:00:00.000Z"::DATETIME');
+    expect(query).toContain('expiry > "2026-01-22T09:00:00.000Z"::DATETIME');
   });
 
   it('computes should_suppress with snooze, ack, and deactivate precedence', () => {
     const req = getAlertEpisodeSuppressionsQuery([createAlertEpisode()]);
+    const query = req.toRequest().query;
 
-    expect(req.query).toContain('EVAL should_suppress = CASE(');
-    expect(req.query).toContain('last_snooze_action == "snooze", TRUE');
-    expect(req.query).toContain('last_ack_action == "ack", TRUE');
-    expect(req.query).toContain('last_deactivate_action == "deactivate", TRUE');
+    expect(query).toContain('EVAL should_suppress = CASE(');
+    expect(query).toContain('last_snooze_action == "snooze", TRUE');
+    expect(query).toContain('last_ack_action == "ack", TRUE');
+    expect(query).toContain('last_deactivate_action == "deactivate", TRUE');
   });
 
   it('keeps the expected output columns', () => {
     const req = getAlertEpisodeSuppressionsQuery([createAlertEpisode()]);
+    const query = req.toRequest().query;
 
-    expect(req.query).toContain(
+    expect(query).toContain(
       'KEEP rule_id, group_hash, episode_id, should_suppress, last_ack_action, last_deactivate_action, last_snooze_action'
     );
   });
@@ -147,8 +155,10 @@ describe('getAlertEpisodeSuppressionsQuery', () => {
     const req = getAlertEpisodeSuppressionsQuery([
       createAlertEpisode({ rule_id: 'only-rule', group_hash: 'only-hash' }),
     ]);
+    const query = req.toRequest().query;
 
-    expect(req.query).toContain('rule_id == "only-rule" AND group_hash == "only-hash"');
+    expect(query).toContain('rule_id IN ("only-rule")');
+    expect(query).toContain('group_hash IN ("only-hash")');
   });
 });
 

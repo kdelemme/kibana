@@ -38,18 +38,24 @@ export class StoreActionsStep implements DispatcherStep {
 
     const now = new Date();
 
+    const suppressedEpisodeKeys = new Set(suppressed.map(toEpisodeKey));
+    const throttledEpisodeKeys = new Set(throttled.flatMap((g) => g.episodes.map(toEpisodeKey)));
+    const dispatchedEpisodeKeys = new Set(dispatch.flatMap((g) => g.episodes.map(toEpisodeKey)));
+
     await this.storageService.bulkIndexDocs<AlertAction>({
       index: ALERT_ACTIONS_DATA_STREAM,
       docs: [
         ...dispatchable
-          .filter(
-            (episode) =>
-              !suppressed.some((s) => s.episode_id === episode.episode_id) &&
-              !throttled.some((g) => g.episodes.some((e) => e.episode_id === episode.episode_id)) &&
-              !dispatch.some((g) => g.episodes.some((e) => e.episode_id === episode.episode_id))
-          )
+          .filter((episode) => {
+            const key = toEpisodeKey(episode);
+            return (
+              !suppressedEpisodeKeys.has(key) &&
+              !throttledEpisodeKeys.has(key) &&
+              !dispatchedEpisodeKeys.has(key)
+            );
+          })
           .map((episode) =>
-            toAction({ episode, actionType: 'fire', now, reason: 'no handler for this episode' })
+            toAction({ episode, actionType: 'no_op', now, reason: 'no action taken' })
           ),
         ...suppressed.map((episode) =>
           toAction({ episode, actionType: 'suppress', now, reason: episode.reason })
@@ -99,7 +105,7 @@ function toAction({
   reason,
 }: {
   episode: AlertEpisode;
-  actionType: 'suppress' | 'fire' | 'notified';
+  actionType: 'suppress' | 'fire' | 'notified' | 'no_op';
   now: Date;
   reason?: string;
 }): AlertAction {
@@ -113,4 +119,8 @@ function toAction({
     source: 'internal',
     reason,
   };
+}
+
+function toEpisodeKey(episode: AlertEpisode): string {
+  return `${episode.rule_id}:${episode.group_hash}:${episode.episode_id}`;
 }
