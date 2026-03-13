@@ -18,6 +18,7 @@ import {
 import type { NotificationPolicyResponse } from '@kbn/alerting-v2-schemas';
 import { i18n } from '@kbn/i18n';
 import React, { useState } from 'react';
+import { isSnoozed } from '../../../components/notification_policy/is_snoozed';
 import {
   NotificationPolicySnoozeForm,
   formatSnoozeDate,
@@ -52,13 +53,12 @@ export const NotificationPolicyActionsCell = ({
   const togglePopover = () => setIsPopoverOpen((prev) => !prev);
   const closePopover = () => setIsPopoverOpen(false);
 
-  const isSnoozed =
-    policy.snoozedUntil != null && new Date(policy.snoozedUntil).getTime() > Date.now();
+  const snoozed = isSnoozed(policy.snoozedUntil);
 
   const snoozeItem = policy.enabled
     ? [
         {
-          name: isSnoozed
+          name: snoozed
             ? i18n.translate('xpack.alertingV2.notificationPoliciesList.action.snoozedUntil', {
                 defaultMessage: 'Snoozed until {date}',
                 values: { date: formatSnoozeDate(policy.snoozedUntil!) },
@@ -149,7 +149,7 @@ export const NotificationPolicyActionsCell = ({
       content: (
         <EuiPanel>
           <NotificationPolicySnoozeForm
-            isSnoozed={isSnoozed}
+            isSnoozed={snoozed}
             onApplySnooze={(snoozedUntil) => {
               onSnooze(policy.id, snoozedUntil);
               closePopover();
