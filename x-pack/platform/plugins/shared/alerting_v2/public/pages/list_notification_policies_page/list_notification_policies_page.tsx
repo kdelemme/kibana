@@ -16,7 +16,10 @@ import {
   type CriteriaWithPagination,
   type EuiBasicTableColumn,
 } from '@elastic/eui';
-import type { NotificationPolicyResponse } from '@kbn/alerting-v2-schemas';
+import type {
+  CreateNotificationPolicyData,
+  NotificationPolicyResponse,
+} from '@kbn/alerting-v2-schemas';
 import { CoreStart, useService } from '@kbn/core-di-browser';
 import { i18n } from '@kbn/i18n';
 import { FormattedMessage } from '@kbn/i18n-react';
@@ -26,6 +29,7 @@ import { NotificationPolicyDestinationBadge } from '../../components/notificatio
 import { NotificationPolicySnoozePopover } from '../../components/notification_policy/notification_policy_snooze_popover';
 import { NotificationPolicyStateBadge } from '../../components/notification_policy/notification_policy_state_badge';
 import { paths } from '../../constants';
+import { useCreateNotificationPolicy } from '../../hooks/use_create_notification_policy';
 import { useDeleteNotificationPolicy } from '../../hooks/use_delete_notification_policy';
 import { useDisableNotificationPolicy } from '../../hooks/use_disable_notification_policy';
 import { useEnableNotificationPolicy } from '../../hooks/use_enable_notification_policy';
@@ -44,6 +48,7 @@ export const ListNotificationPoliciesPage = () => {
   const { navigateToUrl } = useService(CoreStart('application'));
   const { basePath } = useService(CoreStart('http'));
 
+  const { mutate: createNotificationPolicy } = useCreateNotificationPolicy();
   const { mutate: deleteNotificationPolicy, isLoading: isDeleting } = useDeleteNotificationPolicy();
   const {
     mutate: enablePolicy,
@@ -72,6 +77,20 @@ export const ListNotificationPoliciesPage = () => {
 
   const navigateToEdit = (id: string) => {
     navigateToUrl(basePath.prepend(paths.notificationPolicyEdit(id)));
+  };
+
+  const clonePolicy = (policy: NotificationPolicyResponse) => {
+    const { name, description, destinations, matcher, group_by, throttle, rule_labels } = policy;
+    const data: CreateNotificationPolicyData = {
+      name: `${name} [clone]`,
+      description,
+      destinations,
+      ...(matcher != null && { matcher }),
+      ...(group_by != null && { group_by }),
+      ...(throttle != null && { throttle }),
+      ...(rule_labels != null && { rule_labels }),
+    };
+    createNotificationPolicy(data);
   };
 
   const { data, isLoading, isError, error } = useFetchNotificationPolicies({
@@ -197,6 +216,7 @@ export const ListNotificationPoliciesPage = () => {
         <NotificationPolicyActionsCell
           policy={policy}
           onEdit={navigateToEdit}
+          onClone={clonePolicy}
           onDelete={setPolicyToDelete}
           onEnable={(id) => enablePolicy(id)}
           onDisable={(id) => disablePolicy(id)}

@@ -26,6 +26,7 @@ import {
 interface NotificationPolicyActionsCellProps {
   policy: NotificationPolicyResponse;
   onEdit: (id: string) => void;
+  onClone: (policy: NotificationPolicyResponse) => void;
   onDelete: (policy: NotificationPolicyResponse) => void;
   onEnable: (id: string) => void;
   onDisable: (id: string) => void;
@@ -37,6 +38,7 @@ interface NotificationPolicyActionsCellProps {
 export const NotificationPolicyActionsCell = ({
   policy,
   onEdit,
+  onClone,
   onDelete,
   onEnable,
   onDisable,
@@ -84,6 +86,16 @@ export const NotificationPolicyActionsCell = ({
           onClick: () => {
             closePopover();
             onEdit(policy.id);
+          },
+        },
+        {
+          name: i18n.translate('xpack.alertingV2.notificationPoliciesList.action.clone', {
+            defaultMessage: 'Clone',
+          }),
+          icon: 'copy',
+          onClick: () => {
+            closePopover();
+            onClone(policy);
           },
         },
         {
