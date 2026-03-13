@@ -13,7 +13,9 @@ import {
   EuiContextMenu,
   EuiFlexGroup,
   EuiFlexItem,
+  EuiIcon,
   EuiPageHeader,
+  EuiPanel,
   EuiPopover,
   EuiSpacer,
   type CriteriaWithPagination,
@@ -26,6 +28,10 @@ import { FormattedMessage } from '@kbn/i18n-react';
 import React, { useState } from 'react';
 import { DeleteNotificationPolicyConfirmModal } from '../../components/notification_policy/delete_confirmation_modal';
 import { NotificationPolicyDestinationBadge } from '../../components/notification_policy/notification_policy_destination_badge';
+import {
+  NotificationPolicySnoozeForm,
+  formatSnoozeDate,
+} from '../../components/notification_policy/notification_policy_snooze_form';
 import { NotificationPolicySnoozePopover } from '../../components/notification_policy/notification_policy_snooze_popover';
 import { NotificationPolicyStateBadge } from '../../components/notification_policy/notification_policy_state_badge';
 import { paths } from '../../constants';
@@ -44,6 +50,8 @@ const NotificationPolicyActionsCell = ({
   onDelete,
   onEnable,
   onDisable,
+  onSnooze,
+  onCancelSnooze,
   isStateLoading,
 }: {
   policy: NotificationPolicyResponse;
@@ -51,6 +59,8 @@ const NotificationPolicyActionsCell = ({
   onDelete: (policy: NotificationPolicyResponse) => void;
   onEnable: (id: string) => void;
   onDisable: (id: string) => void;
+  onSnooze: (id: string, snoozedUntil: string) => void;
+  onCancelSnooze: (id: string) => void;
   isStateLoading: boolean;
 }) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -58,10 +68,34 @@ const NotificationPolicyActionsCell = ({
   const togglePopover = () => setIsPopoverOpen((prev) => !prev);
   const closePopover = () => setIsPopoverOpen(false);
 
+  const isSnoozed =
+    policy.snoozedUntil != null && new Date(policy.snoozedUntil).getTime() > Date.now();
+
+  const snoozeItem = policy.enabled
+    ? [
+        {
+          name: isSnoozed
+            ? i18n.translate(
+                'xpack.alertingV2.notificationPoliciesList.action.snoozedUntil',
+                {
+                  defaultMessage: 'Snoozed until {date}',
+                  values: { date: formatSnoozeDate(policy.snoozedUntil!) },
+                }
+              )
+            : i18n.translate('xpack.alertingV2.notificationPoliciesList.action.snooze', {
+                defaultMessage: 'Snooze',
+              }),
+          icon: 'bellSlash',
+          panel: 1,
+        },
+      ]
+    : [];
+
   const panels = [
     {
       id: 0,
       items: [
+        ...snoozeItem,
         {
           name: i18n.translate('xpack.alertingV2.notificationPoliciesList.action.edit', {
             defaultMessage: 'Edit',
@@ -102,6 +136,38 @@ const NotificationPolicyActionsCell = ({
           },
         },
       ],
+    },
+    {
+      id: 1,
+      title: (
+        <EuiFlexGroup alignItems="center" gutterSize="s">
+          <EuiFlexItem grow={false}>
+            <EuiIcon type="bellSlash" />
+          </EuiFlexItem>
+          <EuiFlexItem grow={false}>
+            {i18n.translate(
+              'xpack.alertingV2.notificationPoliciesList.action.snoozeNotifications',
+              { defaultMessage: 'Snooze notifications' }
+            )}
+          </EuiFlexItem>
+        </EuiFlexGroup>
+      ),
+      width: 320,
+      content: (
+        <EuiPanel>
+          <NotificationPolicySnoozeForm
+            isSnoozed={isSnoozed}
+            onApplySnooze={(snoozedUntil) => {
+              onSnooze(policy.id, snoozedUntil);
+              closePopover();
+            }}
+            onCancelSnooze={() => {
+              onCancelSnooze(policy.id);
+              closePopover();
+            }}
+          />
+        </EuiPanel>
+      ),
     },
   ];
 
@@ -315,6 +381,8 @@ export const ListNotificationPoliciesPage = () => {
           onDelete={setPolicyToDelete}
           onEnable={(id) => enablePolicy(id)}
           onDisable={(id) => disablePolicy(id)}
+          onSnooze={(id, until) => snoozePolicy({ id, snoozedUntil: until })}
+          onCancelSnooze={(id) => unsnoozePolicy(id)}
           isStateLoading={
             (isEnabling && enableVariables === policy.id) ||
             (isDisabling && disableVariables === policy.id)
