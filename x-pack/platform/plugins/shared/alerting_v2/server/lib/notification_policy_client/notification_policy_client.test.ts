@@ -652,7 +652,6 @@ describe('NotificationPolicyClient', () => {
         'policy-id-enable',
         {
           enabled: true,
-          snoozedUntil: undefined,
           updatedBy: 'elastic_profile_uid',
           updatedAt: '2025-01-01T00:00:00.000Z',
         },
@@ -724,7 +723,6 @@ describe('NotificationPolicyClient', () => {
         'policy-id-disable',
         {
           enabled: false,
-          snoozedUntil: undefined,
           updatedBy: 'elastic_profile_uid',
           updatedAt: '2025-01-01T00:00:00.000Z',
         },
@@ -845,7 +843,7 @@ describe('NotificationPolicyClient', () => {
           id: 'policy-1',
           attributes: {
             enabled: true,
-            snoozedUntil: undefined,
+            snoozedUntil: null,
             updatedBy: 'elastic_profile_uid',
             updatedAt: '2025-01-01T00:00:00.000Z',
           },
@@ -855,7 +853,7 @@ describe('NotificationPolicyClient', () => {
           id: 'policy-2',
           attributes: {
             enabled: false,
-            snoozedUntil: undefined,
+            snoozedUntil: null,
             updatedBy: 'elastic_profile_uid',
             updatedAt: '2025-01-01T00:00:00.000Z',
           },

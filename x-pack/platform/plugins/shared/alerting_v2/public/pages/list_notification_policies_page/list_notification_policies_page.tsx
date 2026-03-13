@@ -223,6 +223,27 @@ export const ListNotificationPoliciesPage = () => {
         />
       ),
     },
+
+    {
+      field: 'destinations',
+      name: (
+        <FormattedMessage
+          id="xpack.alertingV2.notificationPoliciesList.column.destinations"
+          defaultMessage="Destinations"
+        />
+      ),
+      render: (destinations: NotificationPolicyResponse['destinations']) => (
+        <EuiFlexGroup responsive={false} gutterSize="s" wrap>
+          {destinations?.map((destination) => (
+            <EuiFlexItem key={destination.id} grow={false}>
+              <NotificationPolicyDestinationBadge destination={destination} />
+            </EuiFlexItem>
+          ))}
+          {destinations?.length === 0 ? '-' : null}
+        </EuiFlexGroup>
+      ),
+    },
+
     {
       field: 'enabled',
       name: (
@@ -269,61 +290,6 @@ export const ListNotificationPoliciesPage = () => {
       },
     },
     {
-      field: 'destinations',
-      name: (
-        <FormattedMessage
-          id="xpack.alertingV2.notificationPoliciesList.column.destinations"
-          defaultMessage="Destinations"
-        />
-      ),
-      render: (destinations: NotificationPolicyResponse['destinations']) => (
-        <EuiFlexGroup responsive={false} gutterSize="s" wrap>
-          {destinations?.map((destination) => (
-            <EuiFlexItem key={destination.id} grow={false}>
-              <NotificationPolicyDestinationBadge destination={destination} />
-            </EuiFlexItem>
-          ))}
-          {destinations?.length === 0 ? '-' : null}
-        </EuiFlexGroup>
-      ),
-    },
-    {
-      field: 'matcher',
-      name: (
-        <FormattedMessage
-          id="xpack.alertingV2.notificationPoliciesList.column.matcher"
-          defaultMessage="Matcher"
-        />
-      ),
-      render: (matcher: NotificationPolicyResponse['matcher']) =>
-        matcher ? (
-          <EuiCodeBlock paddingSize="s" fontSize="s">
-            {matcher}
-          </EuiCodeBlock>
-        ) : (
-          '-'
-        ),
-    },
-    {
-      field: 'group_by',
-      name: (
-        <FormattedMessage
-          id="xpack.alertingV2.notificationPoliciesList.column.groupBy"
-          defaultMessage="Group by"
-        />
-      ),
-      render: (groupBy: string[]) => (
-        <EuiFlexGroup responsive={false} gutterSize="s" wrap>
-          {groupBy?.map((group) => (
-            <EuiFlexItem key={group} grow={false}>
-              <EuiBadge color="hollow">{group}</EuiBadge>
-            </EuiFlexItem>
-          ))}
-          {groupBy?.length === 0 ? '-' : null}
-        </EuiFlexGroup>
-      ),
-    },
-    {
       field: 'updatedAt',
       name: (
         <FormattedMessage
@@ -331,7 +297,14 @@ export const ListNotificationPoliciesPage = () => {
           defaultMessage="Last update"
         />
       ),
-      render: (updatedAt: string) => new Date(updatedAt).toLocaleString(),
+      render: (updatedAt: string) =>
+        new Date(updatedAt).toLocaleString(undefined, {
+          month: 'short',
+          year: 'numeric',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+        }),
     },
     {
       name: i18n.translate('xpack.alertingV2.notificationPoliciesList.column.actions', {
