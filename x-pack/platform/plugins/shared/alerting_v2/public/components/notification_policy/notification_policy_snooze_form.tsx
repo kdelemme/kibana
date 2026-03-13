@@ -164,9 +164,9 @@ export const NotificationPolicySnoozeForm = ({
         })}
       </EuiText>
       <EuiSpacer size="xs" />
-      <EuiFlexGroup gutterSize="s" responsive={false} wrap>
+      <EuiFlexGroup gutterSize="s" responsive={false} justifyContent="spaceBetween" wrap>
         {COMMON_SNOOZE_TIMES.map((preset) => (
-          <EuiFlexItem key={preset.label} grow={false}>
+          <EuiFlexItem key={preset.label} grow={false} style={{ width: '45%' }}>
             <EuiLink onClick={() => applySnooze(preset.value, preset.unit)}>{preset.label}</EuiLink>
           </EuiFlexItem>
         ))}

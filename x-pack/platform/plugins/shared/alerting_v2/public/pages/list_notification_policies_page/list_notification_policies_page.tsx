@@ -18,6 +18,7 @@ import {
   EuiPanel,
   EuiPopover,
   EuiSpacer,
+  useEuiTheme,
   type CriteriaWithPagination,
   type EuiBasicTableColumn,
 } from '@elastic/eui';
@@ -63,6 +64,7 @@ const NotificationPolicyActionsCell = ({
   onCancelSnooze: (id: string) => void;
   isStateLoading: boolean;
 }) => {
+  const { euiTheme } = useEuiTheme();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   const togglePopover = () => setIsPopoverOpen((prev) => !prev);
@@ -75,13 +77,10 @@ const NotificationPolicyActionsCell = ({
     ? [
         {
           name: isSnoozed
-            ? i18n.translate(
-                'xpack.alertingV2.notificationPoliciesList.action.snoozedUntil',
-                {
-                  defaultMessage: 'Snoozed until {date}',
-                  values: { date: formatSnoozeDate(policy.snoozedUntil!) },
-                }
-              )
+            ? i18n.translate('xpack.alertingV2.notificationPoliciesList.action.snoozedUntil', {
+                defaultMessage: 'Snoozed until {date}',
+                values: { date: formatSnoozeDate(policy.snoozedUntil!) },
+              })
             : i18n.translate('xpack.alertingV2.notificationPoliciesList.action.snooze', {
                 defaultMessage: 'Snooze',
               }),
@@ -96,6 +95,7 @@ const NotificationPolicyActionsCell = ({
       id: 0,
       items: [
         ...snoozeItem,
+        ...(policy.enabled ? [{ isSeparator: true as const }] : []),
         {
           name: i18n.translate('xpack.alertingV2.notificationPoliciesList.action.edit', {
             defaultMessage: 'Edit',
@@ -130,6 +130,7 @@ const NotificationPolicyActionsCell = ({
             defaultMessage: 'Delete',
           }),
           icon: 'trash',
+          style: { color: euiTheme.colors.textDanger },
           onClick: () => {
             closePopover();
             onDelete(policy);
@@ -208,7 +209,7 @@ const NotificationPolicyActionsCell = ({
           isOpen={isPopoverOpen}
           closePopover={closePopover}
           anchorPosition="downRight"
-          panelPaddingSize="none"
+          panelPaddingSize="s"
         >
           <EuiContextMenu initialPanelId={0} panels={panels} size="s" />
         </EuiPopover>
