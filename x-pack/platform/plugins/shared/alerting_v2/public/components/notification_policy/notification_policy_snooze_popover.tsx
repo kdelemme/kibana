@@ -46,7 +46,7 @@ export const NotificationPolicySnoozePopover = ({
       <EuiButton
         iconType="bellSlash"
         color="accent"
-        size="s"
+        size="xs"
         onClick={togglePopover}
         isLoading={isLoading}
       >
@@ -70,6 +70,7 @@ export const NotificationPolicySnoozePopover = ({
       isOpen={isPopoverOpen}
       closePopover={closePopover}
       anchorPosition="downLeft"
+      panelPaddingSize="m"
       panelStyle={{ width: 320 }}
     >
       <NotificationPolicySnoozeForm

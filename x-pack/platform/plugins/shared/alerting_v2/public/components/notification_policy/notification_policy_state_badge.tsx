@@ -5,7 +5,15 @@
  * 2.0.
  */
 
-import { EuiBadge, EuiButtonEmpty, EuiPopover } from '@elastic/eui';
+import {
+  EuiBadge,
+  EuiButtonEmpty,
+  EuiFlexGroup,
+  EuiFlexItem,
+  EuiIcon,
+  EuiLoadingSpinner,
+  EuiPopover,
+} from '@elastic/eui';
 import type { NotificationPolicyResponse } from '@kbn/alerting-v2-schemas';
 import { i18n } from '@kbn/i18n';
 import React, { useState } from 'react';
@@ -28,31 +36,39 @@ export const NotificationPolicyStateBadge = ({
   const togglePopover = () => setIsPopoverOpen((prev) => !prev);
   const closePopover = () => setIsPopoverOpen(false);
 
-  const badge = policy.enabled ? (
-    <EuiBadge
-      color="success"
-      onClick={togglePopover}
-      onClickAriaLabel={i18n.translate(
-        'xpack.alertingV2.notificationPolicy.stateBadge.enabledAriaLabel',
-        { defaultMessage: 'Enabled. Click to change state.' }
-      )}
-    >
-      {i18n.translate('xpack.alertingV2.notificationPolicy.stateBadge.enabled', {
-        defaultMessage: 'Enabled',
-      })}
-    </EuiBadge>
+  const trailingIcon = isLoading ? (
+    <EuiLoadingSpinner size="s" />
   ) : (
+    <EuiIcon type="arrowDown" size="s" />
+  );
+
+  const badge = (
     <EuiBadge
-      color="default"
+      color={policy.enabled ? 'success' : 'default'}
       onClick={togglePopover}
       onClickAriaLabel={i18n.translate(
-        'xpack.alertingV2.notificationPolicy.stateBadge.disabledAriaLabel',
-        { defaultMessage: 'Disabled. Click to change state.' }
+        policy.enabled
+          ? 'xpack.alertingV2.notificationPolicy.stateBadge.enabledAriaLabel'
+          : 'xpack.alertingV2.notificationPolicy.stateBadge.disabledAriaLabel',
+        {
+          defaultMessage: policy.enabled
+            ? 'Enabled. Click to change state.'
+            : 'Disabled. Click to change state.',
+        }
       )}
     >
-      {i18n.translate('xpack.alertingV2.notificationPolicy.stateBadge.disabled', {
-        defaultMessage: 'Disabled',
-      })}
+      <EuiFlexGroup gutterSize="xs" alignItems="center" responsive={false}>
+        <EuiFlexItem grow={false}>
+          {policy.enabled
+            ? i18n.translate('xpack.alertingV2.notificationPolicy.stateBadge.enabled', {
+                defaultMessage: 'Enabled',
+              })
+            : i18n.translate('xpack.alertingV2.notificationPolicy.stateBadge.disabled', {
+                defaultMessage: 'Disabled',
+              })}
+        </EuiFlexItem>
+        <EuiFlexItem grow={false}>{trailingIcon}</EuiFlexItem>
+      </EuiFlexGroup>
     </EuiBadge>
   );
 

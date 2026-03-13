@@ -126,7 +126,7 @@ export const NotificationPolicySnoozeForm = ({
         </h4>
       </EuiTitle>
       <EuiSpacer size="s" />
-      <EuiFlexGroup gutterSize="s" responsive={false} alignItems="center">
+      <EuiFlexGroup gutterSize="xs" responsive={false} alignItems="center">
         <EuiFlexItem grow={false} style={{ width: 80 }}>
           <EuiFieldNumber
             min={1}
@@ -175,11 +175,11 @@ export const NotificationPolicySnoozeForm = ({
       {isSnoozed && (
         <>
           <EuiHorizontalRule margin="s" />
-          <EuiButtonEmpty size="s" color="danger" onClick={onCancelSnooze}>
+          <EuiButton size="s" color="danger" onClick={onCancelSnooze} fullWidth>
             {i18n.translate('xpack.alertingV2.notificationPolicy.snooze.cancel', {
               defaultMessage: 'Cancel snooze',
             })}
-          </EuiButtonEmpty>
+          </EuiButton>
         </>
       )}
     </>
