@@ -8,17 +8,11 @@
 import {
   EuiBasicTable,
   EuiButton,
-  EuiButtonIcon,
   EuiCallOut,
-  EuiContextMenu,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiIcon,
   EuiPageHeader,
-  EuiPanel,
-  EuiPopover,
   EuiSpacer,
-  useEuiTheme,
   type CriteriaWithPagination,
   type EuiBasicTableColumn,
 } from '@elastic/eui';
@@ -29,10 +23,6 @@ import { FormattedMessage } from '@kbn/i18n-react';
 import React, { useState } from 'react';
 import { DeleteNotificationPolicyConfirmModal } from '../../components/notification_policy/delete_confirmation_modal';
 import { NotificationPolicyDestinationBadge } from '../../components/notification_policy/notification_policy_destination_badge';
-import {
-  NotificationPolicySnoozeForm,
-  formatSnoozeDate,
-} from '../../components/notification_policy/notification_policy_snooze_form';
 import { NotificationPolicySnoozePopover } from '../../components/notification_policy/notification_policy_snooze_popover';
 import { NotificationPolicyStateBadge } from '../../components/notification_policy/notification_policy_state_badge';
 import { paths } from '../../constants';
@@ -42,181 +32,9 @@ import { useEnableNotificationPolicy } from '../../hooks/use_enable_notification
 import { useFetchNotificationPolicies } from '../../hooks/use_fetch_notification_policies';
 import { useSnoozeNotificationPolicy } from '../../hooks/use_snooze_notification_policy';
 import { useUnsnoozeNotificationPolicy } from '../../hooks/use_unsnooze_notification_policy';
+import { NotificationPolicyActionsCell } from './components/notification_policy_actions_cell';
 
 const DEFAULT_PER_PAGE = 20;
-
-const NotificationPolicyActionsCell = ({
-  policy,
-  onEdit,
-  onDelete,
-  onEnable,
-  onDisable,
-  onSnooze,
-  onCancelSnooze,
-  isStateLoading,
-}: {
-  policy: NotificationPolicyResponse;
-  onEdit: (id: string) => void;
-  onDelete: (policy: NotificationPolicyResponse) => void;
-  onEnable: (id: string) => void;
-  onDisable: (id: string) => void;
-  onSnooze: (id: string, snoozedUntil: string) => void;
-  onCancelSnooze: (id: string) => void;
-  isStateLoading: boolean;
-}) => {
-  const { euiTheme } = useEuiTheme();
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-
-  const togglePopover = () => setIsPopoverOpen((prev) => !prev);
-  const closePopover = () => setIsPopoverOpen(false);
-
-  const isSnoozed =
-    policy.snoozedUntil != null && new Date(policy.snoozedUntil).getTime() > Date.now();
-
-  const snoozeItem = policy.enabled
-    ? [
-        {
-          name: isSnoozed
-            ? i18n.translate('xpack.alertingV2.notificationPoliciesList.action.snoozedUntil', {
-                defaultMessage: 'Snoozed until {date}',
-                values: { date: formatSnoozeDate(policy.snoozedUntil!) },
-              })
-            : i18n.translate('xpack.alertingV2.notificationPoliciesList.action.snooze', {
-                defaultMessage: 'Snooze',
-              }),
-          icon: 'bellSlash',
-          panel: 1,
-        },
-      ]
-    : [];
-
-  const panels = [
-    {
-      id: 0,
-      items: [
-        ...snoozeItem,
-        ...(policy.enabled ? [{ isSeparator: true as const }] : []),
-        {
-          name: i18n.translate('xpack.alertingV2.notificationPoliciesList.action.edit', {
-            defaultMessage: 'Edit',
-          }),
-          icon: 'pencil',
-          onClick: () => {
-            closePopover();
-            onEdit(policy.id);
-          },
-        },
-        {
-          name: policy.enabled
-            ? i18n.translate('xpack.alertingV2.notificationPoliciesList.action.disable', {
-                defaultMessage: 'Disable',
-              })
-            : i18n.translate('xpack.alertingV2.notificationPoliciesList.action.enable', {
-                defaultMessage: 'Enable',
-              }),
-          icon: policy.enabled ? 'stop' : 'play',
-          disabled: isStateLoading,
-          onClick: () => {
-            closePopover();
-            if (policy.enabled) {
-              onDisable(policy.id);
-            } else {
-              onEnable(policy.id);
-            }
-          },
-        },
-        {
-          name: i18n.translate('xpack.alertingV2.notificationPoliciesList.action.delete', {
-            defaultMessage: 'Delete',
-          }),
-          icon: 'trash',
-          style: { color: euiTheme.colors.textDanger },
-          onClick: () => {
-            closePopover();
-            onDelete(policy);
-          },
-        },
-      ],
-    },
-    {
-      id: 1,
-      title: (
-        <EuiFlexGroup alignItems="center" gutterSize="s">
-          <EuiFlexItem grow={false}>
-            <EuiIcon type="bellSlash" />
-          </EuiFlexItem>
-          <EuiFlexItem grow={false}>
-            {i18n.translate(
-              'xpack.alertingV2.notificationPoliciesList.action.snoozeNotifications',
-              { defaultMessage: 'Snooze notifications' }
-            )}
-          </EuiFlexItem>
-        </EuiFlexGroup>
-      ),
-      width: 320,
-      content: (
-        <EuiPanel>
-          <NotificationPolicySnoozeForm
-            isSnoozed={isSnoozed}
-            onApplySnooze={(snoozedUntil) => {
-              onSnooze(policy.id, snoozedUntil);
-              closePopover();
-            }}
-            onCancelSnooze={() => {
-              onCancelSnooze(policy.id);
-              closePopover();
-            }}
-          />
-        </EuiPanel>
-      ),
-    },
-  ];
-
-  return (
-    <EuiFlexGroup gutterSize="xs" responsive={false} alignItems="center">
-      <EuiFlexItem grow={false}>
-        <EuiButtonIcon
-          iconType="pencil"
-          aria-label={i18n.translate(
-            'xpack.alertingV2.notificationPoliciesList.action.edit.description',
-            { defaultMessage: 'Edit this notification policy' }
-          )}
-          onClick={() => onEdit(policy.id)}
-        />
-      </EuiFlexItem>
-      <EuiFlexItem grow={false}>
-        <EuiButtonIcon
-          iconType="trash"
-          color="danger"
-          aria-label={i18n.translate(
-            'xpack.alertingV2.notificationPoliciesList.action.delete.description',
-            { defaultMessage: 'Delete this notification policy' }
-          )}
-          onClick={() => onDelete(policy)}
-        />
-      </EuiFlexItem>
-      <EuiFlexItem grow={false}>
-        <EuiPopover
-          button={
-            <EuiButtonIcon
-              iconType="boxesHorizontal"
-              aria-label={i18n.translate('xpack.alertingV2.notificationPoliciesList.action.more', {
-                defaultMessage: 'More actions',
-              })}
-              onClick={togglePopover}
-            />
-          }
-          isOpen={isPopoverOpen}
-          closePopover={closePopover}
-          anchorPosition="downRight"
-          panelPaddingSize="s"
-        >
-          <EuiContextMenu initialPanelId={0} panels={panels} size="s" />
-        </EuiPopover>
-      </EuiFlexItem>
-    </EuiFlexGroup>
-  );
-};
 
 export const ListNotificationPoliciesPage = () => {
   const [page, setPage] = useState(0);
