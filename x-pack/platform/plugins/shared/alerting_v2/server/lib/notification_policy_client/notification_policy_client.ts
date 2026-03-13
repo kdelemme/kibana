@@ -46,6 +46,8 @@ const resolveActionAttrs = (
       return { enabled: false, snoozedUntil: null };
     case 'snooze':
       return { snoozedUntil: action.snoozed_until };
+    case 'unsnooze':
+      return { snoozedUntil: null };
   }
 };
 
