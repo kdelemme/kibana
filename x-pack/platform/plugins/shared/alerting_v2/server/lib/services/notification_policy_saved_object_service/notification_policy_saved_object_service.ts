@@ -226,8 +226,8 @@ export class NotificationPolicySavedObjectService
       type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
       page,
       perPage,
-      sortField: 'updatedAt',
-      sortOrder: 'desc',
+      sortField: 'name',
+      sortOrder: 'asc',
     });
   }
 }
