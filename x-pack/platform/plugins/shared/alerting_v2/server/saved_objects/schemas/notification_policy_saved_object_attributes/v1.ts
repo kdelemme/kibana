@@ -30,7 +30,6 @@ export const notificationPolicySavedObjectAttributesSchema = schema.object({
     })
   ),
   snoozedUntil: schema.maybe(schema.nullable(schema.string())),
-  rule_labels: schema.maybe(schema.arrayOf(schema.string())),
   auth: schema.object({
     apiKey: schema.maybe(schema.string()),
     owner: schema.string(),

@@ -18,7 +18,6 @@ export interface NotificationPolicyResponse {
   group_by?: string[];
   throttle?: { interval: string };
   snoozedUntil?: string;
-  rule_labels?: string[];
   auth: {
     owner: string;
     createdByUser: boolean;
