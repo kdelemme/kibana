@@ -162,10 +162,26 @@ export const ListNotificationPoliciesPage = () => {
   const { basePath } = useService(CoreStart('http'));
 
   const { mutate: deleteNotificationPolicy, isLoading: isDeleting } = useDeleteNotificationPolicy();
-  const { mutate: enablePolicy, isLoading: isEnabling } = useEnableNotificationPolicy();
-  const { mutate: disablePolicy, isLoading: isDisabling } = useDisableNotificationPolicy();
-  const { mutate: snoozePolicy, isLoading: isSnoozing } = useSnoozeNotificationPolicy();
-  const { mutate: unsnoozePolicy, isLoading: isUnsnoozing } = useUnsnoozeNotificationPolicy();
+  const {
+    mutate: enablePolicy,
+    isLoading: isEnabling,
+    variables: enableVariables,
+  } = useEnableNotificationPolicy();
+  const {
+    mutate: disablePolicy,
+    isLoading: isDisabling,
+    variables: disableVariables,
+  } = useDisableNotificationPolicy();
+  const {
+    mutate: snoozePolicy,
+    isLoading: isSnoozing,
+    variables: snoozeVariables,
+  } = useSnoozeNotificationPolicy();
+  const {
+    mutate: unsnoozePolicy,
+    isLoading: isUnsnoozing,
+    variables: unsnoozeVariables,
+  } = useUnsnoozeNotificationPolicy();
 
   const navigateToCreate = () => {
     navigateToUrl(basePath.prepend(paths.notificationPolicyCreate));
@@ -220,7 +236,10 @@ export const ListNotificationPoliciesPage = () => {
           policy={policy}
           onEnable={(id) => enablePolicy(id)}
           onDisable={(id) => disablePolicy(id)}
-          isLoading={isEnabling || isDisabling}
+          isLoading={
+            (isEnabling && enableVariables === policy.id) ||
+            (isDisabling && disableVariables === policy.id)
+          }
         />
       ),
     },
@@ -241,7 +260,10 @@ export const ListNotificationPoliciesPage = () => {
             policy={policy}
             onSnooze={(id, until) => snoozePolicy({ id, snoozedUntil: until })}
             onCancelSnooze={(id) => unsnoozePolicy(id)}
-            isLoading={isSnoozing || isUnsnoozing}
+            isLoading={
+              (isSnoozing && snoozeVariables?.id === policy.id) ||
+              (isUnsnoozing && unsnoozeVariables === policy.id)
+            }
           />
         );
       },
@@ -322,7 +344,10 @@ export const ListNotificationPoliciesPage = () => {
           onDelete={setPolicyToDelete}
           onEnable={(id) => enablePolicy(id)}
           onDisable={(id) => disablePolicy(id)}
-          isStateLoading={isEnabling || isDisabling}
+          isStateLoading={
+            (isEnabling && enableVariables === policy.id) ||
+            (isDisabling && disableVariables === policy.id)
+          }
         />
       ),
     },
