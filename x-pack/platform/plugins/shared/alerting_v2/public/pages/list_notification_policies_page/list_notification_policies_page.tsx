@@ -6,12 +6,10 @@
  */
 
 import {
-  EuiBadge,
   EuiBasicTable,
   EuiButton,
   EuiButtonIcon,
   EuiCallOut,
-  EuiCodeBlock,
   EuiContextMenu,
   EuiFlexGroup,
   EuiFlexItem,
