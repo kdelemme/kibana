@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { NotificationPolicyResponse } from '@kbn/alerting-v2-schemas';
 import { I18nProvider } from '@kbn/i18n-react';
@@ -49,6 +49,13 @@ jest.mock('../../hooks/use_update_notification_policy', () => ({
 const mockUseFetchNotificationPolicy = jest.fn();
 jest.mock('../../hooks/use_fetch_notification_policy', () => ({
   useFetchNotificationPolicy: (...args: unknown[]) => mockUseFetchNotificationPolicy(...args),
+}));
+
+jest.mock('../../hooks/use_fetch_workflows', () => ({
+  useFetchWorkflows: () => ({
+    data: { results: [{ id: 'workflow-1', name: 'Workflow 1' }, { id: 'workflow-2', name: 'Workflow 2' }] },
+    isLoading: false,
+  }),
 }));
 
 const mockUseParams = jest.fn();
@@ -123,6 +130,11 @@ describe('NotificationPolicyFormPage', () => {
     it('submits create payload on save', async () => {
       const user = userEvent.setup();
       renderPage();
+
+      // Select a workflow destination
+      const destinationsCombobox = within(screen.getByTestId('destinationsInput'));
+      await user.click(destinationsCombobox.getByTestId('comboBoxSearchInput'));
+      await user.click(await screen.findByText('Workflow 1'));
 
       await user.type(screen.getByTestId(TEST_SUBJ.nameInput), 'Policy from test');
       await user.tab();
