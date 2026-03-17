@@ -43,17 +43,19 @@ export function OverviewItem({
           css={{ cursor: 'pointer' }}
         />
       </EuiToolTip>
-      <EuiToolTip content={subtitleTooltip}>
-        <EuiText
-          tabIndex={-1}
-          size="xs"
-          color="subdued"
-          onClick={() => onSubtitleClick?.()}
-          css={{ cursor: 'pointer' }}
-        >
-          {subtitle}
-        </EuiText>
-      </EuiToolTip>
+      {subtitle && (
+        <EuiToolTip content={subtitleTooltip}>
+          <EuiText
+            tabIndex={-1}
+            size="xs"
+            color="subdued"
+            onClick={() => onSubtitleClick?.()}
+            css={{ cursor: 'pointer' }}
+          >
+            {subtitle}
+          </EuiText>
+        </EuiToolTip>
+      )}
     </EuiFlexItem>
   );
 }
