@@ -370,9 +370,6 @@
         },
         "type": "text"
       },
-      "rule_labels": {
-        "type": "keyword"
-      },
       "snoozedUntil": {
         "type": "date"
       },
