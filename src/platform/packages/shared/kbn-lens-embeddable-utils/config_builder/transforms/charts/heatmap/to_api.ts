@@ -7,17 +7,17 @@
  * License v3.0 only", or the "Server Side Public License, v 1".
  */
 import {
-  HEATMAP_NAME,
   type FormBasedLayer,
   type HeatmapVisualizationState,
   type TextBasedLayer,
 } from '@kbn/lens-common';
 import type { DataViewSpec } from '@kbn/data-views-plugin/common';
 import type { Reference } from '@kbn/content-management-utils';
+import { DEFAULT_LAYER_ID } from '../../../constants';
 import { getDatasourceLayers, getSharedChartLensStateToAPI, stripUndefined } from '../utils';
 import type { HeatmapState } from '../../../schema';
 import { fromColorByValueLensStateToAPI } from '../../coloring';
-import { DEFAULT_LAYER_ID, type LensAttributes } from '../../../types';
+import { type LensAttributes } from '../../../types';
 import {
   buildDatasetStateESQL,
   buildDatasetStateNoESQL,
@@ -46,7 +46,7 @@ function getOrientationFromRotation(rotation: number): 'angled' | 'vertical' | '
 
 function getGridConfigProps(
   gridConfig: HeatmapVisualizationState['gridConfig']
-): HeatmapState['axes'] {
+): HeatmapState['axis'] {
   return {
     x: {
       labels: {
@@ -59,6 +59,7 @@ function getGridConfigProps(
         value: gridConfig.xTitle,
         visible: gridConfig.isXAxisTitleVisible,
       },
+      ...(gridConfig.xSortPredicate ? { sort: gridConfig.xSortPredicate } : {}),
     },
     y: {
       labels: { visible: gridConfig.isYAxisLabelVisible },
@@ -66,6 +67,7 @@ function getGridConfigProps(
         value: gridConfig.yTitle,
         visible: gridConfig.isYAxisTitleVisible,
       },
+      ...(gridConfig.ySortPredicate ? { sort: gridConfig.ySortPredicate } : {}),
     },
   };
 }
@@ -85,9 +87,9 @@ function reverseBuildVisualizationState(
 
   const sharedProps = {
     ...generateApiLayer(layer),
-    type: HEATMAP_NAME,
+    type: 'heat_map' as const,
     legend: getLegendProps(visualization.legend),
-    axes: getGridConfigProps(visualization.gridConfig),
+    axis: getGridConfigProps(visualization.gridConfig),
     cells: {
       labels: { visible: visualization.gridConfig.isCellLabelVisible },
     },
@@ -113,8 +115,8 @@ function reverseBuildVisualizationState(
         ...getValueApiColumn(valueAccessor, layer),
         ...paletteProps,
       },
-      xAxis: getValueApiColumn(visualization.xAccessor, layer),
-      ...(visualization.yAccessor && { yAxis: getValueApiColumn(visualization.yAccessor, layer) }),
+      x: getValueApiColumn(visualization.xAccessor, layer),
+      ...(visualization.yAccessor && { y: getValueApiColumn(visualization.yAccessor, layer) }),
     } satisfies HeatmapStateESQL;
   }
 
@@ -133,8 +135,8 @@ function reverseBuildVisualizationState(
       ...operationFromColumn(valueAccessor, layer),
       ...paletteProps,
     } as LensApiAllMetricOperations,
-    xAxis: operationFromColumn(visualization.xAccessor!, layer),
-    yAxis: visualization.yAccessor && operationFromColumn(visualization.yAccessor, layer),
+    x: operationFromColumn(visualization.xAccessor!, layer),
+    y: visualization.yAccessor && operationFromColumn(visualization.yAccessor, layer),
   } as HeatmapStateNoESQL;
 }
 

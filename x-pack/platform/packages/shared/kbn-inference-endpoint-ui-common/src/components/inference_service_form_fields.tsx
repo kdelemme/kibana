@@ -7,6 +7,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { css } from '@emotion/react';
+import type { InferenceTaskType } from '@elastic/elasticsearch/lib/api/types';
 import type { SolutionView } from '@kbn/spaces-plugin/common';
 import {
   getFieldValidityAndErrorMessage,
@@ -106,6 +107,8 @@ interface InferenceServicesProps {
     reenterSecretsOnEdit?: boolean;
     allowTemperature?: boolean;
     enableEisPromoTour?: boolean;
+    /** When set, only these task types will be available for selection in the form. */
+    allowedTaskTypes?: InferenceTaskType[];
   };
   http: HttpSetup;
   toasts: IToasts;
@@ -123,6 +126,7 @@ export const InferenceServiceFormFields: React.FC<InferenceServicesProps> = ({
     currentSolution,
     reenterSecretsOnEdit,
     enableEisPromoTour,
+    allowedTaskTypes,
   },
 }) => {
   const {
@@ -235,13 +239,11 @@ export const InferenceServiceFormFields: React.FC<InferenceServicesProps> = ({
       const newProvider = updatedProviders?.find(
         (p) => p.service === (config.provider === '' ? providerSelected : config.provider)
       );
+      const overrides = newProvider ? getOverrides(newProvider) : undefined;
+      const newProviderSchema: ConfigEntryView[] = newProvider
+        ? mapProviderFields(taskType, newProvider, overrides)
+        : [];
       if (newProvider) {
-        const overrides = getOverrides(newProvider);
-        const newProviderSchema: ConfigEntryView[] = mapProviderFields(
-          taskType,
-          newProvider,
-          overrides
-        );
         setProviderSchema(newProviderSchema);
       }
 
@@ -266,7 +268,9 @@ export const InferenceServiceFormFields: React.FC<InferenceServicesProps> = ({
           newProvider?.configurations[k]?.supported_task_types &&
           newProvider?.configurations[k].supported_task_types.includes(taskType)
         ) {
-          newConfig[k] = newProvider?.configurations[k]?.default_value ?? null;
+          // Get default value from schema (which includes overridden defaults from INTERNAL_OVERRIDE_FIELDS)
+          const schemaField = newProviderSchema.find((f) => f.key === k);
+          newConfig[k] = schemaField?.default_value ?? null;
         }
       });
 
@@ -299,9 +303,12 @@ export const InferenceServiceFormFields: React.FC<InferenceServicesProps> = ({
     (provider?: string) => {
       const newProvider = updatedProviders?.find((p) => p.service === provider);
 
-      setTaskTypeOptions(getTaskTypeOptions(newProvider?.task_types ?? []));
-      if (newProvider?.task_types && newProvider?.task_types.length > 0) {
-        onTaskTypeOptionsSelect(newProvider?.task_types[0], provider);
+      const availableTaskTypes = allowedTaskTypes
+        ? (newProvider?.task_types ?? []).filter((t) => (allowedTaskTypes as string[]).includes(t))
+        : newProvider?.task_types ?? [];
+      setTaskTypeOptions(getTaskTypeOptions(availableTaskTypes));
+      if (availableTaskTypes.length > 0) {
+        onTaskTypeOptionsSelect(availableTaskTypes[0], provider);
       }
 
       const defaultProviderConfig: Record<string, unknown> = {};
@@ -318,11 +325,8 @@ export const InferenceServiceFormFields: React.FC<InferenceServicesProps> = ({
 
       newProviderSchema.forEach((fieldConfig) => {
         if (!fieldConfig.sensitive) {
-          if (fieldConfig && !!fieldConfig.default_value) {
-            defaultProviderConfig[fieldConfig.key] = fieldConfig.default_value;
-          } else {
-            defaultProviderConfig[fieldConfig.key] = null;
-          }
+          // default_value now includes overridden defaults from INTERNAL_OVERRIDE_FIELDS
+          defaultProviderConfig[fieldConfig.key] = fieldConfig.default_value;
         } else {
           defaultProviderSecrets[fieldConfig.key] = null;
         }
@@ -345,7 +349,14 @@ export const InferenceServiceFormFields: React.FC<InferenceServicesProps> = ({
         },
       });
     },
-    [config, onTaskTypeOptionsSelect, updateFieldValues, updatedProviders, getOverrides]
+    [
+      config,
+      onTaskTypeOptionsSelect,
+      updateFieldValues,
+      updatedProviders,
+      getOverrides,
+      allowedTaskTypes,
+    ]
   );
 
   const onSetProviderConfigEntry = useCallback(
@@ -426,9 +437,15 @@ export const InferenceServiceFormFields: React.FC<InferenceServicesProps> = ({
   const getUpdatedProviders = useCallback(
     (filterBySolution?: SolutionView) => {
       if (providers) {
-        const filteredProviders = filterBySolution
+        let filteredProviders = filterBySolution
           ? providers.filter(isProviderForSolutions.bind(this, filterBySolution))
           : providers;
+
+        if (allowedTaskTypes) {
+          filteredProviders = filteredProviders.filter((provider) =>
+            provider.task_types.some((t) => (allowedTaskTypes as string[]).includes(t))
+          );
+        }
 
         // Ensure the Elastic Inference Service (EIS) appears at the top of the providers list
         const elasticServiceIndex = filteredProviders.findIndex(
@@ -446,7 +463,7 @@ export const InferenceServiceFormFields: React.FC<InferenceServicesProps> = ({
         }
       }
     },
-    [providers]
+    [providers, allowedTaskTypes]
   );
 
   useEffect(() => {

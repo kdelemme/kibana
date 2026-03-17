@@ -86,7 +86,7 @@ export function getDashboardApi({
     viewModeManager,
     incomingEmbeddables,
     initialState.panels,
-    initialState.controlGroupInput,
+    initialState.pinned_panels,
     trackPanel
   );
 
@@ -125,6 +125,18 @@ export function getDashboardApi({
     settingsManager.api.projectRoutingRestore$
   );
 
+  function setState(state: DashboardState) {
+    layoutManager.internalApi.reset(state);
+    unifiedSearchManager.internalApi.reset(state);
+    projectRoutingManager?.internalApi.reset(state);
+    settingsManager.internalApi.reset(state);
+
+    // when auto-apply is `false`, wait for children to update their filters + time slice + variables, then publish
+    if (!settingsManager.api.settings.autoApplyFilters$.getValue()) {
+      forcePublishOnReset$.next();
+    }
+  }
+
   const unsavedChangesManager = initializeUnsavedChangesManager({
     viewMode$: viewModeManager.api.viewMode$,
     storeUnsavedChanges: creationOptions?.useSessionStorageIntegration,
@@ -134,11 +146,11 @@ export function getDashboardApi({
     settingsManager,
     unifiedSearchManager,
     projectRoutingManager,
-    forcePublishOnReset$,
+    setState,
   });
 
   function getState() {
-    const { panels, controlGroupInput } = layoutManager.internalApi.serializeLayout();
+    const { panels, pinned_panels } = layoutManager.internalApi.serializeLayout();
     const unifiedSearchState = unifiedSearchManager.internalApi.getState();
     const projectRoutingState = projectRoutingManager?.internalApi.getState();
     return {
@@ -146,7 +158,7 @@ export function getDashboardApi({
       ...unifiedSearchState,
       ...projectRoutingState,
       panels,
-      controlGroupInput,
+      pinned_panels,
     } satisfies DashboardState;
   }
 
@@ -189,6 +201,7 @@ export function getDashboardApi({
     getSerializedState: () => ({
       attributes: getState(),
     }),
+    setState,
     runInteractiveSave: async () => {
       trackOverlayApi.clearOverlays();
 

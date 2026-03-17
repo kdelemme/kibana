@@ -42,9 +42,10 @@ import type {
 } from '@kbn/observability-shared-plugin/public';
 
 import type { SharePluginSetup, SharePluginStart } from '@kbn/share-plugin/public';
-import type {
-  TriggersAndActionsUIPublicPluginSetup,
-  TriggersAndActionsUIPublicPluginStart,
+import {
+  getIsExperimentalFeatureEnabled,
+  type TriggersAndActionsUIPublicPluginSetup,
+  type TriggersAndActionsUIPublicPluginStart,
 } from '@kbn/triggers-actions-ui-plugin/public';
 import { BehaviorSubject, from, map, mergeMap, switchMap } from 'rxjs';
 
@@ -277,10 +278,27 @@ export class Plugin
       pluginsSetup.share.url.locators.get<DiscoverAppLocatorParams>(DISCOVER_APP_LOCATOR);
 
     const mount = async (params: AppMountParameters<unknown>) => {
-      // Load application bundle
-      const { renderApp } = await import('./application');
-      // Get start services
       const [coreStart, pluginsStart] = await coreSetup.getStartServices();
+
+      if (getIsExperimentalFeatureEnabled('unifiedRulesPage')) {
+        const { pathname, search } = params.history.location;
+
+        if (pathname.startsWith(RULES_PATH)) {
+          let suffix = pathname.slice(RULES_PATH.length) || '/';
+          const isTopLevelRoute =
+            suffix === '/' || suffix === '/logs' || suffix.startsWith('/create');
+          if (!isTopLevelRoute) {
+            suffix = `/rule${suffix}`;
+          }
+          await coreStart.application.navigateToApp('rules', {
+            path: suffix + search,
+            replace: true,
+          });
+          return () => {};
+        }
+      }
+
+      const { renderApp } = await import('./application');
       const { ruleTypeRegistry, actionTypeRegistry } = pluginsStart.triggersActionsUi;
 
       return renderApp({
@@ -339,6 +357,7 @@ export class Plugin
     registerObservabilityRuleTypes(
       this.observabilityRuleTypeRegistry,
       coreSetup.uiSettings,
+      coreSetup.getStartServices,
       logsLocator
     );
 
@@ -504,10 +523,12 @@ export class Plugin
       )
     );
 
+    const unifiedRulesPage = getIsExperimentalFeatureEnabled('unifiedRulesPage');
+
     return {
       dashboard: { register: registerDataHandler },
       observabilityRuleTypeRegistry: this.observabilityRuleTypeRegistry,
-      useRulesLink: createUseRulesLink(),
+      useRulesLink: createUseRulesLink(unifiedRulesPage),
       rulesLocator,
       ruleDetailsLocator,
       config,
@@ -531,10 +552,12 @@ export class Plugin
       );
     });
 
+    const unifiedRulesPage = getIsExperimentalFeatureEnabled('unifiedRulesPage');
+
     return {
       config,
       observabilityRuleTypeRegistry: this.observabilityRuleTypeRegistry,
-      useRulesLink: createUseRulesLink(),
+      useRulesLink: createUseRulesLink(unifiedRulesPage),
     };
   }
 }

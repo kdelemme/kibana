@@ -26,7 +26,7 @@ describe('AppMenuActionButton', () => {
   const splitButtonProps = {
     run: jest.fn(),
     secondaryButtonAriaLabel: 'More options',
-    secondaryButtonIcon: 'arrowDown',
+    secondaryButtonIcon: 'chevronSingleDown',
   };
 
   beforeEach(() => {
@@ -46,7 +46,6 @@ describe('AppMenuActionButton', () => {
     await user.click(screen.getByTestId('test-action-button'));
 
     expect(defaultProps.run).toHaveBeenCalledTimes(1);
-    expect(defaultProps.run).toHaveBeenCalledWith();
   });
 
   it('should render as split button', () => {
