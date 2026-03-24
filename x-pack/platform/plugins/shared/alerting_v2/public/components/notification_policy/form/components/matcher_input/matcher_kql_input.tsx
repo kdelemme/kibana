@@ -8,7 +8,7 @@
 import React, { useCallback, useMemo } from 'react';
 import type { DataView } from '@kbn/data-views-plugin/common';
 import type { Query } from '@kbn/es-query';
-import type { KqlPluginStart } from '@kbn/kql/public';
+import type { KqlPluginStart, SuggestionsAbstraction } from '@kbn/kql/public';
 import { useService } from '@kbn/core-di-browser';
 import { PluginStart } from '@kbn/core-di';
 import { MATCHER_CONTEXT_FIELDS } from '@kbn/alerting-v2-schemas';
@@ -35,6 +35,11 @@ const syntheticDataView = [
   },
 ] as unknown as DataView[];
 
+const matcherSuggestionsAbstraction: SuggestionsAbstraction = {
+  type: 'alerting-v2',
+  fields: {},
+};
+
 export const MatcherInput = ({
   value,
   onChange,
@@ -57,6 +62,7 @@ export const MatcherInput = ({
       indexPatterns={syntheticDataView}
       query={query}
       onChange={handleChange}
+      suggestionsAbstraction={matcherSuggestionsAbstraction}
       disableAutoFocus
       disableLanguageSwitcher={true}
       bubbleSubmitEvent={false}

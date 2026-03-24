@@ -29,6 +29,7 @@ import { SnoozeNotificationPolicyRoute } from '../routes/notification_policies/s
 import { UnsnoozeNotificationPolicyRoute } from '../routes/notification_policies/unsnooze_notification_policy_route';
 import { UpdateNotificationPolicyRoute } from '../routes/notification_policies/update_notification_policy_route';
 import { DeleteNotificationPolicyRoute } from '../routes/notification_policies/delete_notification_policy_route';
+import { MatcherValueSuggestionsRoute } from '../routes/suggestions/matcher_value_suggestions_route';
 
 export function bindRoutes({ bind }: ContainerModuleLoadOptions) {
   bind(Route).toConstantValue(CreateRuleRoute);
@@ -53,4 +54,5 @@ export function bindRoutes({ bind }: ContainerModuleLoadOptions) {
   bind(Route).toConstantValue(SnoozeNotificationPolicyRoute);
   bind(Route).toConstantValue(UnsnoozeNotificationPolicyRoute);
   bind(Route).toConstantValue(BulkActionNotificationPoliciesRoute);
+  bind(Route).toConstantValue(MatcherValueSuggestionsRoute);
 }
