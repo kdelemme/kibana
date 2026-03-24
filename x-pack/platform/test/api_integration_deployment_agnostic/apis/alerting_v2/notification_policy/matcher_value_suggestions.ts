@@ -76,6 +76,12 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     after(async () => {
       await kibanaServer.savedObjects.clean({ types: [RULE_SO_TYPE] });
+      await es.deleteByQuery({
+        index: '.alerting-events',
+        query: { match_all: {} },
+        refresh: true,
+        ignore_unavailable: true,
+      });
       await samlAuth.invalidateM2mApiKeyWithRoleScope(roleAuthc);
     });
 

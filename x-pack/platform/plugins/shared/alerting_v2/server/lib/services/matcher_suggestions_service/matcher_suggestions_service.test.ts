@@ -72,6 +72,38 @@ describe('MatcherSuggestionsService', () => {
     });
   });
 
+  describe('rule.description', () => {
+    it('returns rule descriptions from saved objects', async () => {
+      const { service, ruleSoClient } = createService();
+
+      ruleSoClient.find.mockResolvedValue({
+        saved_objects: [
+          {
+            id: 'rule-1',
+            type: RULE_SAVED_OBJECT_TYPE,
+            attributes: { metadata: { name: 'r1', description: 'CPU above threshold' } },
+            references: [],
+            score: 1,
+          },
+        ],
+        total: 1,
+        per_page: 10,
+        page: 1,
+      });
+
+      const result = await service.getSuggestions('rule.description', 'CPU');
+
+      expect(ruleSoClient.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: RULE_SAVED_OBJECT_TYPE,
+          search: 'CPU*',
+          searchFields: ['metadata.description'],
+        })
+      );
+      expect(result).toEqual(['CPU above threshold']);
+    });
+  });
+
   describe('rule.labels', () => {
     it('returns deduplicated labels filtered by prefix', async () => {
       const { service, ruleSoClient } = createService();

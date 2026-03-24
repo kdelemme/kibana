@@ -42,6 +42,7 @@ import {
   RulesSavedObjectServiceInternalToken,
   RulesSavedObjectServiceScopedToken,
 } from '../lib/services/rules_saved_object_service/tokens';
+import { MatcherSuggestionsService } from '../lib/services/matcher_suggestions_service/matcher_suggestions_service';
 import { StorageService } from '../lib/services/storage_service/storage_service';
 import {
   StorageServiceInternalToken,
@@ -219,6 +220,8 @@ export function bindServices({ bind }: ContainerModuleLoadOptions) {
       return wfm.management;
     })
     .inSingletonScope();
+
+  bind(MatcherSuggestionsService).toSelf().inRequestScope();
 
   bind(DispatcherService).toSelf().inSingletonScope();
   bind(DispatcherServiceInternalToken).toService(DispatcherService);
