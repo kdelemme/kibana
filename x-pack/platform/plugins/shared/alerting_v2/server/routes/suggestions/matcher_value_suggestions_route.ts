@@ -7,20 +7,13 @@
 
 import Boom from '@hapi/boom';
 import { schema } from '@kbn/config-schema';
-import type {
-  ElasticsearchClient,
-  KibanaRequest,
-  KibanaResponseFactory,
-  SavedObjectsClientContract,
-} from '@kbn/core/server';
+import type { KibanaRequest, KibanaResponseFactory } from '@kbn/core/server';
 import type { RouteSecurity } from '@kbn/core-http-server';
 import type { TypeOf } from '@kbn/config-schema';
 import { inject, injectable } from 'inversify';
 import { Request, Response } from '@kbn/core-di-server';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { INTERNAL_ALERTING_V2_SUGGESTIONS_API_PATH } from '../constants';
-import { EsServiceScopedToken } from '../../lib/services/es_service/tokens';
-import { RuleSavedObjectsClientToken } from '../../lib/services/rules_saved_object_service/tokens';
 import { MatcherSuggestionsService } from '../../lib/services/matcher_suggestions_service/matcher_suggestions_service';
 
 const suggestionsBodySchema = schema.object({
@@ -51,19 +44,13 @@ export class MatcherValueSuggestionsRoute {
     },
   } as const;
 
-  private readonly suggestionsService: MatcherSuggestionsService;
-
   constructor(
     @inject(Request)
     private readonly request: KibanaRequest<unknown, unknown, SuggestionsBody>,
     @inject(Response) private readonly response: KibanaResponseFactory,
-    @inject(RuleSavedObjectsClientToken)
-    ruleSoClient: SavedObjectsClientContract,
-    @inject(EsServiceScopedToken)
-    esClient: ElasticsearchClient
-  ) {
-    this.suggestionsService = new MatcherSuggestionsService(ruleSoClient, esClient);
-  }
+    @inject(MatcherSuggestionsService)
+    private readonly suggestionsService: MatcherSuggestionsService
+  ) {}
 
   async handle() {
     const { field, query } = this.request.body;

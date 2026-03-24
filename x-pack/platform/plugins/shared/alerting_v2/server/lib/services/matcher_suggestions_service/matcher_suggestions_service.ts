@@ -6,6 +6,9 @@
  */
 
 import type { ElasticsearchClient, SavedObjectsClientContract } from '@kbn/core/server';
+import { inject, injectable } from 'inversify';
+import { EsServiceScopedToken } from '../es_service/tokens';
+import { RuleSavedObjectsClientToken } from '../rules_saved_object_service/tokens';
 import { ALERT_EVENTS_DATA_STREAM, alertEpisodeStatus } from '../../../resources/alert_events';
 import { RULE_SAVED_OBJECT_TYPE, type RuleSavedObjectAttributes } from '../../../saved_objects';
 
@@ -31,9 +34,12 @@ const MATCHER_FIELD_TO_ES_FIELD: Record<string, string> = {
 const getEscapedQuery = (q: string = '') =>
   q.replace(/[.?+*|{}[\]()"\\#@&<>~]/g, (match) => `\\${match}`);
 
+@injectable()
 export class MatcherSuggestionsService {
   constructor(
+    @inject(RuleSavedObjectsClientToken)
     private readonly ruleSoClient: SavedObjectsClientContract,
+    @inject(EsServiceScopedToken)
     private readonly esClient: ElasticsearchClient
   ) {}
 
