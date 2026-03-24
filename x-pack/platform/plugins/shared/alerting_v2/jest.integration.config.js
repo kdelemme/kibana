@@ -10,5 +10,6 @@ module.exports = {
   rootDir: '../../../../..',
   roots: [
     '<rootDir>/x-pack/platform/plugins/shared/alerting_v2/server/lib/dispatcher/integration_tests',
+    '<rootDir>/x-pack/platform/plugins/shared/alerting_v2/server/routes/suggestions/integration_tests',
   ],
 };

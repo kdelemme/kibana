@@ -36,7 +36,7 @@ const syntheticDataView = [
 ] as unknown as DataView[];
 
 const matcherSuggestionsAbstraction: SuggestionsAbstraction = {
-  type: 'alerting-v2',
+  type: 'notification_policies',
   fields: {},
 };
 

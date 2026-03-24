@@ -18,7 +18,7 @@ import type { TypeOf } from '@kbn/config-schema';
 import { inject, injectable } from 'inversify';
 import { Request, Response } from '@kbn/core-di-server';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
-import { INTERNAL_ALERTING_V2_SUGGESTIONS_API_PATH } from '../constants';
+import { INTERNAL_ALERTING_V2_SUGGESTIONS_API_PATH, MatcherField } from '../constants';
 import { EsServiceScopedToken } from '../../lib/services/es_service/tokens';
 import { RuleSavedObjectsClientToken } from '../../lib/services/rules_saved_object_service/tokens';
 import { ALERT_EVENTS_DATA_STREAM, alertEpisodeStatus } from '../../resources/alert_events';
@@ -38,8 +38,8 @@ type SuggestionsBody = TypeOf<typeof suggestionsBodySchema>;
 const EPISODE_STATUS_VALUES = Object.values(alertEpisodeStatus);
 
 const MATCHER_FIELD_TO_ES_FIELD: Record<string, string> = {
-  episode_id: 'episode.id',
-  group_hash: 'group_hash',
+  [MatcherField.EpisodeId]: 'episode.id',
+  [MatcherField.GroupHash]: 'group_hash',
 };
 
 const getEscapedQuery = (q: string = '') =>
@@ -51,7 +51,10 @@ export class MatcherValueSuggestionsRoute {
   static path = INTERNAL_ALERTING_V2_SUGGESTIONS_API_PATH;
   static security: RouteSecurity = {
     authz: {
-      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.read],
+      requiredPrivileges: [
+        ALERTING_V2_API_PRIVILEGES.notificationPolicies.read,
+        ALERTING_V2_API_PRIVILEGES.rules.read,
+      ],
     },
   };
   static options = { access: 'internal' } as const;
@@ -66,7 +69,7 @@ export class MatcherValueSuggestionsRoute {
     private readonly request: KibanaRequest<unknown, unknown, SuggestionsBody>,
     @inject(Response) private readonly response: KibanaResponseFactory,
     @inject(RuleSavedObjectsClientToken)
-    private readonly savedObjectsClient: SavedObjectsClientContract,
+    private readonly ruleSoClient: SavedObjectsClientContract,
     @inject(EsServiceScopedToken)
     private readonly esClient: ElasticsearchClient
   ) {}
@@ -88,27 +91,27 @@ export class MatcherValueSuggestionsRoute {
 
   private async getSuggestionsForField(field: string, query: string): Promise<string[]> {
     switch (field) {
-      case 'episode_status':
+      case MatcherField.EpisodeStatus:
         return this.getStaticSuggestions(EPISODE_STATUS_VALUES, query);
 
-      case 'rule.name':
+      case MatcherField.RuleName:
         return this.getRuleSoFieldSuggestions(query, 'metadata.name', (a) => a.metadata.name);
 
-      case 'rule.description':
+      case MatcherField.RuleDescription:
         return this.getRuleSoFieldSuggestions(
           query,
           'metadata.description',
           (a) => a.metadata.description
         );
 
-      case 'rule.labels':
+      case MatcherField.RuleLabels:
         return this.getRuleLabelsSuggestions(query);
 
-      case 'rule.id':
+      case MatcherField.RuleId:
         return this.getRuleIdSuggestions(query);
 
-      case 'episode_id':
-      case 'group_hash':
+      case MatcherField.EpisodeId:
+      case MatcherField.GroupHash:
         return this.getAlertEventFieldSuggestions(MATCHER_FIELD_TO_ES_FIELD[field] ?? field, query);
 
       default:
@@ -128,7 +131,7 @@ export class MatcherValueSuggestionsRoute {
     searchField: string,
     accessor: (attrs: RuleSavedObjectAttributes) => string | undefined
   ): Promise<string[]> {
-    const result = await this.savedObjectsClient.find<RuleSavedObjectAttributes>({
+    const result = await this.ruleSoClient.find<RuleSavedObjectAttributes>({
       type: RULE_SAVED_OBJECT_TYPE,
       page: 1,
       perPage: MAX_SUGGESTIONS,
@@ -143,7 +146,7 @@ export class MatcherValueSuggestionsRoute {
   }
 
   private async getRuleLabelsSuggestions(query: string): Promise<string[]> {
-    const result = await this.savedObjectsClient.find<RuleSavedObjectAttributes>({
+    const result = await this.ruleSoClient.find<RuleSavedObjectAttributes>({
       type: RULE_SAVED_OBJECT_TYPE,
       page: 1,
       perPage: 100,
@@ -170,7 +173,7 @@ export class MatcherValueSuggestionsRoute {
   }
 
   private async getRuleIdSuggestions(query: string): Promise<string[]> {
-    const result = await this.savedObjectsClient.find<RuleSavedObjectAttributes>({
+    const result = await this.ruleSoClient.find<RuleSavedObjectAttributes>({
       type: RULE_SAVED_OBJECT_TYPE,
       page: 1,
       perPage: MAX_SUGGESTIONS,
@@ -190,7 +193,7 @@ export class MatcherValueSuggestionsRoute {
       const result = await this.esClient.search({
         index: ALERT_EVENTS_DATA_STREAM,
         size: 0,
-        timeout: '1s',
+        timeout: '10s',
         terminate_after: 100000,
         query: {
           bool: {

@@ -10,4 +10,14 @@ export const INTERNAL_ALERTING_V2_ALERT_API_PATH = '/internal/alerting/v2/alerts
 export const INTERNAL_ALERTING_V2_NOTIFICATION_POLICY_API_PATH =
   '/internal/alerting/v2/notification_policies' as const;
 export const INTERNAL_ALERTING_V2_SUGGESTIONS_API_PATH =
-  '/internal/alerting-v2/suggestions/values' as const;
+  '/internal/notification_policies/suggestions/values' as const;
+
+export enum MatcherField {
+  EpisodeStatus = 'episode_status',
+  RuleName = 'rule.name',
+  RuleDescription = 'rule.description',
+  RuleLabels = 'rule.labels',
+  RuleId = 'rule.id',
+  EpisodeId = 'episode_id',
+  GroupHash = 'group_hash',
+}

@@ -17,17 +17,17 @@ const createRoute = ({ field, query }: { field: string; query: string }) => {
     body: { field, query },
   }) as KibanaRequest<unknown, unknown, { field: string; query: string }>;
   const response = httpServerMock.createResponseFactory();
-  const savedObjectsClient = savedObjectsClientMock.create();
+  const ruleSoClient = savedObjectsClientMock.create();
   const esClient = elasticsearchServiceMock.createElasticsearchClient();
 
   const route = new MatcherValueSuggestionsRoute(
     request,
     response as unknown as KibanaResponseFactory,
-    savedObjectsClient,
+    ruleSoClient,
     esClient
   );
 
-  return { route, response, savedObjectsClient, esClient };
+  return { route, response, ruleSoClient, esClient };
 };
 
 describe('MatcherValueSuggestionsRoute', () => {
@@ -51,12 +51,12 @@ describe('MatcherValueSuggestionsRoute', () => {
 
   describe('rule.name', () => {
     it('returns rule names from saved objects', async () => {
-      const { route, response, savedObjectsClient } = createRoute({
+      const { route, response, ruleSoClient } = createRoute({
         field: 'rule.name',
         query: 'prod',
       });
 
-      savedObjectsClient.find.mockResolvedValue({
+      ruleSoClient.find.mockResolvedValue({
         saved_objects: [
           {
             id: 'rule-1',
@@ -80,7 +80,7 @@ describe('MatcherValueSuggestionsRoute', () => {
 
       await route.handle();
 
-      expect(savedObjectsClient.find).toHaveBeenCalledWith(
+      expect(ruleSoClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
           type: RULE_SAVED_OBJECT_TYPE,
           search: 'prod*',
@@ -95,12 +95,12 @@ describe('MatcherValueSuggestionsRoute', () => {
 
   describe('rule.labels', () => {
     it('returns deduplicated labels filtered by prefix', async () => {
-      const { route, response, savedObjectsClient } = createRoute({
+      const { route, response, ruleSoClient } = createRoute({
         field: 'rule.labels',
         query: 'prod',
       });
 
-      savedObjectsClient.find.mockResolvedValue({
+      ruleSoClient.find.mockResolvedValue({
         saved_objects: [
           {
             id: 'rule-1',
@@ -132,12 +132,12 @@ describe('MatcherValueSuggestionsRoute', () => {
 
   describe('rule.id', () => {
     it('returns rule IDs', async () => {
-      const { route, response, savedObjectsClient } = createRoute({
+      const { route, response, ruleSoClient } = createRoute({
         field: 'rule.id',
         query: '',
       });
 
-      savedObjectsClient.find.mockResolvedValue({
+      ruleSoClient.find.mockResolvedValue({
         saved_objects: [
           {
             id: 'abc-123',
