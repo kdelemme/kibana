@@ -62,7 +62,11 @@ export class MatcherSuggestionsService {
   async getSuggestions(field: string, query: string): Promise<string[]> {
     const soFieldConfig = RULE_SO_FIELD_CONFIG[field as MatcherField];
     if (soFieldConfig) {
-      return this.getRuleSoFieldSuggestions(query, soFieldConfig.searchField, soFieldConfig.accessor);
+      return this.getRuleSoFieldSuggestions(
+        query,
+        soFieldConfig.searchField,
+        soFieldConfig.accessor
+      );
     }
 
     const esField = MATCHER_FIELD_TO_ES_FIELD[field as MatcherField];
