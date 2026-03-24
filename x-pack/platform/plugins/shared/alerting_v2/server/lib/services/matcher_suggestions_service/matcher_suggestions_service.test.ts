@@ -5,56 +5,37 @@
  * 2.0.
  */
 
-import type { KibanaRequest, KibanaResponseFactory } from '@kbn/core-http-server';
-import { httpServerMock } from '@kbn/core-http-server-mocks';
 import { savedObjectsClientMock } from '@kbn/core-saved-objects-api-server-mocks';
 import { elasticsearchServiceMock } from '@kbn/core-elasticsearch-server-mocks';
-import { RULE_SAVED_OBJECT_TYPE } from '../../saved_objects';
-import { MatcherValueSuggestionsRoute } from './matcher_value_suggestions_route';
+import { RULE_SAVED_OBJECT_TYPE } from '../../../saved_objects';
+import { MatcherSuggestionsService } from './matcher_suggestions_service';
 
-const createRoute = ({ field, query }: { field: string; query: string }) => {
-  const request = httpServerMock.createKibanaRequest({
-    body: { field, query },
-  }) as KibanaRequest<unknown, unknown, { field: string; query: string }>;
-  const response = httpServerMock.createResponseFactory();
+const createService = () => {
   const ruleSoClient = savedObjectsClientMock.create();
   const esClient = elasticsearchServiceMock.createElasticsearchClient();
+  const service = new MatcherSuggestionsService(ruleSoClient, esClient);
 
-  const route = new MatcherValueSuggestionsRoute(
-    request,
-    response as unknown as KibanaResponseFactory,
-    ruleSoClient,
-    esClient
-  );
-
-  return { route, response, ruleSoClient, esClient };
+  return { service, ruleSoClient, esClient };
 };
 
-describe('MatcherValueSuggestionsRoute', () => {
+describe('MatcherSuggestionsService', () => {
   describe('episode_status', () => {
     it('returns all statuses when query is empty', async () => {
-      const { route, response } = createRoute({ field: 'episode_status', query: '' });
-      await route.handle();
-      expect(response.ok).toHaveBeenCalledWith({
-        body: ['inactive', 'pending', 'active', 'recovering'],
-      });
+      const { service } = createService();
+      const result = await service.getSuggestions('episode_status', '');
+      expect(result).toEqual(['inactive', 'pending', 'active', 'recovering']);
     });
 
     it('filters statuses by prefix', async () => {
-      const { route, response } = createRoute({ field: 'episode_status', query: 'act' });
-      await route.handle();
-      expect(response.ok).toHaveBeenCalledWith({
-        body: ['active'],
-      });
+      const { service } = createService();
+      const result = await service.getSuggestions('episode_status', 'act');
+      expect(result).toEqual(['active']);
     });
   });
 
   describe('rule.name', () => {
     it('returns rule names from saved objects', async () => {
-      const { route, response, ruleSoClient } = createRoute({
-        field: 'rule.name',
-        query: 'prod',
-      });
+      const { service, ruleSoClient } = createService();
 
       ruleSoClient.find.mockResolvedValue({
         saved_objects: [
@@ -78,7 +59,7 @@ describe('MatcherValueSuggestionsRoute', () => {
         page: 1,
       });
 
-      await route.handle();
+      const result = await service.getSuggestions('rule.name', 'prod');
 
       expect(ruleSoClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -87,18 +68,13 @@ describe('MatcherValueSuggestionsRoute', () => {
           searchFields: ['metadata.name'],
         })
       );
-      expect(response.ok).toHaveBeenCalledWith({
-        body: ['production-cpu', 'production-memory'],
-      });
+      expect(result).toEqual(['production-cpu', 'production-memory']);
     });
   });
 
   describe('rule.labels', () => {
     it('returns deduplicated labels filtered by prefix', async () => {
-      const { route, response, ruleSoClient } = createRoute({
-        field: 'rule.labels',
-        query: 'prod',
-      });
+      const { service, ruleSoClient } = createService();
 
       ruleSoClient.find.mockResolvedValue({
         saved_objects: [
@@ -122,20 +98,14 @@ describe('MatcherValueSuggestionsRoute', () => {
         page: 1,
       });
 
-      await route.handle();
-
-      expect(response.ok).toHaveBeenCalledWith({
-        body: ['production'],
-      });
+      const result = await service.getSuggestions('rule.labels', 'prod');
+      expect(result).toEqual(['production']);
     });
   });
 
   describe('rule.id', () => {
     it('returns rule IDs', async () => {
-      const { route, response, ruleSoClient } = createRoute({
-        field: 'rule.id',
-        query: '',
-      });
+      const { service, ruleSoClient } = createService();
 
       ruleSoClient.find.mockResolvedValue({
         saved_objects: [
@@ -152,20 +122,14 @@ describe('MatcherValueSuggestionsRoute', () => {
         page: 1,
       });
 
-      await route.handle();
-
-      expect(response.ok).toHaveBeenCalledWith({
-        body: ['abc-123'],
-      });
+      const result = await service.getSuggestions('rule.id', '');
+      expect(result).toEqual(['abc-123']);
     });
   });
 
   describe('episode_id', () => {
     it('returns values from .alerting-events terms aggregation', async () => {
-      const { route, response, esClient } = createRoute({
-        field: 'episode_id',
-        query: 'ep-',
-      });
+      const { service, esClient } = createService();
 
       esClient.search.mockResolvedValue({
         took: 1,
@@ -182,7 +146,7 @@ describe('MatcherValueSuggestionsRoute', () => {
         },
       });
 
-      await route.handle();
+      const result = await service.getSuggestions('episode_id', 'ep-');
 
       expect(esClient.search).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -194,16 +158,11 @@ describe('MatcherValueSuggestionsRoute', () => {
           },
         })
       );
-      expect(response.ok).toHaveBeenCalledWith({
-        body: ['ep-123', 'ep-456'],
-      });
+      expect(result).toEqual(['ep-123', 'ep-456']);
     });
 
     it('returns empty array when index does not exist', async () => {
-      const { route, response, esClient } = createRoute({
-        field: 'episode_id',
-        query: '',
-      });
+      const { service, esClient } = createService();
 
       const error = new Error('index_not_found_exception');
       Object.assign(error, {
@@ -211,20 +170,14 @@ describe('MatcherValueSuggestionsRoute', () => {
       });
       esClient.search.mockRejectedValue(error);
 
-      await route.handle();
-
-      expect(response.ok).toHaveBeenCalledWith({
-        body: [],
-      });
+      const result = await service.getSuggestions('episode_id', '');
+      expect(result).toEqual([]);
     });
   });
 
   describe('group_hash', () => {
     it('queries the correct ES field', async () => {
-      const { route, esClient } = createRoute({
-        field: 'group_hash',
-        query: 'abc',
-      });
+      const { service, esClient } = createService();
 
       esClient.search.mockResolvedValue({
         took: 1,
@@ -234,7 +187,7 @@ describe('MatcherValueSuggestionsRoute', () => {
         aggregations: { suggestions: { buckets: [] } },
       });
 
-      await route.handle();
+      await service.getSuggestions('group_hash', 'abc');
 
       expect(esClient.search).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -252,23 +205,23 @@ describe('MatcherValueSuggestionsRoute', () => {
 
   describe('unknown field', () => {
     it('returns empty array', async () => {
-      const { route, response } = createRoute({ field: 'unknown.field', query: '' });
-      await route.handle();
-      expect(response.ok).toHaveBeenCalledWith({ body: [] });
+      const { service } = createService();
+      const result = await service.getSuggestions('unknown.field', '');
+      expect(result).toEqual([]);
     });
   });
 
   describe('timestamp fields', () => {
     it('returns empty array for last_event_timestamp', async () => {
-      const { route, response } = createRoute({ field: 'last_event_timestamp', query: '' });
-      await route.handle();
-      expect(response.ok).toHaveBeenCalledWith({ body: [] });
+      const { service } = createService();
+      const result = await service.getSuggestions('last_event_timestamp', '');
+      expect(result).toEqual([]);
     });
 
     it('returns empty array for rule.createdAt', async () => {
-      const { route, response } = createRoute({ field: 'rule.createdAt', query: '' });
-      await route.handle();
-      expect(response.ok).toHaveBeenCalledWith({ body: [] });
+      const { service } = createService();
+      const result = await service.getSuggestions('rule.createdAt', '');
+      expect(result).toEqual([]);
     });
   });
 });
