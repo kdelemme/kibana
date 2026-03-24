@@ -64,6 +64,8 @@ export function evaluateMatchers(
       }
 
       context ??= createMatcherContext(episode, rule);
+      console.dir(policy.matcher, { depth: null });
+      console.dir(context, { depth: null });
       const isMatch = evaluateKql(policy.matcher, context);
       if (isMatch) {
         matched.push({ episode, policy });
@@ -80,6 +82,7 @@ function createMatcherContext(episode: AlertEpisode, rule: Rule): MatcherContext
     group_hash: episode.group_hash,
     episode_id: episode.episode_id,
     episode_status: episode.episode_status,
+    ...(episode.data ? { data: episode.data } : {}),
     rule: {
       id: rule.id,
       name: rule.name,
