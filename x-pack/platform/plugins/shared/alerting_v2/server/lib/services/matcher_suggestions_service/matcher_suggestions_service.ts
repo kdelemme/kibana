@@ -16,7 +16,7 @@ const MAX_SUGGESTIONS = 10;
 
 const EPISODE_STATUS_VALUES = Object.values(alertEpisodeStatus);
 
-export enum MatcherField {
+enum MatcherField {
   EpisodeStatus = 'episode_status',
   RuleName = 'rule.name',
   RuleDescription = 'rule.description',
@@ -26,7 +26,23 @@ export enum MatcherField {
   GroupHash = 'group_hash',
 }
 
-const MATCHER_FIELD_TO_ES_FIELD: Record<string, string> = {
+interface RuleSoFieldConfig {
+  searchField: string;
+  accessor: (attrs: RuleSavedObjectAttributes) => string | undefined;
+}
+
+const RULE_SO_FIELD_CONFIG: Partial<Record<MatcherField, RuleSoFieldConfig>> = {
+  [MatcherField.RuleName]: {
+    searchField: 'metadata.name',
+    accessor: (a) => a.metadata.name,
+  },
+  [MatcherField.RuleDescription]: {
+    searchField: 'metadata.description',
+    accessor: (a) => a.metadata.description,
+  },
+};
+
+const MATCHER_FIELD_TO_ES_FIELD: Partial<Record<MatcherField, string>> = {
   [MatcherField.EpisodeId]: 'episode.id',
   [MatcherField.GroupHash]: 'group_hash',
 };
@@ -44,29 +60,25 @@ export class MatcherSuggestionsService {
   ) {}
 
   async getSuggestions(field: string, query: string): Promise<string[]> {
+    const soFieldConfig = RULE_SO_FIELD_CONFIG[field as MatcherField];
+    if (soFieldConfig) {
+      return this.getRuleSoFieldSuggestions(query, soFieldConfig.searchField, soFieldConfig.accessor);
+    }
+
+    const esField = MATCHER_FIELD_TO_ES_FIELD[field as MatcherField];
+    if (esField) {
+      return this.getAlertEventFieldSuggestions(esField, query);
+    }
+
     switch (field) {
       case MatcherField.EpisodeStatus:
         return this.getStaticSuggestions(EPISODE_STATUS_VALUES, query);
-
-      case MatcherField.RuleName:
-        return this.getRuleSoFieldSuggestions(query, 'metadata.name', (a) => a.metadata.name);
-
-      case MatcherField.RuleDescription:
-        return this.getRuleSoFieldSuggestions(
-          query,
-          'metadata.description',
-          (a) => a.metadata.description
-        );
 
       case MatcherField.RuleLabels:
         return this.getRuleLabelsSuggestions(query);
 
       case MatcherField.RuleId:
         return this.getRuleIdSuggestions(query);
-
-      case MatcherField.EpisodeId:
-      case MatcherField.GroupHash:
-        return this.getAlertEventFieldSuggestions(MATCHER_FIELD_TO_ES_FIELD[field] ?? field, query);
 
       default:
         return [];
