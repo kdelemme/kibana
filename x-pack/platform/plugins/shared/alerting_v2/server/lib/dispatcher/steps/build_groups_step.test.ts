@@ -202,8 +202,8 @@ describe('buildNotificationGroups', () => {
     const groups = buildNotificationGroups(matched);
 
     expect(groups).toHaveLength(2);
-    const prodGroup = groups.find((g) => g.groupKey['env'] === 'prod')!;
-    const stagingGroup = groups.find((g) => g.groupKey['env'] === 'staging')!;
+    const prodGroup = groups.find((g) => g.groupKey.env === 'prod')!;
+    const stagingGroup = groups.find((g) => g.groupKey.env === 'staging')!;
     expect(prodGroup.episodes).toHaveLength(2);
     expect(stagingGroup.episodes).toHaveLength(1);
   });
