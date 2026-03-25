@@ -102,12 +102,143 @@ describe('buildNotificationGroups', () => {
     expect(groups1[0].id).toBe(groups2[0].id);
   });
 
-  it('throws when groupBy fields are provided', () => {
-    const policy = createNotificationPolicy({ id: 'p1', groupBy: ['field1'] });
-    const episode = createAlertEpisode();
+  it('groups episodes by a single data field', () => {
+    const policy = createNotificationPolicy({
+      id: 'p1',
+      groupBy: ['host.name'],
+      destinations: [{ type: 'workflow', id: 'w1' }],
+    });
+    const matched = [
+      createMatchedPair({
+        episode: createAlertEpisode({
+          rule_id: 'r1',
+          episode_id: 'e1',
+          data: { host: { name: 'server-1' } },
+        }),
+        policy,
+      }),
+      createMatchedPair({
+        episode: createAlertEpisode({
+          rule_id: 'r1',
+          episode_id: 'e2',
+          data: { host: { name: 'server-1' } },
+        }),
+        policy,
+      }),
+    ];
 
-    expect(() => buildNotificationGroups([createMatchedPair({ episode, policy })])).toThrow(
-      'Grouping by fields is not supported yet'
-    );
+    const groups = buildNotificationGroups(matched);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].episodes).toHaveLength(2);
+    expect(groups[0].groupKey).toEqual({ 'host.name': 'server-1' });
+  });
+
+  it('creates separate groups for different field values', () => {
+    const policy = createNotificationPolicy({
+      id: 'p1',
+      groupBy: ['host.name'],
+      destinations: [{ type: 'workflow', id: 'w1' }],
+    });
+    const matched = [
+      createMatchedPair({
+        episode: createAlertEpisode({
+          rule_id: 'r1',
+          episode_id: 'e1',
+          data: { host: { name: 'server-1' } },
+        }),
+        policy,
+      }),
+      createMatchedPair({
+        episode: createAlertEpisode({
+          rule_id: 'r1',
+          episode_id: 'e2',
+          data: { host: { name: 'server-2' } },
+        }),
+        policy,
+      }),
+    ];
+
+    const groups = buildNotificationGroups(matched);
+
+    expect(groups).toHaveLength(2);
+    expect(groups[0].groupKey).toEqual({ 'host.name': 'server-1' });
+    expect(groups[1].groupKey).toEqual({ 'host.name': 'server-2' });
+  });
+
+  it('groups episodes by multiple data fields', () => {
+    const policy = createNotificationPolicy({
+      id: 'p1',
+      groupBy: ['host.name', 'env'],
+      destinations: [{ type: 'workflow', id: 'w1' }],
+    });
+    const matched = [
+      createMatchedPair({
+        episode: createAlertEpisode({
+          rule_id: 'r1',
+          episode_id: 'e1',
+          data: { host: { name: 'server-1' }, env: 'prod' },
+        }),
+        policy,
+      }),
+      createMatchedPair({
+        episode: createAlertEpisode({
+          rule_id: 'r1',
+          episode_id: 'e2',
+          data: { host: { name: 'server-1' }, env: 'prod' },
+        }),
+        policy,
+      }),
+      createMatchedPair({
+        episode: createAlertEpisode({
+          rule_id: 'r1',
+          episode_id: 'e3',
+          data: { host: { name: 'server-1' }, env: 'staging' },
+        }),
+        policy,
+      }),
+    ];
+
+    const groups = buildNotificationGroups(matched);
+
+    expect(groups).toHaveLength(2);
+    const prodGroup = groups.find((g) => g.groupKey['env'] === 'prod')!;
+    const stagingGroup = groups.find((g) => g.groupKey['env'] === 'staging')!;
+    expect(prodGroup.episodes).toHaveLength(2);
+    expect(stagingGroup.episodes).toHaveLength(1);
+  });
+
+  it('defaults missing data fields to null', () => {
+    const policy = createNotificationPolicy({
+      id: 'p1',
+      groupBy: ['host.name', 'env'],
+      destinations: [{ type: 'workflow', id: 'w1' }],
+    });
+    const matched = [
+      createMatchedPair({
+        episode: createAlertEpisode({
+          rule_id: 'r1',
+          episode_id: 'e1',
+          data: { host: { name: 'server-1' } },
+        }),
+        policy,
+      }),
+      createMatchedPair({
+        episode: createAlertEpisode({
+          rule_id: 'r1',
+          episode_id: 'e2',
+          data: {},
+        }),
+        policy,
+      }),
+    ];
+
+    const groups = buildNotificationGroups(matched);
+
+    const groupWithHost = groups.find((g) => g.groupKey['host.name'] === 'server-1')!;
+    expect(groupWithHost.groupKey).toEqual({ 'host.name': 'server-1', env: null });
+
+    const groupWithoutHost = groups.find((g) => g.groupKey['host.name'] === null)!;
+    expect(groupWithoutHost.groupKey).toEqual({ 'host.name': null, env: null });
   });
 });

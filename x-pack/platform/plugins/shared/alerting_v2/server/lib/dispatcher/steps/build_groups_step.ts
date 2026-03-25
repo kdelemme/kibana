@@ -6,13 +6,14 @@
  */
 
 import { injectable } from 'inversify';
+import { get } from 'lodash';
 import objectHash from 'object-hash';
 import type {
+  DispatcherPipelineState,
+  DispatcherStep,
+  DispatcherStepOutput,
   MatchedPair,
   NotificationGroup,
-  DispatcherStep,
-  DispatcherPipelineState,
-  DispatcherStepOutput,
 } from '../types';
 
 @injectable()
@@ -39,7 +40,9 @@ export function buildNotificationGroups(matched: readonly MatchedPair[]): Notifi
         episodeId: episode.episode_id,
       };
     } else {
-      throw new Error('Grouping by fields is not supported yet');
+      groupKey = Object.fromEntries(
+        policy.groupBy.map((field) => [field, get(episode.data, field, null)])
+      );
     }
 
     const notificationGroupId = objectHash({
