@@ -77,6 +77,7 @@ export const MatcherInput = ({
       query={query}
       onChange={handleChange}
       suggestionsAbstraction={matcherSuggestionsAbstraction}
+      suggestionsDebounceMs={300}
       disableAutoFocus
       disableLanguageSwitcher={true}
       bubbleSubmitEvent={false}
