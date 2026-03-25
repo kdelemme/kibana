@@ -29,29 +29,6 @@ interface RawAlertEpisode {
   data_json: string | null;
 }
 
-export function parseDataJson(json: string): AlertEpisodeData {
-  try {
-    const parsed = JSON.parse(json);
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
-    const result: AlertEpisodeData = {};
-    for (const [key, value] of Object.entries(parsed)) {
-      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-        set(result, key.split('.'), value);
-      }
-    }
-    return result;
-  } catch {
-    return {};
-  }
-}
-
-export function parseAlertEpisodes(raw: RawAlertEpisode[]): AlertEpisode[] {
-  return raw.map(({ data_json, ...rest }) => ({
-    ...rest,
-    ...(data_json ? { data: parseDataJson(data_json) } : {}),
-  }));
-}
-
 @injectable()
 export class FetchEpisodesStep implements DispatcherStep {
   public readonly name = 'fetch_episodes';
@@ -85,5 +62,28 @@ export class FetchEpisodesStep implements DispatcherStep {
     }
 
     return { type: 'continue', data: { episodes } };
+  }
+}
+
+export function parseAlertEpisodes(raw: RawAlertEpisode[]): AlertEpisode[] {
+  return raw.map(({ data_json, ...rest }) => ({
+    ...rest,
+    ...(data_json ? { data: parseDataJson(data_json) } : {}),
+  }));
+}
+
+export function parseDataJson(json: string): AlertEpisodeData {
+  try {
+    const parsed = JSON.parse(json);
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
+    const result: AlertEpisodeData = {};
+    for (const [key, value] of Object.entries(parsed)) {
+      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+        set(result, key.split('.'), value);
+      }
+    }
+    return result;
+  } catch {
+    return {};
   }
 }
