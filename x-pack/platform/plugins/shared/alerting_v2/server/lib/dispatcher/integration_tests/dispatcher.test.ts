@@ -339,6 +339,90 @@ const SUPPRESSION_USER_ACTIONS: AlertAction[] = [
   },
 ];
 
+/**
+ * Matcher test: 3 episodes for rule-matcher, 2 critical and 1 warning.
+ * A policy with matcher 'data.severity: "critical"' should only match the 2 critical episodes.
+ */
+const MATCHER_ALERT_EVENTS: AlertEvent[] = [
+  {
+    '@timestamp': '2026-02-01T10:00:00.000Z',
+    type: 'alert',
+    rule: { id: 'rule-matcher', version: 1 },
+    group_hash: 'rule-matcher-series-1',
+    episode: { id: 'rule-matcher-s1-ep1', status: 'active' },
+    data: { severity: 'critical' },
+    status: 'breached',
+    source: 'internal',
+  },
+  {
+    '@timestamp': '2026-02-01T10:05:00.000Z',
+    type: 'alert',
+    rule: { id: 'rule-matcher', version: 1 },
+    group_hash: 'rule-matcher-series-1',
+    episode: { id: 'rule-matcher-s1-ep2', status: 'active' },
+    data: { severity: 'critical' },
+    status: 'breached',
+    source: 'internal',
+  },
+  {
+    '@timestamp': '2026-02-01T10:10:00.000Z',
+    type: 'alert',
+    rule: { id: 'rule-matcher', version: 1 },
+    group_hash: 'rule-matcher-series-1',
+    episode: { id: 'rule-matcher-s1-ep3', status: 'active' },
+    data: { severity: 'warning' },
+    status: 'breached',
+    source: 'internal',
+  },
+];
+
+/**
+ * GroupBy test: 4 episodes for rule-groupby across 4 series, grouped into 2 hosts.
+ * A policy with groupBy: ['host.name'] should produce 2 notification groups.
+ */
+const GROUPBY_ALERT_EVENTS: AlertEvent[] = [
+  {
+    '@timestamp': '2026-02-01T11:00:00.000Z',
+    type: 'alert',
+    rule: { id: 'rule-groupby', version: 1 },
+    group_hash: 'rule-groupby-series-1',
+    episode: { id: 'rule-groupby-s1-ep1', status: 'active' },
+    data: { 'host.name': 'server-1' },
+    status: 'breached',
+    source: 'internal',
+  },
+  {
+    '@timestamp': '2026-02-01T11:05:00.000Z',
+    type: 'alert',
+    rule: { id: 'rule-groupby', version: 1 },
+    group_hash: 'rule-groupby-series-2',
+    episode: { id: 'rule-groupby-s2-ep1', status: 'active' },
+    data: { 'host.name': 'server-1' },
+    status: 'breached',
+    source: 'internal',
+  },
+  {
+    '@timestamp': '2026-02-01T11:10:00.000Z',
+    type: 'alert',
+    rule: { id: 'rule-groupby', version: 1 },
+    group_hash: 'rule-groupby-series-3',
+    episode: { id: 'rule-groupby-s3-ep1', status: 'active' },
+    data: { 'host.name': 'server-2' },
+    status: 'breached',
+    source: 'internal',
+  },
+  {
+    '@timestamp': '2026-02-01T11:15:00.000Z',
+    type: 'alert',
+    rule: { id: 'rule-groupby', version: 1 },
+    group_hash: 'rule-groupby-series-4',
+    episode: { id: 'rule-groupby-s4-ep1', status: 'active' },
+    data: { 'host.name': 'server-2' },
+    status: 'breached',
+    source: 'internal',
+  },
+];
+
 const createMockWorkflowsManagement = (): WorkflowsServerPluginSetup['management'] =>
   ({
     getWorkflow: jest.fn().mockResolvedValue(null),
@@ -423,6 +507,9 @@ describe('DispatcherService integration tests', () => {
     dispatcherService = new DispatcherService(pipeline);
 
     await setNotificationPolicyThrottle(npSoService, null);
+    await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, true);
+    await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_MATCHER_ID, false);
+    await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, false);
   });
 
   describe('when there are no alert events', () => {
@@ -707,6 +794,125 @@ describe('DispatcherService integration tests', () => {
       );
     });
   });
+
+  describe('when the notification policy has a matcher', () => {
+    beforeEach(async () => {
+      await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
+      await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_MATCHER_ID, true);
+    });
+
+    it('should only dispatch episodes matching the KQL expression', async () => {
+      await seedAlertEvents(esClient, MATCHER_ALERT_EVENTS);
+
+      const result = await dispatcherService.run({
+        previousStartedAt: new Date('2026-02-01T09:00:00.000Z'),
+      });
+
+      expect(result.startedAt).toBeDefined();
+
+      await esClient.indices.refresh({ index: ALERT_ACTIONS_DATA_STREAM });
+
+      const actionsResponse = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: {
+          bool: {
+            filter: [{ terms: { action_type: ['fire', 'unmatched'] } }],
+          },
+        },
+        size: 100,
+      });
+
+      const actions = actionsResponse.hits.hits.map(
+        (hit) => hit._source as Record<string, unknown>
+      );
+
+      const fireActions = actions.filter((a) => a.action_type === 'fire');
+      const unmatchedActions = actions.filter((a) => a.action_type === 'unmatched');
+
+      expect(fireActions).toHaveLength(2);
+      fireActions.forEach((action) => {
+        expect(action).toMatchObject({
+          rule_id: 'rule-matcher',
+          action_type: 'fire',
+          actor: 'system',
+          source: 'internal',
+        });
+      });
+
+      expect(unmatchedActions).toHaveLength(1);
+      expect(unmatchedActions[0]).toMatchObject({
+        rule_id: 'rule-matcher',
+        action_type: 'unmatched',
+      });
+    });
+  });
+
+  describe('when the notification policy has groupBy fields', () => {
+    beforeEach(async () => {
+      await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
+      await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, true);
+      await setNotificationPolicyThrottle(npSoService, null, NOTIFICATION_POLICY_GROUPBY_ID);
+    });
+
+    it('should group episodes by the specified data fields', async () => {
+      await setNotificationPolicyThrottle(
+        npSoService,
+        { interval: '1h' },
+        NOTIFICATION_POLICY_GROUPBY_ID
+      );
+      await seedAlertEvents(esClient, GROUPBY_ALERT_EVENTS);
+
+      const result = await dispatcherService.run({
+        previousStartedAt: new Date('2026-02-01T10:00:00.000Z'),
+      });
+
+      expect(result.startedAt).toBeDefined();
+
+      await esClient.indices.refresh({ index: ALERT_ACTIONS_DATA_STREAM });
+
+      const fireResponse = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'fire' } },
+        size: 100,
+      });
+
+      const fireActions = fireResponse.hits.hits.map(
+        (hit) => hit._source as Record<string, unknown>
+      );
+
+      expect(fireActions).toHaveLength(4);
+      fireActions.forEach((action) => {
+        expect(action).toMatchObject({
+          rule_id: 'rule-groupby',
+          action_type: 'fire',
+          actor: 'system',
+          source: 'internal',
+        });
+      });
+
+      const notifiedResponse = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'notified' } },
+        size: 100,
+      });
+
+      const notifiedActions = notifiedResponse.hits.hits.map(
+        (hit) => hit._source as Record<string, unknown>
+      );
+
+      expect(notifiedActions).toHaveLength(2);
+      const groupIds = notifiedActions.map((a) => a.notification_group_id);
+      expect(new Set(groupIds).size).toBe(2);
+      notifiedActions.forEach((action) => {
+        expect(action).toMatchObject({
+          action_type: 'notified',
+          rule_id: 'rule-groupby',
+          actor: 'system',
+          source: 'internal',
+        });
+      });
+    });
+  });
 });
 
 async function cleanupDataStreams(esClient: ElasticsearchClient): Promise<void> {
@@ -735,8 +941,19 @@ async function seedAlertEvents(esClient: ElasticsearchClient, events: AlertEvent
 }
 
 const NOTIFICATION_POLICY_ID = 'np-1';
+const NOTIFICATION_POLICY_MATCHER_ID = 'np-matcher';
+const NOTIFICATION_POLICY_GROUPBY_ID = 'np-groupby';
 
-const TEST_RULE_IDS = ['rule-1', 'rule-001', 'rule-002', 'rule-003', 'rule-004', 'rule-005'];
+const TEST_RULE_IDS = [
+  'rule-1',
+  'rule-001',
+  'rule-002',
+  'rule-003',
+  'rule-004',
+  'rule-005',
+  'rule-matcher',
+  'rule-groupby',
+];
 
 async function seedRulesAndPolicies(
   rulesSoService: RulesSavedObjectServiceContract,
@@ -761,6 +978,24 @@ async function seedRulesAndPolicies(
   };
   await npSoService.create({ attrs: policyAttrs, id: NOTIFICATION_POLICY_ID });
 
+  const matcherPolicyAttrs: NotificationPolicySavedObjectAttributes = {
+    ...policyAttrs,
+    name: 'Matcher Policy',
+    description: 'Only matches critical severity',
+    enabled: false,
+    matcher: 'data.severity: "critical"',
+  };
+  await npSoService.create({ attrs: matcherPolicyAttrs, id: NOTIFICATION_POLICY_MATCHER_ID });
+
+  const groupByPolicyAttrs: NotificationPolicySavedObjectAttributes = {
+    ...policyAttrs,
+    name: 'GroupBy Policy',
+    description: 'Groups by host.name',
+    enabled: false,
+    groupBy: ['host.name'],
+  };
+  await npSoService.create({ attrs: groupByPolicyAttrs, id: NOTIFICATION_POLICY_GROUPBY_ID });
+
   const ruleAttrs: RuleSavedObjectAttributes = {
     kind: 'alert',
     metadata: { name: 'Test Rule' },
@@ -781,14 +1016,29 @@ async function seedRulesAndPolicies(
 
 async function setNotificationPolicyThrottle(
   npSoService: NotificationPolicySavedObjectServiceContract,
-  throttle: NotificationPolicySavedObjectAttributes['throttle']
+  throttle: NotificationPolicySavedObjectAttributes['throttle'],
+  policyId: string = NOTIFICATION_POLICY_ID
 ): Promise<void> {
-  const policy = await npSoService.get(NOTIFICATION_POLICY_ID);
+  const policy = await npSoService.get(policyId);
 
   await npSoService.update({
-    id: NOTIFICATION_POLICY_ID,
+    id: policyId,
     version: policy.version,
     attrs: { throttle },
+  });
+}
+
+async function setNotificationPolicyEnabled(
+  npSoService: NotificationPolicySavedObjectServiceContract,
+  policyId: string,
+  enabled: boolean
+): Promise<void> {
+  const policy = await npSoService.get(policyId);
+
+  await npSoService.update({
+    id: policyId,
+    version: policy.version,
+    attrs: { enabled },
   });
 }
 
