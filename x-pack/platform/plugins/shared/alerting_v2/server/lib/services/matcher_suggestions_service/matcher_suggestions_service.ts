@@ -16,6 +16,7 @@ import { RULE_SAVED_OBJECT_TYPE, type RuleSavedObjectAttributes } from '../../..
 const MAX_SUGGESTIONS = 10;
 const MAX_DATA_FIELDS = 100;
 const DATA_FIELD_SAMPLE_SIZE = 1000;
+const ALERT_EVENTS_LOOKBACK = 'now-24h';
 
 const EPISODE_STATUS_VALUES = Object.values(alertEpisodeStatus);
 
@@ -114,7 +115,7 @@ export class MatcherSuggestionsService {
           bool: {
             filter: [
               { term: { type: 'alert' } },
-              { range: { '@timestamp': { gte: 'now-24h' } } },
+              { range: { '@timestamp': { gte: ALERT_EVENTS_LOOKBACK } } },
               { exists: { field: 'data' } },
             ],
           },
@@ -222,7 +223,10 @@ export class MatcherSuggestionsService {
         terminate_after: 100000,
         query: {
           bool: {
-            filter: [{ term: { type: 'alert' } }, { range: { '@timestamp': { gte: 'now-1h' } } }],
+            filter: [
+              { term: { type: 'alert' } },
+              { range: { '@timestamp': { gte: ALERT_EVENTS_LOOKBACK } } },
+            ],
           },
         },
         aggs: {
@@ -231,7 +235,6 @@ export class MatcherSuggestionsService {
               field: esFieldName,
               include: `${getEscapedQuery(query)}.*`,
               execution_hint: 'map' as const,
-              shard_size: MAX_SUGGESTIONS,
             },
           },
         },

@@ -214,7 +214,10 @@ describe('MatcherSuggestionsService', () => {
           index: '.rule-events',
           query: {
             bool: {
-              filter: [{ term: { type: 'alert' } }, { range: { '@timestamp': { gte: 'now-1h' } } }],
+              filter: [
+                { term: { type: 'alert' } },
+                { range: { '@timestamp': { gte: 'now-24h' } } },
+              ],
             },
           },
         })
