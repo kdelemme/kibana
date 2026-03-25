@@ -157,6 +157,35 @@ describe('MatcherSuggestionsService', () => {
       const result = await service.getSuggestions('rule.id', '');
       expect(result).toEqual(['abc-123']);
     });
+
+    it('filters rule IDs by prefix', async () => {
+      const { service, ruleSoClient } = createService();
+
+      ruleSoClient.find.mockResolvedValue({
+        saved_objects: [
+          {
+            id: 'abc-123',
+            type: RULE_SAVED_OBJECT_TYPE,
+            attributes: { metadata: { name: 'r1' } },
+            references: [],
+            score: 1,
+          },
+          {
+            id: 'def-456',
+            type: RULE_SAVED_OBJECT_TYPE,
+            attributes: { metadata: { name: 'r2' } },
+            references: [],
+            score: 1,
+          },
+        ],
+        total: 2,
+        per_page: 100,
+        page: 1,
+      });
+
+      const result = await service.getSuggestions('rule.id', 'abc');
+      expect(result).toEqual(['abc-123']);
+    });
   });
 
   describe('episode_id', () => {

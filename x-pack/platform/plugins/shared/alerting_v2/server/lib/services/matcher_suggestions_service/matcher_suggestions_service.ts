@@ -179,7 +179,7 @@ export class MatcherSuggestionsService {
 
     const allLabels = new Set<string>();
     for (const so of result.saved_objects) {
-      const labels = so.attributes.metadata.labels;
+      const labels = so.attributes.metadata?.labels;
       if (Array.isArray(labels)) {
         for (const label of labels) {
           allLabels.add(label);
@@ -198,13 +198,16 @@ export class MatcherSuggestionsService {
     const result = await this.ruleSoClient.find<RuleSavedObjectAttributes>({
       type: RULE_SAVED_OBJECT_TYPE,
       page: 1,
-      perPage: MAX_SUGGESTIONS,
-      ...(query ? { search: `${query}*` } : {}),
+      perPage: 100,
       sortField: 'updatedAt',
       sortOrder: 'desc',
     });
 
-    return result.saved_objects.map((so) => so.id);
+    const lowerQuery = query.toLowerCase();
+    return result.saved_objects
+      .map((so) => so.id)
+      .filter((id) => !lowerQuery || id.toLowerCase().startsWith(lowerQuery))
+      .slice(0, MAX_SUGGESTIONS);
   }
 
   private async getAlertEventFieldSuggestions(
