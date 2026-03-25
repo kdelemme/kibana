@@ -18,16 +18,23 @@ import {
 } from '@elastic/eui';
 import { i18n } from '@kbn/i18n';
 import { FormattedMessage } from '@kbn/i18n-react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { FREQUENCY_OPTIONS, THROTTLE_INTERVAL_PATTERN } from './constants';
 import { MatcherInput } from './components/matcher_input';
 import { WorkflowSelector } from './components/workflow_selector';
+import { useFetchDataFields } from '../../../hooks/use_fetch_data_fields';
 import type { NotificationPolicyFormState } from './types';
 
 export const NotificationPolicyForm = () => {
   const { control } = useFormContext<NotificationPolicyFormState>();
   const frequency = useWatch({ control, name: 'frequency' });
+  const { data: dataFieldNames } = useFetchDataFields();
+
+  const groupByOptions = useMemo(
+    () => (dataFieldNames ?? []).map((name) => ({ label: name.replace(/^data\./, '') })),
+    [dataFieldNames]
+  );
 
   return (
     <>
@@ -191,7 +198,7 @@ export const NotificationPolicyForm = () => {
                     { defaultMessage: 'Select or type a field name' }
                   )}
                   selectedOptions={field.value.map((g: string) => ({ label: g }))}
-                  noSuggestions
+                  options={groupByOptions}
                   onCreateOption={(val) => {
                     field.onChange([...field.value, val]);
                   }}
