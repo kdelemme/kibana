@@ -17,7 +17,6 @@ import type {
 } from '../types';
 import type { QueryServiceContract } from '../../services/query_service/query_service';
 import { QueryServiceInternalToken } from '../../services/query_service/tokens';
-import { queryResponseToRecords } from '../../services/query_service/query_response_to_records';
 import { LOOKBACK_WINDOW_MINUTES } from '../constants';
 import { getDispatchableAlertEventsQuery } from '../queries';
 
@@ -68,7 +67,7 @@ export class FetchEpisodesStep implements DispatcherStep {
       .subtract(LOOKBACK_WINDOW_MINUTES, 'minutes')
       .toISOString();
 
-    const result = await this.queryService.executeQuery({
+    const result = await this.queryService.executeQueryRows<RawAlertEpisode>({
       query: getDispatchableAlertEventsQuery().query,
       filter: {
         range: {
@@ -79,7 +78,7 @@ export class FetchEpisodesStep implements DispatcherStep {
       },
     });
 
-    const episodes = parseAlertEpisodes(queryResponseToRecords<RawAlertEpisode>(result));
+    const episodes = parseAlertEpisodes(result);
 
     if (episodes.length === 0) {
       return { type: 'halt', reason: 'no_episodes' };
