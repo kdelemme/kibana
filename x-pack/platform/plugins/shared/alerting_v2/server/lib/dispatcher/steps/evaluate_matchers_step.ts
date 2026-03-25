@@ -40,12 +40,7 @@ export function evaluateMatchers(
 ): MatchedPair[] {
   const matched: MatchedPair[] = [];
 
-  const policiesBySpace = new Map<string, NotificationPolicy[]>();
-  for (const policy of policies.values()) {
-    const list = policiesBySpace.get(policy.spaceId) ?? [];
-    list.push(policy);
-    policiesBySpace.set(policy.spaceId, list);
-  }
+  const policiesBySpace = Map.groupBy(policies.values(), (policy) => policy.spaceId);
 
   for (const episode of dispatchable) {
     const rule = rules.get(episode.rule_id);
@@ -64,6 +59,7 @@ export function evaluateMatchers(
       }
 
       context ??= createMatcherContext(episode, rule);
+
       const isMatch = evaluateKql(policy.matcher, context);
       if (isMatch) {
         matched.push({ episode, policy });
@@ -80,6 +76,7 @@ function createMatcherContext(episode: AlertEpisode, rule: Rule): MatcherContext
     group_hash: episode.group_hash,
     episode_id: episode.episode_id,
     episode_status: episode.episode_status,
+    ...(episode.data ? { data: episode.data } : {}),
     rule: {
       id: rule.id,
       name: rule.name,

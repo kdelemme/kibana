@@ -8,6 +8,7 @@
 export type RuleId = string;
 export type NotificationPolicyId = string;
 export type NotificationGroupId = string;
+export type AlertEpisodeData = Record<string, unknown>;
 
 export interface NotificationPolicyDestination {
   type: 'workflow';
@@ -20,6 +21,7 @@ export interface AlertEpisode {
   group_hash: string;
   episode_id: string;
   episode_status: 'inactive' | 'pending' | 'active' | 'recovering';
+  data?: AlertEpisodeData;
 }
 
 export interface AlertEpisodeSuppression {

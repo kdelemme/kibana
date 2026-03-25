@@ -55,11 +55,29 @@ describe('getDispatchableAlertEventsQuery', () => {
     expect(req.query).toContain('BY rule_id, group_hash, episode_id, episode_status');
   });
 
-  it('keeps the expected output columns', () => {
+  it('fetches _source metadata alongside _index', () => {
+    const req = getDispatchableAlertEventsQuery();
+
+    expect(req.query).toContain('METADATA _index, _source');
+  });
+
+  it('extracts data_json from _source using JSON_EXTRACT for rule-events rows', () => {
+    const req = getDispatchableAlertEventsQuery();
+
+    expect(req.query).toContain('JSON_EXTRACT(_source, "$.data")');
+  });
+
+  it('aggregates data_json using LAST by timestamp', () => {
+    const req = getDispatchableAlertEventsQuery();
+
+    expect(req.query).toContain('data_json = LAST(data_json, @timestamp)');
+  });
+
+  it('keeps the expected output columns including data_json', () => {
     const req = getDispatchableAlertEventsQuery();
 
     expect(req.query).toContain(
-      'KEEP last_event_timestamp, rule_id, group_hash, episode_id, episode_status'
+      'KEEP last_event_timestamp, rule_id, group_hash, episode_id, episode_status, data_json'
     );
   });
 

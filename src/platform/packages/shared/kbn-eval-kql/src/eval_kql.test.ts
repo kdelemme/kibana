@@ -35,6 +35,22 @@ describe('evaluateKql', () => {
       expect(evaluateKql(kql, { user: { info: { name: 'Jane Doe' } } })).toBe(false);
     });
 
+    it('should correctly evaluate a quoted value with dots in nested field path', () => {
+      const kql = 'data.host.name: "admin-console.prod.001"';
+      expect(
+        evaluateKql(kql, {
+          episode_status: 'recovering',
+          data: { count: 2, host: { name: 'admin-console.prod.001' } },
+        })
+      ).toBe(true);
+      expect(
+        evaluateKql(kql, {
+          episode_status: 'recovering',
+          data: { count: 2, host: { name: 'other-host' } },
+        })
+      ).toBe(false);
+    });
+
     it('should correctly evaluate a simple "is" KQL expression with boolean', () => {
       const kql = 'isActive: true';
       expect(evaluateKql(kql, { isActive: true })).toBe(true);
