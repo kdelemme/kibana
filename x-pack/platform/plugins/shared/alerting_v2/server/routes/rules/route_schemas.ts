@@ -6,13 +6,10 @@
  */
 
 import { z } from '@kbn/zod/v4';
-import { validateDuration } from './validation';
 
-const durationSchema = z.string().superRefine((value, ctx) => {
-  const error = validateDuration(value);
-  if (error) {
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message: error });
-  }
+/**
+ * Shared path params schema for routes that accept a single rule ID.
+ */
+export const ruleIdParamsSchema = z.object({
+  id: z.string().describe('The identifier for the rule.'),
 });
-
-export { durationSchema };
