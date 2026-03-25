@@ -12,6 +12,7 @@ import type { KqlPluginStart, SuggestionsAbstraction } from '@kbn/kql/public';
 import { useService } from '@kbn/core-di-browser';
 import { PluginStart } from '@kbn/core-di';
 import { MATCHER_CONTEXT_FIELDS } from '@kbn/alerting-v2-schemas';
+import { useFetchDataFields } from '../../../../../hooks/use_fetch_data_fields';
 
 interface MatcherInputProps {
   value: string;
@@ -21,19 +22,13 @@ interface MatcherInputProps {
   'data-test-subj'?: string;
 }
 
-const syntheticDataView = [
-  {
-    title: '',
-    fieldFormatMap: {},
-    fields: MATCHER_CONTEXT_FIELDS.map((f) => ({
-      name: f.path,
-      type: f.type === 'boolean' ? 'boolean' : 'string',
-      esTypes: [f.type === 'boolean' ? 'boolean' : 'keyword'],
-      searchable: true,
-      aggregatable: true,
-    })),
-  },
-] as unknown as DataView[];
+const staticFields = MATCHER_CONTEXT_FIELDS.filter((f) => f.type !== 'object').map((f) => ({
+  name: f.path,
+  type: f.type === 'boolean' ? 'boolean' : 'string',
+  esTypes: [f.type === 'boolean' ? 'boolean' : 'keyword'],
+  searchable: true,
+  aggregatable: true,
+}));
 
 const matcherSuggestionsAbstraction: SuggestionsAbstraction = {
   type: 'notification_policies',
@@ -48,6 +43,25 @@ export const MatcherInput = ({
   'data-test-subj': dataTestSubj,
 }: MatcherInputProps) => {
   const { QueryStringInput } = useService(PluginStart('kql')) as KqlPluginStart;
+  const { data: dataFieldNames } = useFetchDataFields();
+
+  const syntheticDataView = useMemo(() => {
+    const dataFields = (dataFieldNames ?? []).map((name) => ({
+      name,
+      type: 'string',
+      esTypes: ['keyword'],
+      searchable: true,
+      aggregatable: true,
+    }));
+
+    return [
+      {
+        title: '',
+        fieldFormatMap: {},
+        fields: [...staticFields, ...dataFields],
+      },
+    ] as unknown as DataView[];
+  }, [dataFieldNames]);
 
   const query: Query = useMemo(() => ({ query: value, language: 'kuery' }), [value]);
 

@@ -31,6 +31,7 @@ import { UpdateNotificationPolicyRoute } from '../routes/notification_policies/u
 import { UpdateNotificationPolicyApiKeyRoute } from '../routes/notification_policies/update_notification_policy_api_key_route';
 import { DeleteNotificationPolicyRoute } from '../routes/notification_policies/delete_notification_policy_route';
 import { MatcherValueSuggestionsRoute } from '../routes/suggestions/matcher_value_suggestions_route';
+import { MatcherDataFieldsRoute } from '../routes/suggestions/matcher_data_fields_route';
 
 export function bindRoutes({ bind }: ContainerModuleLoadOptions) {
   bind(Route).toConstantValue(CreateRuleRoute);
@@ -57,4 +58,5 @@ export function bindRoutes({ bind }: ContainerModuleLoadOptions) {
   bind(Route).toConstantValue(UnsnoozeNotificationPolicyRoute);
   bind(Route).toConstantValue(BulkActionNotificationPoliciesRoute);
   bind(Route).toConstantValue(MatcherValueSuggestionsRoute);
+  bind(Route).toConstantValue(MatcherDataFieldsRoute);
 }

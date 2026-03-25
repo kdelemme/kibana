@@ -11,6 +11,7 @@ import type { RoleCredentials } from '../../../services';
 import { createAlertEvent, indexAlertEvents } from '../fixtures';
 
 const SUGGESTIONS_API_PATH = '/internal/notification_policies/suggestions/values';
+const DATA_FIELDS_API_PATH = '/internal/notification_policies/suggestions/data_fields';
 const RULE_API_PATH = '/internal/alerting/v2/rule';
 const RULE_SO_TYPE = 'alerting_rule';
 
@@ -61,15 +62,17 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           evaluation: { query: { base: 'FROM metrics-* | LIMIT 10' } },
         });
 
-      // Index alert events for episode_id and group_hash suggestions
+      // Index alert events for episode_id, group_hash, and data.* suggestions
       await indexAlertEvents(es, [
         createAlertEvent({
           group_hash: 'hash-abc',
           episode: { id: 'ep-100', status: 'active' },
+          data: { severity: 'critical', env: 'production' },
         }),
         createAlertEvent({
           group_hash: 'hash-def',
           episode: { id: 'ep-200', status: 'active' },
+          data: { severity: 'warning', env: 'staging', region: 'us-east' },
         }),
       ]);
     });
@@ -154,6 +157,45 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
         expect(resp.status).to.be(200);
         expect(resp.body).to.contain('hash-abc');
         expect(resp.body).to.contain('hash-def');
+      });
+    });
+
+    describe('data.* value suggestions', () => {
+      it('should return matching values for data.severity', async () => {
+        const resp = await postSuggestions('data.severity', '');
+        expect(resp.status).to.be(200);
+        expect(resp.body).to.contain('critical');
+        expect(resp.body).to.contain('warning');
+      });
+
+      it('should filter data field values by prefix', async () => {
+        const resp = await postSuggestions('data.severity', 'crit');
+        expect(resp.status).to.be(200);
+        expect(resp.body).to.contain('critical');
+        expect(resp.body).not.to.contain('warning');
+      });
+
+      it('should return matching values for data.env', async () => {
+        const resp = await postSuggestions('data.env', '');
+        expect(resp.status).to.be(200);
+        expect(resp.body).to.contain('production');
+        expect(resp.body).to.contain('staging');
+      });
+    });
+
+    describe('data fields discovery', () => {
+      const getDataFields = () =>
+        supertestWithoutAuth
+          .get(DATA_FIELDS_API_PATH)
+          .set(roleAuthc.apiKeyHeader)
+          .set(samlAuth.getInternalRequestHeader());
+
+      it('should return available data field names', async () => {
+        const resp = await getDataFields();
+        expect(resp.status).to.be(200);
+        expect(resp.body).to.contain('data.env');
+        expect(resp.body).to.contain('data.region');
+        expect(resp.body).to.contain('data.severity');
       });
     });
 

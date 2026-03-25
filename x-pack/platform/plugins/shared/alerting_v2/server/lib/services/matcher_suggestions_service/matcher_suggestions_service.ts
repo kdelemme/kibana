@@ -13,6 +13,8 @@ import { ALERT_EVENTS_DATA_STREAM, alertEpisodeStatus } from '../../../resources
 import { RULE_SAVED_OBJECT_TYPE, type RuleSavedObjectAttributes } from '../../../saved_objects';
 
 const MAX_SUGGESTIONS = 10;
+const MAX_DATA_FIELDS = 100;
+const DATA_FIELD_SAMPLE_SIZE = 1000;
 
 const EPISODE_STATUS_VALUES = Object.values(alertEpisodeStatus);
 
@@ -50,6 +52,19 @@ const MATCHER_FIELD_TO_ES_FIELD: Partial<Record<MatcherField, string>> = {
 const getEscapedQuery = (q: string = '') =>
   q.replace(/[.?+*|{}[\]()"\\#@&<>~]/g, (match) => `\\${match}`);
 
+const extractLeafKeys = (obj: Record<string, unknown>, prefix: string): string[] => {
+  const keys: string[] = [];
+  for (const [key, value] of Object.entries(obj)) {
+    const path = `${prefix}.${key}`;
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      keys.push(...extractLeafKeys(value as Record<string, unknown>, path));
+    } else {
+      keys.push(path);
+    }
+  }
+  return keys;
+};
+
 @injectable()
 export class MatcherSuggestionsService {
   constructor(
@@ -85,7 +100,51 @@ export class MatcherSuggestionsService {
         return this.getRuleIdSuggestions(query);
 
       default:
+        if (field.startsWith('data.')) {
+          return this.getAlertEventFieldSuggestions(field, query);
+        }
         return [];
+    }
+  }
+
+  async getDataFieldNames(): Promise<string[]> {
+    try {
+      const result = await this.esClient.search({
+        index: ALERT_EVENTS_DATA_STREAM,
+        size: DATA_FIELD_SAMPLE_SIZE,
+        timeout: '10s',
+        _source: ['data'],
+        query: {
+          bool: {
+            filter: [
+              { term: { type: 'alert' } },
+              { range: { '@timestamp': { gte: 'now-24h' } } },
+              { exists: { field: 'data' } },
+            ],
+          },
+        },
+        sort: [{ '@timestamp': 'desc' }],
+      });
+
+      const fieldNames = new Set<string>();
+      for (const hit of result.hits.hits) {
+        const source = hit._source as { data?: Record<string, unknown> } | undefined;
+        if (source?.data && typeof source.data === 'object') {
+          for (const key of extractLeafKeys(source.data, 'data')) {
+            fieldNames.add(key);
+          }
+        }
+      }
+
+      return Array.from(fieldNames).sort().slice(0, MAX_DATA_FIELDS);
+    } catch (e) {
+      if (
+        e?.meta?.body?.error?.type === 'index_not_found_exception' ||
+        e?.body?.error?.type === 'index_not_found_exception'
+      ) {
+        return [];
+      }
+      throw e;
     }
   }
 

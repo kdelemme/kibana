@@ -182,7 +182,7 @@ describe('MatcherSuggestionsService', () => {
 
       expect(esClient.search).toHaveBeenCalledWith(
         expect.objectContaining({
-          index: '.alerting-events',
+          index: '.rule-events',
           query: {
             bool: {
               filter: [{ term: { type: 'alert' } }, { range: { '@timestamp': { gte: 'now-1h' } } }],
@@ -240,6 +240,161 @@ describe('MatcherSuggestionsService', () => {
       const { service } = createService();
       const result = await service.getSuggestions('unknown.field', '');
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('data.* fields', () => {
+    it('delegates data.severity to ES terms aggregation', async () => {
+      const { service, esClient } = createService();
+
+      esClient.search.mockResolvedValue({
+        took: 1,
+        timed_out: false,
+        _shards: { total: 1, successful: 1, skipped: 0, failed: 0 },
+        hits: { total: { value: 0, relation: 'eq' }, hits: [] },
+        aggregations: {
+          suggestions: {
+            buckets: [
+              { key: 'critical', doc_count: 10 },
+              { key: 'warning', doc_count: 5 },
+            ],
+          },
+        },
+      });
+
+      const result = await service.getSuggestions('data.severity', '');
+
+      expect(esClient.search).toHaveBeenCalledWith(
+        expect.objectContaining({
+          aggs: expect.objectContaining({
+            suggestions: expect.objectContaining({
+              terms: expect.objectContaining({
+                field: 'data.severity',
+              }),
+            }),
+          }),
+        })
+      );
+      expect(result).toEqual(['critical', 'warning']);
+    });
+
+    it('delegates nested data fields to ES terms aggregation', async () => {
+      const { service, esClient } = createService();
+
+      esClient.search.mockResolvedValue({
+        took: 1,
+        timed_out: false,
+        _shards: { total: 1, successful: 1, skipped: 0, failed: 0 },
+        hits: { total: { value: 0, relation: 'eq' }, hits: [] },
+        aggregations: {
+          suggestions: {
+            buckets: [{ key: 'web-01', doc_count: 3 }],
+          },
+        },
+      });
+
+      const result = await service.getSuggestions('data.host.name', 'web');
+      expect(result).toEqual(['web-01']);
+    });
+  });
+
+  describe('getDataFieldNames', () => {
+    it('extracts data field names from sampled documents', async () => {
+      const { service, esClient } = createService();
+
+      esClient.search.mockResolvedValue({
+        took: 1,
+        timed_out: false,
+        _shards: { total: 1, successful: 1, skipped: 0, failed: 0 },
+        hits: {
+          total: { value: 2, relation: 'eq' },
+          hits: [
+            {
+              _index: '.ds-.rule-events-1',
+              _id: '1',
+              _source: { data: { severity: 'critical', env: 'production' } },
+            },
+            {
+              _index: '.ds-.rule-events-1',
+              _id: '2',
+              _source: { data: { severity: 'warning', region: 'us-east' } },
+            },
+          ],
+        },
+      });
+
+      const result = await service.getDataFieldNames();
+      expect(result).toEqual(['data.env', 'data.region', 'data.severity']);
+    });
+
+    it('extracts nested data field names with dot notation', async () => {
+      const { service, esClient } = createService();
+
+      esClient.search.mockResolvedValue({
+        took: 1,
+        timed_out: false,
+        _shards: { total: 1, successful: 1, skipped: 0, failed: 0 },
+        hits: {
+          total: { value: 1, relation: 'eq' },
+          hits: [
+            {
+              _index: '.ds-.rule-events-1',
+              _id: '1',
+              _source: { data: { host: { name: 'web-01', ip: '10.0.0.1' }, severity: 'critical' } },
+            },
+          ],
+        },
+      });
+
+      const result = await service.getDataFieldNames();
+      expect(result).toEqual(['data.host.ip', 'data.host.name', 'data.severity']);
+    });
+
+    it('returns empty array when no documents exist', async () => {
+      const { service, esClient } = createService();
+
+      esClient.search.mockResolvedValue({
+        took: 1,
+        timed_out: false,
+        _shards: { total: 1, successful: 1, skipped: 0, failed: 0 },
+        hits: { total: { value: 0, relation: 'eq' }, hits: [] },
+      });
+
+      const result = await service.getDataFieldNames();
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array when index does not exist', async () => {
+      const { service, esClient } = createService();
+
+      const error = new Error('index_not_found_exception');
+      Object.assign(error, {
+        meta: { body: { error: { type: 'index_not_found_exception' } } },
+      });
+      esClient.search.mockRejectedValue(error);
+
+      const result = await service.getDataFieldNames();
+      expect(result).toEqual([]);
+    });
+
+    it('skips documents with no data field', async () => {
+      const { service, esClient } = createService();
+
+      esClient.search.mockResolvedValue({
+        took: 1,
+        timed_out: false,
+        _shards: { total: 1, successful: 1, skipped: 0, failed: 0 },
+        hits: {
+          total: { value: 2, relation: 'eq' },
+          hits: [
+            { _index: '.ds-.rule-events-1', _id: '1', _source: { data: { severity: 'critical' } } },
+            { _index: '.ds-.rule-events-1', _id: '2', _source: {} },
+          ],
+        },
+      });
+
+      const result = await service.getDataFieldNames();
+      expect(result).toEqual(['data.severity']);
     });
   });
 
