@@ -14,6 +14,8 @@ export const ALERTING_V2_NOTIFICATION_POLICIES_PATH = `${ALERTING_V2_BASE_PATH}/
 export const INTERNAL_ALERTING_V2_RULE_API_PATH = '/internal/alerting/v2/rule' as const;
 export const INTERNAL_ALERTING_V2_NOTIFICATION_POLICY_API_PATH =
   '/internal/alerting/v2/notification_policies' as const;
+export const INTERNAL_ALERTING_V2_DATA_FIELDS_API_PATH =
+  '/internal/notification_policies/suggestions/data_fields' as const;
 
 export const paths = {
   ruleCreate: `${ALERTING_V2_BASE_PATH}/create`,

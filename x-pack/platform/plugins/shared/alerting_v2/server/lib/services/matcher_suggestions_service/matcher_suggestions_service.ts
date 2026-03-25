@@ -7,6 +7,7 @@
 
 import type { ElasticsearchClient, SavedObjectsClientContract } from '@kbn/core/server';
 import { inject, injectable } from 'inversify';
+import { flattenObject } from '@kbn/object-utils';
 import { EsServiceScopedToken } from '../es_service/tokens';
 import { RuleSavedObjectsClientToken } from '../rules_saved_object_service/tokens';
 import { ALERT_EVENTS_DATA_STREAM, alertEpisodeStatus } from '../../../resources/alert_events';
@@ -52,17 +53,12 @@ const MATCHER_FIELD_TO_ES_FIELD: Partial<Record<MatcherField, string>> = {
 const getEscapedQuery = (q: string = '') =>
   q.replace(/[.?+*|{}[\]()"\\#@&<>~]/g, (match) => `\\${match}`);
 
-const extractLeafKeys = (obj: Record<string, unknown>, prefix: string): string[] => {
-  const keys: string[] = [];
-  for (const [key, value] of Object.entries(obj)) {
-    const path = `${prefix}.${key}`;
-    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      keys.push(...extractLeafKeys(value as Record<string, unknown>, path));
-    } else {
-      keys.push(path);
-    }
-  }
-  return keys;
+const isIndexNotFoundException = (e: unknown): boolean => {
+  const err = e as Record<string, any> | undefined;
+  return (
+    err?.meta?.body?.error?.type === 'index_not_found_exception' ||
+    err?.body?.error?.type === 'index_not_found_exception'
+  );
 };
 
 @injectable()
@@ -130,7 +126,7 @@ export class MatcherSuggestionsService {
       for (const hit of result.hits.hits) {
         const source = hit._source as { data?: Record<string, unknown> } | undefined;
         if (source?.data && typeof source.data === 'object') {
-          for (const key of extractLeafKeys(source.data, 'data')) {
+          for (const key of Object.keys(flattenObject(source.data, 'data'))) {
             fieldNames.add(key);
           }
         }
@@ -138,10 +134,7 @@ export class MatcherSuggestionsService {
 
       return Array.from(fieldNames).sort().slice(0, MAX_DATA_FIELDS);
     } catch (e) {
-      if (
-        e?.meta?.body?.error?.type === 'index_not_found_exception' ||
-        e?.body?.error?.type === 'index_not_found_exception'
-      ) {
+      if (isIndexNotFoundException(e)) {
         return [];
       }
       throw e;
@@ -246,10 +239,7 @@ export class MatcherSuggestionsService {
         | undefined;
       return (aggs?.suggestions?.buckets ?? []).map((bucket) => bucket.key);
     } catch (e) {
-      if (
-        e?.meta?.body?.error?.type === 'index_not_found_exception' ||
-        e?.body?.error?.type === 'index_not_found_exception'
-      ) {
+      if (isIndexNotFoundException(e)) {
         return [];
       }
       throw e;
