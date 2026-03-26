@@ -12,4 +12,4 @@ export const MAX_CONSECUTIVE_BREACHES = 1000;
 export const MAX_DURATION = '365d';
 
 /** Minimum allowed interval for schedule.every */
-export const MIN_SCHEDULE_INTERVAL = '1m';
+export const MIN_SCHEDULE_INTERVAL = '5s';
