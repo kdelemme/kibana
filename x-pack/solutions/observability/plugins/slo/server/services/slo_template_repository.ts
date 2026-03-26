@@ -89,6 +89,9 @@ export class DefaultSLOTemplateRepository implements SLOTemplateRepository {
           terms: {
             field: `${SO_SLO_TEMPLATE_TYPE}.attributes.tags`,
             size: 10000,
+            order: {
+              _key: 'asc',
+            },
           },
         },
       },

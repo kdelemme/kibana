@@ -12,6 +12,7 @@ import type {
   CreateSLOInput,
   FindSLODefinitionsResponse,
   FindSLOInstancesResponse,
+  FindSLOTemplateTagsResponse,
   FindSLOTemplatesResponse,
   GetHealthScanResultsResponse,
   GetSLOTemplateResponse,
@@ -336,6 +337,20 @@ export function SloApiProvider({ getService }: DeploymentAgnosticFtrProviderCont
       const { body } = await supertestWithoutAuth
         .get(`/api/observability/slo_templates`)
         .query(queryParams)
+        .set(roleAuthc.apiKeyHeader)
+        .set(samlAuth.getInternalRequestHeader())
+        .send()
+        .expect(expectedStatus);
+
+      return body;
+    },
+
+    async findTemplateTags(
+      roleAuthc: RoleCredentials,
+      expectedStatus: number = 200
+    ): Promise<FindSLOTemplateTagsResponse> {
+      const { body } = await supertestWithoutAuth
+        .get(`/api/observability/slo_templates/_tags`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send()

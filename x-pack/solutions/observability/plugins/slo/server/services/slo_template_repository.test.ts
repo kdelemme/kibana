@@ -19,7 +19,7 @@ describe('DefaultSLOTemplateRepository', () => {
   });
 
   describe('tags', () => {
-    it('returns all unique tags from SLO templates', async () => {
+    it('returns all unique tags in alphabetical order from SLO templates', async () => {
       soClient.find.mockResolvedValueOnce({
         saved_objects: [],
         total: 0,
@@ -28,9 +28,9 @@ describe('DefaultSLOTemplateRepository', () => {
         aggregations: {
           tagsAggs: {
             buckets: [
-              { key: 'production', doc_count: 5 },
-              { key: 'latency', doc_count: 3 },
               { key: 'availability', doc_count: 2 },
+              { key: 'latency', doc_count: 3 },
+              { key: 'production', doc_count: 5 },
             ],
           },
         },
@@ -38,7 +38,7 @@ describe('DefaultSLOTemplateRepository', () => {
 
       const tags = await repository.tags();
 
-      expect(tags).toEqual(['production', 'latency', 'availability']);
+      expect(tags).toEqual(['availability', 'latency', 'production']);
       expect(soClient.find).toHaveBeenCalledWith({
         type: 'slo_template',
         perPage: 0,
@@ -47,6 +47,9 @@ describe('DefaultSLOTemplateRepository', () => {
             terms: {
               field: 'slo_template.attributes.tags',
               size: 10000,
+              order: {
+                _key: 'asc',
+              },
             },
           },
         },
