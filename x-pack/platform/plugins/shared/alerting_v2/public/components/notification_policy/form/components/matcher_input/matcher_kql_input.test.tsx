@@ -51,18 +51,40 @@ describe('MatcherInput', () => {
     expect(screen.getByTestId('matcherInput')).toHaveValue('episode_status : "active"');
   });
 
-  it('passes a synthetic DataView built from MATCHER_CONTEXT_FIELDS', () => {
+  it('passes a synthetic DataView built from MATCHER_CONTEXT_FIELDS (excluding object types)', () => {
     render(<MatcherInput value="" onChange={jest.fn()} />);
 
     const { indexPatterns } = mockQueryStringInput.mock.calls[0][0] as {
       indexPatterns: Array<{ fields: Array<{ name: string }> }>;
     };
 
+    const expectedFields = MATCHER_CONTEXT_FIELDS.filter((f) => f.type !== 'object');
     expect(indexPatterns).toHaveLength(1);
-    expect(indexPatterns[0].fields).toHaveLength(MATCHER_CONTEXT_FIELDS.length);
+    expect(indexPatterns[0].fields).toHaveLength(expectedFields.length);
     expect(indexPatterns[0].fields.map((f: { name: string }) => f.name)).toEqual(
-      MATCHER_CONTEXT_FIELDS.map((f) => f.path)
+      expectedFields.map((f) => f.path)
     );
+  });
+
+  it('includes data fields in synthetic DataView when dataFieldNames is provided', () => {
+    render(
+      <MatcherInput
+        value=""
+        onChange={jest.fn()}
+        dataFieldNames={['data.host.name', 'data.severity']}
+      />
+    );
+
+    const { indexPatterns } = mockQueryStringInput.mock.calls[0][0] as {
+      indexPatterns: Array<{ fields: Array<{ name: string }> }>;
+    };
+
+    const staticFieldCount = MATCHER_CONTEXT_FIELDS.filter((f) => f.type !== 'object').length;
+    expect(indexPatterns[0].fields).toHaveLength(staticFieldCount + 2);
+
+    const fieldNames = indexPatterns[0].fields.map((f: { name: string }) => f.name);
+    expect(fieldNames).toContain('data.host.name');
+    expect(fieldNames).toContain('data.severity');
   });
 
   it('disables the language switcher and uses kuery language', () => {

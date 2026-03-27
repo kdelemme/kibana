@@ -148,6 +148,7 @@ export const NotificationPolicyForm = () => {
                   value={field.value}
                   onChange={field.onChange}
                   fullWidth
+                  dataFieldNames={dataFieldNames}
                   data-test-subj="matcherInput"
                   placeholder={i18n.translate(
                     'xpack.alertingV2.notificationPolicy.form.matcher.placeholder',

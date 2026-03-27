@@ -12,7 +12,6 @@ import type { KqlPluginStart, SuggestionsAbstraction } from '@kbn/kql/public';
 import { useService } from '@kbn/core-di-browser';
 import { PluginStart } from '@kbn/core-di';
 import { MATCHER_CONTEXT_FIELDS } from '@kbn/alerting-v2-schemas';
-import { useFetchDataFields } from '../../../../../hooks/use_fetch_data_fields';
 
 interface MatcherInputProps {
   value: string;
@@ -20,6 +19,7 @@ interface MatcherInputProps {
   fullWidth?: boolean;
   placeholder?: string;
   'data-test-subj'?: string;
+  dataFieldNames?: string[];
 }
 
 const staticFields = MATCHER_CONTEXT_FIELDS.filter((f) => f.type !== 'object').map((f) => ({
@@ -41,9 +41,9 @@ export const MatcherInput = ({
   fullWidth,
   placeholder,
   'data-test-subj': dataTestSubj,
+  dataFieldNames,
 }: MatcherInputProps) => {
   const { QueryStringInput } = useService(PluginStart('kql')) as KqlPluginStart;
-  const { data: dataFieldNames } = useFetchDataFields();
 
   const syntheticDataView = useMemo(() => {
     const dataFields = (dataFieldNames ?? []).map((name) => ({

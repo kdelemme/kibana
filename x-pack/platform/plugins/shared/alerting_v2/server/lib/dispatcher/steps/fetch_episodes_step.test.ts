@@ -114,8 +114,11 @@ describe('parseDataJson', () => {
     expect(parseDataJson('null')).toEqual({});
   });
 
-  it('filters out non-primitive values', () => {
-    expect(parseDataJson('{"a":"ok","b":{"nested":true},"c":[1]}')).toEqual({ a: 'ok' });
+  it('flattens nested objects and filters out non-primitive values', () => {
+    expect(parseDataJson('{"a":"ok","b":{"nested":true},"c":[1]}')).toEqual({
+      a: 'ok',
+      b: { nested: true },
+    });
   });
 
   it('keeps string, number, and boolean values', () => {
@@ -138,6 +141,28 @@ describe('parseDataJson', () => {
   it('handles deeply nested dot-separated keys', () => {
     expect(parseDataJson('{"a.b.c":"deep"}')).toEqual({
       a: { b: { c: 'deep' } },
+    });
+  });
+
+  it('handles nested objects from _source', () => {
+    expect(parseDataJson('{"host":{"name":"server-01","ip":"10.0.0.1"}}')).toEqual({
+      host: { name: 'server-01', ip: '10.0.0.1' },
+    });
+  });
+
+  it('handles deeply nested objects from _source', () => {
+    expect(parseDataJson('{"a":{"b":{"c":"deep"}}}')).toEqual({
+      a: { b: { c: 'deep' } },
+    });
+  });
+
+  it('handles mixed nested objects and flat dot-separated keys', () => {
+    expect(
+      parseDataJson('{"host":{"name":"server-01"},"severity":"critical","tags.env":"prod"}')
+    ).toEqual({
+      host: { name: 'server-01' },
+      severity: 'critical',
+      tags: { env: 'prod' },
     });
   });
 });

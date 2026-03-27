@@ -48,7 +48,7 @@ describe('DispatchStep', () => {
   afterEach(() => jest.clearAllMocks());
 
   it('dispatches each group to its workflow destinations', async () => {
-    const { loggerService } = createLoggerService();
+    const { loggerService, mockLogger } = createLoggerService();
     const step = new DispatchStep(loggerService, mockWfm);
 
     mockWfm.getWorkflow.mockResolvedValue(createWorkflowDetailDto());
@@ -90,6 +90,12 @@ describe('DispatchStep', () => {
       }),
       'notification_policy'
     );
+
+    const summaryCall = mockLogger.debug.mock.calls.find((call) => {
+      const msg = typeof call[0] === 'function' ? call[0]() : call[0];
+      return msg.includes('Dispatched 1 notification groups');
+    });
+    expect(summaryCall).toBeDefined();
   });
 
   it('skips dispatch when policy has no API key', async () => {

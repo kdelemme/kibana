@@ -36,6 +36,13 @@ jest.mock('../../../hooks/use_fetch_workflows', () => ({
   }),
 }));
 
+jest.mock('../../../hooks/use_fetch_data_fields', () => ({
+  useFetchDataFields: () => ({
+    data: ['data.host.name', 'data.severity'],
+    isLoading: false,
+  }),
+}));
+
 const renderForm = (defaultValues: NotificationPolicyFormState = DEFAULT_FORM_STATE) => {
   const TestComponent = () => {
     const methods = useForm<NotificationPolicyFormState>({

@@ -49,6 +49,12 @@ export class DispatchStep implements DispatcherStep {
       dispatch.map((group) => limiter(() => this.dispatchGroup(group, policies)))
     );
 
+    if (dispatch.length > 0) {
+      this.logger.debug({
+        message: () => `Dispatched ${dispatch.length} notification groups`,
+      });
+    }
+
     return { type: 'continue' };
   }
 

@@ -7,6 +7,7 @@
 
 import moment from 'moment';
 import { set } from '@kbn/safer-lodash-set';
+import { flattenObject } from '@kbn/object-utils';
 import { inject, injectable } from 'inversify';
 import type {
   AlertEpisode,
@@ -76,8 +77,9 @@ export function parseDataJson(json: string): AlertEpisodeData {
   try {
     const parsed = JSON.parse(json);
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
+    const flattened = flattenObject(parsed);
     const result: AlertEpisodeData = {};
-    for (const [key, value] of Object.entries(parsed)) {
+    for (const [key, value] of Object.entries(flattened)) {
       if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
         set(result, key.split('.'), value);
       }
