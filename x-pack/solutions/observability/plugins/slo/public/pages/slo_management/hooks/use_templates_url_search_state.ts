@@ -31,6 +31,9 @@ export function useTemplatesUrlSearchState(): {
   onStateChange: (state: Partial<TemplatesSearchState>) => void;
 } {
   const [state, setState] = useState<TemplatesSearchState>(DEFAULT_STATE);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   const history = useHistory();
   const urlStateStorage = useRef(
     createKbnUrlStateStorage({
@@ -61,14 +64,14 @@ export function useTemplatesUrlSearchState(): {
 
   const onStateChange = useCallback(
     (newState: Partial<TemplatesSearchState>) => {
-      const updatedState = { ...state, page: 0, ...newState };
-      setState(() => updatedState);
-
+      const updatedState = { ...stateRef.current, page: 0, ...newState };
+      stateRef.current = updatedState;
+      setState(updatedState);
       urlStateStorage.current?.set(SLO_TEMPLATES_SEARCH_URL_STORAGE_KEY, updatedState, {
         replace: true,
       });
     },
-    [state]
+    [urlStateStorage]
   );
 
   return {
