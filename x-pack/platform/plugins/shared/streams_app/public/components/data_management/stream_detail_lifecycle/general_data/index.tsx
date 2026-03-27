@@ -144,7 +144,7 @@ export const StreamDetailGeneralData = ({
       <EuiTitle size="xs">
         <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
           <EuiFlexItem grow={false}>
-            <EuiIcon type="checkInCircleFilled" color="success" aria-hidden={true} />
+            <EuiIcon type="checkCircleFill" color="success" aria-hidden={true} />
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <h4>
@@ -168,6 +168,7 @@ export const StreamDetailGeneralData = ({
         bottomCard={
           <StorageSizeCard
             hasMonitorPrivileges={definition.privileges?.monitor}
+            isTimeSeriesMode={definition.index_mode === 'time_series'}
             stats={data.stats?.ds.stats}
             statsError={data.error}
           />

@@ -147,7 +147,7 @@ export function StreamDeleteModal({
                 <EuiButtonEmpty
                   data-test-subj="streamsAppDeleteStreamModalCopyCodeButton"
                   size="s"
-                  iconType="editorCodeBlock"
+                  iconType="code"
                   onClick={copy}
                 >
                   {copyCodeButtonText}
@@ -169,6 +169,7 @@ export function StreamDeleteModal({
                 color="danger"
                 onClick={handleDelete}
                 fill
+                data-test-subj="streamsAppDeleteStreamModalDeleteButton"
               >
                 {i18n.translate('xpack.streams.streamDetailView.deleteStreamModal.deleteButton', {
                   defaultMessage: 'Delete',
