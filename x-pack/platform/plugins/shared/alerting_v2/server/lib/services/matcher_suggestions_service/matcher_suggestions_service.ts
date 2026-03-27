@@ -232,6 +232,7 @@ export class MatcherSuggestionsService {
         aggs: {
           suggestions: {
             terms: {
+              size: MAX_SUGGESTIONS,
               field: esFieldName,
               include: `${getEscapedQuery(query)}.*`,
               execution_hint: 'map' as const,

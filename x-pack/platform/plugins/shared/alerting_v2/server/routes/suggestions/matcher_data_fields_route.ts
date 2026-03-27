@@ -6,13 +6,13 @@
  */
 
 import Boom from '@hapi/boom';
-import type { KibanaResponseFactory } from '@kbn/core/server';
-import type { RouteSecurity } from '@kbn/core-http-server';
-import { inject, injectable } from 'inversify';
 import { Response } from '@kbn/core-di-server';
+import type { RouteSecurity } from '@kbn/core-http-server';
+import type { KibanaResponseFactory } from '@kbn/core/server';
+import { inject, injectable } from 'inversify';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
-import { INTERNAL_ALERTING_V2_DATA_FIELDS_API_PATH } from '../constants';
 import { MatcherSuggestionsService } from '../../lib/services/matcher_suggestions_service/matcher_suggestions_service';
+import { INTERNAL_ALERTING_V2_DATA_FIELDS_API_PATH } from '../constants';
 
 @injectable()
 export class MatcherDataFieldsRoute {

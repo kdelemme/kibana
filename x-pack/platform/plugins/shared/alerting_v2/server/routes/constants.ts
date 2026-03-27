@@ -12,4 +12,4 @@ export const INTERNAL_ALERTING_V2_NOTIFICATION_POLICY_API_PATH =
 export const INTERNAL_ALERTING_V2_SUGGESTIONS_API_PATH =
   '/internal/notification_policies/suggestions/values' as const;
 export const INTERNAL_ALERTING_V2_DATA_FIELDS_API_PATH =
-  '/internal/notification_policies/suggestions/data_fields' as const;
+  `${INTERNAL_ALERTING_V2_NOTIFICATION_POLICY_API_PATH}/suggestions/data_fields` as const;

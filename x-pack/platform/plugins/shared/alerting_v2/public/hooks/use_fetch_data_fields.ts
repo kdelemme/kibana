@@ -17,6 +17,6 @@ export const useFetchDataFields = () => {
     queryKey: matcherSuggestionKeys.dataFields(),
     queryFn: () => http.get<string[]>(INTERNAL_ALERTING_V2_DATA_FIELDS_API_PATH),
     refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
   });
 };
