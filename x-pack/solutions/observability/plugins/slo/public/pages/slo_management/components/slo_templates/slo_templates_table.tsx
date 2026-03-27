@@ -100,7 +100,7 @@ export function SloTemplatesTable({ state, onStateChange, onTemplateSelect }: Pr
       render: (value: SLOTemplateResponse['tags']) => {
         if (!value?.length) return null;
         return (
-          <EuiFlexGroup gutterSize="xs" wrap responsive={false}>
+          <EuiFlexGroup gutterSize="xs" wrap responsive>
             {value.map((tag) => (
               <EuiFlexItem key={tag} grow={false}>
                 <EuiBadge color="hollow">{tag}</EuiBadge>
@@ -111,7 +111,9 @@ export function SloTemplatesTable({ state, onStateChange, onTemplateSelect }: Pr
       },
     },
     {
-      name: 'Actions',
+      name: i18n.translate('xpack.slo.sloTemplatesTable.columns.actionsLabel', {
+        defaultMessage: 'Actions',
+      }),
       width: '80px',
       actions,
     },
