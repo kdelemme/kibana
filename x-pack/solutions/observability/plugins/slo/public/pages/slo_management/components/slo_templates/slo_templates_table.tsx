@@ -60,11 +60,13 @@ export function SloTemplatesTable({ state, onStateChange, onTemplateSelect }: Pr
   const actions: Array<DefaultItemAction<SLOTemplateResponse>> = [
     {
       name: i18n.translate('xpack.slo.sloTemplatesTable.actions.createSlo', {
-        defaultMessage: 'Create from template',
+        defaultMessage: 'Create SLO',
       }),
       description: i18n.translate('xpack.slo.sloTemplatesTable.actions.createSloDescription', {
         defaultMessage: 'Create SLO from this template',
       }),
+      icon: 'plusInCircle',
+      type: 'icon',
       'data-test-subj': 'sloTemplateActionCreate',
       enabled: () => !!permissions?.hasAllWriteRequested,
       onClick: (template: SLOTemplateResponse) => {
@@ -79,6 +81,7 @@ export function SloTemplatesTable({ state, onStateChange, onTemplateSelect }: Pr
       name: i18n.translate('xpack.slo.sloTemplatesTable.columns.nameLabel', {
         defaultMessage: 'Name',
       }),
+      width: '25%',
       truncateText: true,
     },
     {
@@ -86,6 +89,7 @@ export function SloTemplatesTable({ state, onStateChange, onTemplateSelect }: Pr
       name: i18n.translate('xpack.slo.sloTemplatesTable.columns.descriptionLabel', {
         defaultMessage: 'Description',
       }),
+      width: '40%',
       truncateText: true,
     },
     {
@@ -96,7 +100,7 @@ export function SloTemplatesTable({ state, onStateChange, onTemplateSelect }: Pr
       render: (value: SLOTemplateResponse['tags']) => {
         if (!value?.length) return null;
         return (
-          <EuiFlexGroup gutterSize="xs" wrap responsive>
+          <EuiFlexGroup gutterSize="xs" wrap responsive={false}>
             {value.map((tag) => (
               <EuiFlexItem key={tag} grow={false}>
                 <EuiBadge color="hollow">{tag}</EuiBadge>
@@ -107,10 +111,8 @@ export function SloTemplatesTable({ state, onStateChange, onTemplateSelect }: Pr
       },
     },
     {
-      name: i18n.translate('xpack.slo.sloTemplatesTable.columns.actionsLabel', {
-        defaultMessage: 'Actions',
-      }),
-      width: '10%',
+      name: 'Actions',
+      width: '80px',
       actions,
     },
   ];
