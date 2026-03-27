@@ -5,16 +5,12 @@
  * 2.0.
  */
 
-import {
-  createKbnUrlStateStorage,
-  createSessionStorageStateStorage,
-} from '@kbn/kibana-utils-plugin/public';
+import { createKbnUrlStateStorage } from '@kbn/kibana-utils-plugin/public';
 import deepmerge from 'deepmerge';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 
 export const SLO_TEMPLATES_SEARCH_URL_STORAGE_KEY = 'search';
-export const SLO_TEMPLATES_SEARCH_SESSION_STORAGE_KEY = 'slo.templates_page_search_state';
 
 export interface TemplatesSearchState {
   search: string;
@@ -44,8 +40,6 @@ export function useTemplatesUrlSearchState(): {
     })
   );
 
-  const sessionStorage = useRef(createSessionStorageStateStorage(window.localStorage));
-
   useEffect(() => {
     const sub = urlStateStorage.current
       ?.change$<TemplatesSearchState>(SLO_TEMPLATES_SEARCH_URL_STORAGE_KEY)
@@ -57,16 +51,13 @@ export function useTemplatesUrlSearchState(): {
 
     setState(
       urlStateStorage.current?.get<TemplatesSearchState>(SLO_TEMPLATES_SEARCH_URL_STORAGE_KEY) ??
-        sessionStorage.current?.get<TemplatesSearchState>(
-          SLO_TEMPLATES_SEARCH_SESSION_STORAGE_KEY
-        ) ??
         DEFAULT_STATE
     );
 
     return () => {
       sub?.unsubscribe();
     };
-  }, [urlStateStorage, sessionStorage]);
+  }, [urlStateStorage]);
 
   const onStateChange = useCallback(
     (newState: Partial<TemplatesSearchState>) => {
