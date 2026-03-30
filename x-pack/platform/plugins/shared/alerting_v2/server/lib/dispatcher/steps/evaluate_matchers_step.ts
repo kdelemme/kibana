@@ -59,7 +59,6 @@ export function evaluateMatchers(
       }
 
       context ??= createMatcherContext(episode, rule);
-
       const isMatch = evaluateKql(policy.matcher, context);
       if (isMatch) {
         matched.push({ episode, policy });
