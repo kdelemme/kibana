@@ -6,14 +6,15 @@
  */
 
 import { EuiButtonGroup, EuiComboBox, EuiFormRow, EuiSelect } from '@elastic/eui';
-import type { GroupingMode } from '@kbn/alerting-v2-schemas';
+import type { GroupingMode, ThrottleStrategy } from '@kbn/alerting-v2-schemas';
 import { i18n } from '@kbn/i18n';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { useFetchDataFields } from '../../../../hooks/use_fetch_data_fields';
 import {
   AGGREGATE_STRATEGY_OPTIONS,
   DEFAULT_STRATEGY_FOR_MODE,
+  DEFAULT_THROTTLE_INTERVAL,
   GROUPING_MODE_HELP_TEXT,
   GROUPING_MODE_OPTIONS,
   PER_EPISODE_STRATEGY_OPTIONS,
@@ -25,10 +26,16 @@ import type { NotificationPolicyFormState } from '../types';
 import { DurationInput } from './duration_input/duration_input';
 
 export const DispatchSection: React.FC = () => {
-  const { control, setValue } = useFormContext<NotificationPolicyFormState>();
+  const { control, setValue, getValues } = useFormContext<NotificationPolicyFormState>();
   const groupingMode = useWatch({ control, name: 'groupingMode' });
   const throttleStrategy = useWatch({ control, name: 'throttleStrategy' });
   const { data: dataFieldNames } = useFetchDataFields();
+
+  useEffect(() => {
+    if (needsInterval(getValues('throttleStrategy')) && !getValues('throttleInterval')) {
+      setValue('throttleInterval', DEFAULT_THROTTLE_INTERVAL);
+    }
+  }, [getValues, setValue]);
 
   const groupByOptions = useMemo(
     () => (dataFieldNames ?? []).map((name) => ({ label: name })),
@@ -58,7 +65,10 @@ export const DispatchSection: React.FC = () => {
                 const mode = id as GroupingMode;
                 field.onChange(mode);
                 setValue('throttleStrategy', DEFAULT_STRATEGY_FOR_MODE[mode]);
-                setValue('throttleInterval', '');
+                setValue(
+                  'throttleInterval',
+                  needsInterval(DEFAULT_STRATEGY_FOR_MODE[mode]) ? DEFAULT_THROTTLE_INTERVAL : ''
+                );
                 if (mode !== 'per_field') {
                   setValue('groupBy', []);
                 }
@@ -139,6 +149,13 @@ export const DispatchSection: React.FC = () => {
               inputRef={ref}
               fullWidth
               options={strategyOptions}
+              onChange={(e) => {
+                field.onChange(e);
+                const strategy = e.target.value as ThrottleStrategy;
+                if (needsInterval(strategy) && !getValues('throttleInterval')) {
+                  setValue('throttleInterval', DEFAULT_THROTTLE_INTERVAL);
+                }
+              }}
               data-test-subj="strategySelect"
             />
           </EuiFormRow>

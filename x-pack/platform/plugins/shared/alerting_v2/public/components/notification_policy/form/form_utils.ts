@@ -8,12 +8,13 @@
 import type {
   CreateNotificationPolicyData,
   NotificationPolicyResponse,
+  ThrottleStrategy,
   UpdateNotificationPolicyBody,
 } from '@kbn/alerting-v2-schemas';
 import { DEFAULT_STRATEGY_FOR_MODE } from './constants';
 import type { NotificationPolicyFormState } from './types';
 
-export const needsInterval = (strategy: string): boolean =>
+export const needsInterval = (strategy: ThrottleStrategy): boolean =>
   strategy === 'per_status_interval' || strategy === 'time_interval';
 
 const buildThrottle = (state: NotificationPolicyFormState) => ({

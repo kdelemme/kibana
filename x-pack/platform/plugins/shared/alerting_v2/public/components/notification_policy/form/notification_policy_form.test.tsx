@@ -7,7 +7,7 @@
 
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { I18nProvider } from '@kbn/i18n-react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -140,5 +140,36 @@ describe('NotificationPolicyForm', () => {
     await user.click(buttons[2]); // Digest is the third button
 
     expect(screen.getByTestId(TEST_SUBJ.throttleIntervalInput)).toBeInTheDocument();
+  });
+
+  it('pre-fills interval with 5m when switching to digest mode', async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    const toggle = screen.getByTestId(TEST_SUBJ.groupingModeToggle);
+    const buttons = toggle.querySelectorAll('button');
+    await user.click(buttons[2]); // Digest
+
+    expect(screen.getByTestId(TEST_SUBJ.throttleIntervalInput)).toHaveValue(5);
+  });
+
+  it('pre-fills interval with 5m when selecting per_status_interval strategy', async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    await user.selectOptions(screen.getByTestId(TEST_SUBJ.strategySelect), 'per_status_interval');
+
+    expect(screen.getByTestId(TEST_SUBJ.throttleIntervalInput)).toHaveValue(5);
+  });
+
+  it('pre-fills interval with 5m on mount when strategy needs interval and interval is empty', () => {
+    renderForm({
+      ...DEFAULT_FORM_STATE,
+      groupingMode: 'all',
+      throttleStrategy: 'time_interval',
+      throttleInterval: '',
+    });
+
+    expect(screen.getByTestId(TEST_SUBJ.throttleIntervalInput)).toHaveValue(5);
   });
 });

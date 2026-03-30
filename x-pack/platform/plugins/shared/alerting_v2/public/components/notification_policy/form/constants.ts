@@ -108,6 +108,8 @@ export const STRATEGY_HELP_TEXT: Partial<Record<ThrottleStrategy, string>> = {
 
 export const THROTTLE_INTERVAL_PATTERN = /^[1-9][0-9]*[dhms]$/;
 
+export const DEFAULT_THROTTLE_INTERVAL = '5m';
+
 export const DEFAULT_FORM_STATE: NotificationPolicyFormState = {
   name: '',
   description: '',
