@@ -91,7 +91,7 @@ export const getLastNotifiedTimestampsQuery = (
 
   return esql`FROM ${ALERT_ACTIONS_DATA_STREAM}
     | WHERE ${whereClause}
-    | STATS last_notified = MAX(@timestamp) BY notification_group_id
-    | KEEP notification_group_id, last_notified
+    | STATS last_notified = MAX(@timestamp), episode_status = LAST(episode_status, @timestamp) BY notification_group_id
+    | KEEP notification_group_id, last_notified, episode_status
     `.toRequest();
 };

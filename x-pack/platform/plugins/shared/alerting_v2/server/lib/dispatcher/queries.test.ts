@@ -227,7 +227,13 @@ describe('getLastNotifiedTimestampsQuery', () => {
   it('keeps the expected output columns', () => {
     const req = getLastNotifiedTimestampsQuery(['group-1']);
 
-    expect(req.query).toContain('KEEP notification_group_id, last_notified');
+    expect(req.query).toContain('KEEP notification_group_id, last_notified, episode_status');
+  });
+
+  it('aggregates episode_status using LAST by timestamp', () => {
+    const req = getLastNotifiedTimestampsQuery(['group-1']);
+
+    expect(req.query).toContain('episode_status = LAST(episode_status, @timestamp)');
   });
 
   it('groups by notification_group_id', () => {
