@@ -65,6 +65,10 @@ jest.mock('../../hooks/use_fetch_notification_policy', () => ({
   useFetchNotificationPolicy: (...args: unknown[]) => mockUseFetchNotificationPolicy(...args),
 }));
 
+jest.mock('../../hooks/use_fetch_data_fields', () => ({
+  useFetchDataFields: () => ({ data: undefined, isLoading: false }),
+}));
+
 jest.mock('../../hooks/use_fetch_workflows', () => ({
   useFetchWorkflows: () => ({
     data: {

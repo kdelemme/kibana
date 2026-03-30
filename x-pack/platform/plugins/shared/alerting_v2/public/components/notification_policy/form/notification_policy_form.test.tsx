@@ -29,6 +29,10 @@ jest.mock('./components/matcher_input', () => ({
   ),
 }));
 
+jest.mock('../../../hooks/use_fetch_data_fields', () => ({
+  useFetchDataFields: () => ({ data: undefined, isLoading: false }),
+}));
+
 jest.mock('../../../hooks/use_fetch_workflows', () => ({
   useFetchWorkflows: () => ({
     data: { results: [], total: 0, page: 1, size: 100 },
