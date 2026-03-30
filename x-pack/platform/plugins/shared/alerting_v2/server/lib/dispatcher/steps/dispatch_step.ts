@@ -75,7 +75,20 @@ export class DispatchStep implements DispatcherStep {
           continue;
         }
 
-        await this.dispatchWorkflow(group, destination.id, fakeRequest);
+        try {
+          await this.dispatchWorkflow(group, destination.id, fakeRequest);
+        } catch (err) {
+          this.logger.error({
+            error:
+              err instanceof Error
+                ? err
+                : new Error(
+                    `Failed to dispatch group ${group.id} to workflow ${destination.id}: ${String(
+                      err
+                    )}`
+                  ),
+          });
+        }
       }
     } catch (err) {
       this.logger.error({

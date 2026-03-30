@@ -263,6 +263,40 @@ describe('DispatchStep', () => {
     );
   });
 
+  it('continues dispatching remaining destinations when one destination fails', async () => {
+    const { loggerService, mockLogger } = createLoggerService();
+    const step = new DispatchStep(loggerService, mockWfm);
+
+    mockWfm.getWorkflow.mockResolvedValue(createWorkflowDetailDto());
+    mockWfm.scheduleWorkflow
+      .mockRejectedValueOnce(new Error('workflow-1 failed'))
+      .mockResolvedValueOnce('exec-2');
+
+    const group = createNotificationGroup({
+      id: 'g1',
+      policyId: 'p1',
+      destinations: [
+        { type: 'workflow', id: 'workflow-1' },
+        { type: 'workflow', id: 'workflow-2' },
+      ],
+    });
+    const policy = createNotificationPolicy({
+      id: 'p1',
+      apiKey: 'dGVzdC1pZDp0ZXN0LWtleQ==',
+    });
+
+    const state = createDispatcherPipelineState({
+      dispatch: [group],
+      policies: new Map([['p1', policy]]),
+    });
+
+    const result = await step.execute(state);
+
+    expect(result.type).toBe('continue');
+    expect(mockWfm.scheduleWorkflow).toHaveBeenCalledTimes(2);
+    expect(mockLogger.error).toHaveBeenCalledTimes(1);
+  });
+
   it('dispatches multiple groups concurrently with a max concurrency of 3', async () => {
     jest.useFakeTimers();
     const { loggerService } = createLoggerService();
