@@ -158,7 +158,7 @@ export class MatcherSuggestionsService {
       type: RULE_SAVED_OBJECT_TYPE,
       page: 1,
       perPage: MAX_SUGGESTIONS,
-      ...(query ? { search: `${query}*`, searchFields: [searchField] } : {}),
+      ...(query ? { search: `${getEscapedQuery(query)}*`, searchFields: [searchField] } : {}),
       sortField: 'updatedAt',
       sortOrder: 'desc',
     });
