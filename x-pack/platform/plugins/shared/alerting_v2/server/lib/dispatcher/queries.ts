@@ -32,11 +32,12 @@ export const getDispatchableAlertEventsQuery = (): EsqlRequest => {
       | WHERE (last_fired IS NULL OR last_fired < @timestamp) or (_index LIKE ${ALERT_ACTIONS_BACKING_INDEX})
       | STATS
           last_event_timestamp = MAX(@timestamp) WHERE _index LIKE ${ALERT_EVENTS_BACKING_INDEX},
-          episode_status = LAST(episode_status, @timestamp) WHERE _index LIKE ${ALERT_EVENTS_BACKING_INDEX},
+          last_episode_status = LAST(episode_status, @timestamp) WHERE _index LIKE ${ALERT_EVENTS_BACKING_INDEX},
           data_json = LAST(data_json, @timestamp) WHERE _index LIKE ${ALERT_EVENTS_BACKING_INDEX}
           BY rule_id, group_hash, episode_id
       | WHERE last_event_timestamp IS NOT NULL
-      | KEEP last_event_timestamp, rule_id, group_hash, episode_id, episode_status, data_json
+      | KEEP last_event_timestamp, rule_id, group_hash, episode_id, last_episode_status, data_json
+      | RENAME last_episode_status AS episode_status
       | SORT last_event_timestamp asc
       | LIMIT 10000`.toRequest();
 };
@@ -90,7 +91,7 @@ export const getLastNotifiedTimestampsQuery = (
 
   return esql`FROM ${ALERT_ACTIONS_DATA_STREAM}
     | WHERE ${whereClause}
-    | STATS last_notified = MAX(@timestamp), episode_status = LAST(episode_status, @timestamp) BY notification_group_id
-    | KEEP notification_group_id, last_notified, episode_status
+    | STATS last_notified = MAX(@timestamp) BY notification_group_id
+    | KEEP notification_group_id, last_notified
     `.toRequest();
 };

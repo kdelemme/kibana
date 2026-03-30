@@ -54,7 +54,7 @@ describe('getDispatchableAlertEventsQuery', () => {
 
     expect(req.query).toContain('BY rule_id, group_hash, episode_id');
     expect(req.query).not.toContain('BY rule_id, group_hash, episode_id, episode_status');
-    expect(req.query).toContain('episode_status = LAST(episode_status, @timestamp)');
+    expect(req.query).toContain('last_episode_status = LAST(episode_status, @timestamp)');
   });
 
   it('fetches _source metadata alongside _index', () => {
@@ -75,12 +75,13 @@ describe('getDispatchableAlertEventsQuery', () => {
     expect(req.query).toContain('data_json = LAST(data_json, @timestamp)');
   });
 
-  it('keeps the expected output columns including data_json', () => {
+  it('keeps the expected output columns and renames episode_status', () => {
     const req = getDispatchableAlertEventsQuery();
 
     expect(req.query).toContain(
-      'KEEP last_event_timestamp, rule_id, group_hash, episode_id, episode_status, data_json'
+      'KEEP last_event_timestamp, rule_id, group_hash, episode_id, last_episode_status, data_json'
     );
+    expect(req.query).toContain('RENAME last_episode_status AS episode_status');
   });
 
   it('sorts by timestamp ascending with a limit', () => {
@@ -223,16 +224,10 @@ describe('getLastNotifiedTimestampsQuery', () => {
     expect(req.query).toContain('action_type == "notified"');
   });
 
-  it('keeps the expected output columns including episode_status', () => {
+  it('keeps the expected output columns', () => {
     const req = getLastNotifiedTimestampsQuery(['group-1']);
 
-    expect(req.query).toContain('KEEP notification_group_id, last_notified, episode_status');
-  });
-
-  it('aggregates episode_status using LAST by timestamp', () => {
-    const req = getLastNotifiedTimestampsQuery(['group-1']);
-
-    expect(req.query).toContain('episode_status = LAST(episode_status, @timestamp)');
+    expect(req.query).toContain('KEEP notification_group_id, last_notified');
   });
 
   it('groups by notification_group_id', () => {
