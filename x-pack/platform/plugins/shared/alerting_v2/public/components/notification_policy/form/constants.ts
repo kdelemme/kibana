@@ -13,13 +13,13 @@ export const GROUPING_MODE_OPTIONS: Array<{ id: GroupingMode; label: string }> =
   {
     id: 'per_episode',
     label: i18n.translate('xpack.alertingV2.notificationPolicy.form.dispatch.mode.perEpisode', {
-      defaultMessage: 'Per Episode',
+      defaultMessage: 'Per episode',
     }),
   },
   {
     id: 'per_field',
     label: i18n.translate('xpack.alertingV2.notificationPolicy.form.dispatch.mode.perGroup', {
-      defaultMessage: 'Per Group',
+      defaultMessage: 'Per group',
     }),
   },
   {

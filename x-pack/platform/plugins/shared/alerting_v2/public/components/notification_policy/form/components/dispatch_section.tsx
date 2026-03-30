@@ -20,7 +20,7 @@ import {
 import { needsInterval } from '../form_utils';
 import type { NotificationPolicyFormState } from '../types';
 import { useFetchDataFields } from '../../../../hooks/use_fetch_data_fields';
-import { DurationInput } from './duration_input';
+import { DurationInput } from './duration_input/duration_input';
 
 export const DispatchSection: React.FC = () => {
   const { control, setValue } = useFormContext<NotificationPolicyFormState>();
