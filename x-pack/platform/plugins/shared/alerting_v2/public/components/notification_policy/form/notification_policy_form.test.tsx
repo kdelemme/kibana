@@ -82,7 +82,8 @@ describe('NotificationPolicyForm', () => {
 
     const toggle = screen.getByTestId(TEST_SUBJ.groupingModeToggle);
     expect(toggle).toBeInTheDocument();
-    expect(within(toggle).getByText('Per Episode')).toBeInTheDocument();
+    const perEpisodeButton = toggle.querySelector('button[aria-pressed="true"]');
+    expect(perEpisodeButton).toBeInTheDocument();
     expect(screen.getByTestId(TEST_SUBJ.strategySelect)).toHaveValue('on_status_change');
   });
 
@@ -110,7 +111,8 @@ describe('NotificationPolicyForm', () => {
     renderForm();
 
     const toggle = screen.getByTestId(TEST_SUBJ.groupingModeToggle);
-    await user.click(within(toggle).getByText('Per Group'));
+    const buttons = toggle.querySelectorAll('button');
+    await user.click(buttons[1]); // Per Group is the second button
 
     expect(screen.getByTestId(TEST_SUBJ.groupByInput)).toBeInTheDocument();
     expect(screen.getByTestId(TEST_SUBJ.strategySelect)).toBeInTheDocument();
@@ -121,7 +123,8 @@ describe('NotificationPolicyForm', () => {
     renderForm();
 
     const toggle = screen.getByTestId(TEST_SUBJ.groupingModeToggle);
-    await user.click(within(toggle).getByText('Digest'));
+    const buttons = toggle.querySelectorAll('button');
+    await user.click(buttons[2]); // Digest is the third button
 
     const strategySelect = screen.getByTestId(TEST_SUBJ.strategySelect);
     expect(strategySelect).toBeInTheDocument();
@@ -133,7 +136,8 @@ describe('NotificationPolicyForm', () => {
     renderForm();
 
     const toggle = screen.getByTestId(TEST_SUBJ.groupingModeToggle);
-    await user.click(within(toggle).getByText('Digest'));
+    const buttons = toggle.querySelectorAll('button');
+    await user.click(buttons[2]); // Digest is the third button
 
     expect(screen.getByTestId(TEST_SUBJ.throttleIntervalInput)).toBeInTheDocument();
   });

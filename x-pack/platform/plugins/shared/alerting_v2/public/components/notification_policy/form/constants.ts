@@ -30,6 +30,21 @@ export const GROUPING_MODE_OPTIONS: Array<{ id: GroupingMode; label: string }> =
   },
 ];
 
+export const GROUPING_MODE_HELP_TEXT: Record<GroupingMode, string> = {
+  per_episode: i18n.translate(
+    'xpack.alertingV2.notificationPolicy.form.dispatch.mode.perEpisode.help',
+    { defaultMessage: 'One dispatch for each matched episode.' }
+  ),
+  per_field: i18n.translate(
+    'xpack.alertingV2.notificationPolicy.form.dispatch.mode.perGroup.help',
+    { defaultMessage: 'Episodes grouped by shared field values. One dispatch per group.' }
+  ),
+  all: i18n.translate('xpack.alertingV2.notificationPolicy.form.dispatch.mode.digest.help', {
+    defaultMessage:
+      'All matched episodes bundled into a single dispatch. Good for periodic summaries.',
+  }),
+};
+
 export const PER_EPISODE_STRATEGY_OPTIONS: Array<{ value: ThrottleStrategy; text: string }> = [
   {
     value: 'on_status_change',
@@ -74,6 +89,21 @@ export const DEFAULT_STRATEGY_FOR_MODE: Record<GroupingMode, ThrottleStrategy> =
   per_episode: 'on_status_change',
   per_field: 'time_interval',
   all: 'time_interval',
+};
+
+export const STRATEGY_HELP_TEXT: Partial<Record<ThrottleStrategy, string>> = {
+  on_status_change: i18n.translate(
+    'xpack.alertingV2.notificationPolicy.form.dispatch.strategy.onStatusChange.help',
+    { defaultMessage: 'When the episode status changes.' }
+  ),
+  per_status_interval: i18n.translate(
+    'xpack.alertingV2.notificationPolicy.form.dispatch.strategy.perStatusInterval.help',
+    { defaultMessage: 'On status change and on a repeat interval while status is unchanged.' }
+  ),
+  every_time: i18n.translate(
+    'xpack.alertingV2.notificationPolicy.form.dispatch.strategy.everyTime.help',
+    { defaultMessage: 'No minimum time between dispatches for the same episode.' }
+  ),
 };
 
 export const THROTTLE_INTERVAL_PATTERN = /^[1-9][0-9]*[dhms]$/;

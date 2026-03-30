@@ -10,16 +10,18 @@ import type { GroupingMode } from '@kbn/alerting-v2-schemas';
 import { i18n } from '@kbn/i18n';
 import React, { useMemo } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
+import { useFetchDataFields } from '../../../../hooks/use_fetch_data_fields';
 import {
   AGGREGATE_STRATEGY_OPTIONS,
   DEFAULT_STRATEGY_FOR_MODE,
+  GROUPING_MODE_HELP_TEXT,
   GROUPING_MODE_OPTIONS,
   PER_EPISODE_STRATEGY_OPTIONS,
+  STRATEGY_HELP_TEXT,
   THROTTLE_INTERVAL_PATTERN,
 } from '../constants';
 import { needsInterval } from '../form_utils';
 import type { NotificationPolicyFormState } from '../types';
-import { useFetchDataFields } from '../../../../hooks/use_fetch_data_fields';
 import { DurationInput } from './duration_input/duration_input';
 
 export const DispatchSection: React.FC = () => {
@@ -44,7 +46,7 @@ export const DispatchSection: React.FC = () => {
         name="groupingMode"
         control={control}
         render={({ field }) => (
-          <EuiFormRow fullWidth>
+          <EuiFormRow fullWidth helpText={GROUPING_MODE_HELP_TEXT[field.value]}>
             <EuiButtonGroup
               legend={i18n.translate(
                 'xpack.alertingV2.notificationPolicy.form.dispatch.modeLegend',
@@ -73,12 +75,24 @@ export const DispatchSection: React.FC = () => {
         <Controller
           name="groupBy"
           control={control}
-          render={({ field }) => (
+          rules={{
+            validate: (val) => {
+              if (!val || val.length === 0) {
+                return i18n.translate('xpack.alertingV2.notificationPolicy.form.groupBy.required', {
+                  defaultMessage: 'At least one group-by field is required.',
+                });
+              }
+              return true;
+            },
+          }}
+          render={({ field, fieldState: { error } }) => (
             <EuiFormRow
               label={i18n.translate('xpack.alertingV2.notificationPolicy.form.groupBy', {
                 defaultMessage: 'Group by',
               })}
               fullWidth
+              isInvalid={!!error}
+              error={error?.message}
               helpText={i18n.translate(
                 'xpack.alertingV2.notificationPolicy.form.groupBy.helpText',
                 {
@@ -88,6 +102,7 @@ export const DispatchSection: React.FC = () => {
               )}
             >
               <EuiComboBox
+                isInvalid={!!error}
                 fullWidth
                 data-test-subj="groupByInput"
                 placeholder={i18n.translate(
@@ -117,6 +132,7 @@ export const DispatchSection: React.FC = () => {
               defaultMessage: 'Frequency',
             })}
             fullWidth
+            helpText={STRATEGY_HELP_TEXT[throttleStrategy]}
           >
             <EuiSelect
               {...field}
