@@ -43,31 +43,34 @@ const PER_EPISODE_STRATEGIES = new Set<string>([
 const AGGREGATE_STRATEGIES = new Set<string>(['time_interval', 'every_time']);
 const STRATEGIES_REQUIRING_INTERVAL = new Set<string>(['per_status_interval', 'time_interval']);
 
-const validateGroupingModeAndStrategy = (
-  data: {
+const validateGroupingModeAndStrategy = (payload: {
+  value: {
     groupingMode?: string | null;
     throttle?: { strategy?: string; interval?: string } | null;
-  },
-  ctx: z.RefinementCtx
-) => {
+  };
+  issues: z.core.$ZodRawIssue[];
+}) => {
+  const { value: data, issues } = payload;
   const mode = data.groupingMode ?? 'per_episode';
   const strategy = data.throttle?.strategy;
   if (!strategy) return;
 
   const allowed = mode === 'per_episode' ? PER_EPISODE_STRATEGIES : AGGREGATE_STRATEGIES;
   if (!allowed.has(strategy)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+    issues.push({
+      code: 'custom',
       message: `Strategy "${strategy}" is not valid for grouping mode "${mode}"`,
       path: ['throttle', 'strategy'],
+      input: data,
     });
   }
 
   if (STRATEGIES_REQUIRING_INTERVAL.has(strategy) && !data.throttle?.interval) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+    issues.push({
+      code: 'custom',
       message: `Strategy "${strategy}" requires an interval to be defined`,
       path: ['throttle', 'interval'],
+      input: data,
     });
   }
 };
@@ -75,7 +78,7 @@ const validateGroupingModeAndStrategy = (
 export type NotificationPolicyDestination = z.infer<typeof notificationPolicyDestinationSchema>;
 
 export const snoozeNotificationPolicyBodySchema = z.object({
-  snoozedUntil: z.string().datetime(),
+  snoozedUntil: z.iso.datetime(),
 });
 
 export type SnoozeNotificationPolicyBody = z.infer<typeof snoozeNotificationPolicyBodySchema>;
@@ -93,7 +96,7 @@ const bulkDisableActionSchema = z.object({
 const bulkSnoozeActionSchema = z.object({
   id: z.string(),
   action: z.literal('snooze'),
-  snoozedUntil: z.string().datetime(),
+  snoozedUntil: z.iso.datetime(),
 });
 
 const bulkUnsnoozeActionSchema = z.object({
@@ -142,7 +145,7 @@ export const createNotificationPolicyDataSchema = z
     groupingMode: groupingModeSchema.optional(),
     throttle: throttleSchema.optional(),
   })
-  .superRefine(validateGroupingModeAndStrategy);
+  .check(validateGroupingModeAndStrategy);
 
 export type CreateNotificationPolicyData = z.infer<typeof createNotificationPolicyDataSchema>;
 
@@ -159,9 +162,9 @@ export const updateNotificationPolicyDataSchema = z
     groupingMode: groupingModeSchema.optional().nullable(),
     throttle: throttleSchema.optional().nullable(),
   })
-  .superRefine((data, ctx) => {
-    if (data.throttle === null || data.throttle === undefined) return;
-    validateGroupingModeAndStrategy(data, ctx);
+  .check((payload) => {
+    if (payload.value.throttle === null || payload.value.throttle === undefined) return;
+    validateGroupingModeAndStrategy(payload);
   });
 
 export type UpdateNotificationPolicyData = z.infer<typeof updateNotificationPolicyDataSchema>;
