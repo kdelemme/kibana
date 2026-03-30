@@ -46,7 +46,7 @@ export function buildNotificationGroups(matched: readonly MatchedPair[]): Notifi
         break;
       case 'per_field':
         groupKey = Object.fromEntries(
-          policy.groupBy.map((field) => [field, get(episode.data, field, null)])
+          policy.groupBy.map((field) => [field, get(episode, field, null)])
         );
         break;
     }

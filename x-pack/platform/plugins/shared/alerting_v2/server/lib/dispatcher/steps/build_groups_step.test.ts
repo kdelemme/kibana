@@ -104,7 +104,7 @@ describe('buildNotificationGroups', () => {
   it('groups episodes by a single data field', () => {
     const policy = createNotificationPolicy({
       id: 'p1',
-      groupBy: ['host.name'],
+      groupBy: ['data.host.name'],
       groupingMode: 'per_field' as const,
       destinations: [{ type: 'workflow', id: 'w1' }],
     });
@@ -131,13 +131,13 @@ describe('buildNotificationGroups', () => {
 
     expect(groups).toHaveLength(1);
     expect(groups[0].episodes).toHaveLength(2);
-    expect(groups[0].groupKey).toEqual({ 'host.name': 'server-1' });
+    expect(groups[0].groupKey).toEqual({ 'data.host.name': 'server-1' });
   });
 
   it('creates separate groups for different field values', () => {
     const policy = createNotificationPolicy({
       id: 'p1',
-      groupBy: ['host.name'],
+      groupBy: ['data.host.name'],
       groupingMode: 'per_field' as const,
       destinations: [{ type: 'workflow', id: 'w1' }],
     });
@@ -163,14 +163,14 @@ describe('buildNotificationGroups', () => {
     const groups = buildNotificationGroups(matched);
 
     expect(groups).toHaveLength(2);
-    expect(groups[0].groupKey).toEqual({ 'host.name': 'server-1' });
-    expect(groups[1].groupKey).toEqual({ 'host.name': 'server-2' });
+    expect(groups[0].groupKey).toEqual({ 'data.host.name': 'server-1' });
+    expect(groups[1].groupKey).toEqual({ 'data.host.name': 'server-2' });
   });
 
   it('groups episodes by multiple data fields', () => {
     const policy = createNotificationPolicy({
       id: 'p1',
-      groupBy: ['host.name', 'env'],
+      groupBy: ['data.host.name', 'data.env'],
       groupingMode: 'per_field' as const,
       destinations: [{ type: 'workflow', id: 'w1' }],
     });
@@ -204,8 +204,8 @@ describe('buildNotificationGroups', () => {
     const groups = buildNotificationGroups(matched);
 
     expect(groups).toHaveLength(2);
-    const prodGroup = groups.find((g) => g.groupKey.env === 'prod')!;
-    const stagingGroup = groups.find((g) => g.groupKey.env === 'staging')!;
+    const prodGroup = groups.find((g) => g.groupKey['data.env'] === 'prod')!;
+    const stagingGroup = groups.find((g) => g.groupKey['data.env'] === 'staging')!;
     expect(prodGroup.episodes).toHaveLength(2);
     expect(stagingGroup.episodes).toHaveLength(1);
   });
@@ -213,7 +213,7 @@ describe('buildNotificationGroups', () => {
   it('defaults missing data fields to null', () => {
     const policy = createNotificationPolicy({
       id: 'p1',
-      groupBy: ['host.name', 'env'],
+      groupBy: ['data.host.name', 'data.env'],
       groupingMode: 'per_field' as const,
       destinations: [{ type: 'workflow', id: 'w1' }],
     });
@@ -238,11 +238,11 @@ describe('buildNotificationGroups', () => {
 
     const groups = buildNotificationGroups(matched);
 
-    const groupWithHost = groups.find((g) => g.groupKey['host.name'] === 'server-1')!;
-    expect(groupWithHost.groupKey).toEqual({ 'host.name': 'server-1', env: null });
+    const groupWithHost = groups.find((g) => g.groupKey['data.host.name'] === 'server-1')!;
+    expect(groupWithHost.groupKey).toEqual({ 'data.host.name': 'server-1', 'data.env': null });
 
-    const groupWithoutHost = groups.find((g) => g.groupKey['host.name'] === null)!;
-    expect(groupWithoutHost.groupKey).toEqual({ 'host.name': null, env: null });
+    const groupWithoutHost = groups.find((g) => g.groupKey['data.host.name'] === null)!;
+    expect(groupWithoutHost.groupKey).toEqual({ 'data.host.name': null, 'data.env': null });
   });
 
   it('creates one group per rule for all mode', () => {

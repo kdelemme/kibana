@@ -42,13 +42,20 @@ export const useNotificationPolicyForm = ({
 
   const [name, destinations, groupingMode, groupBy, throttleStrategy, throttleInterval] = useWatch({
     control: methods.control,
-    name: ['name', 'destinations', 'groupingMode', 'groupBy', 'throttleStrategy', 'throttleInterval'],
+    name: [
+      'name',
+      'destinations',
+      'groupingMode',
+      'groupBy',
+      'throttleStrategy',
+      'throttleInterval',
+    ],
   });
 
   const isSubmitEnabled = useMemo(() => {
     const hasName = name.trim().length > 0;
     const hasDestinations = destinations.length > 0;
-    const hasValidGroupBy = groupingMode !== 'per_field' || groupBy.length > 0;
+    const hasValidGroupBy = groupingMode === 'per_field' ? groupBy.length > 0 : true;
     const hasValidInterval =
       !needsInterval(throttleStrategy) || THROTTLE_INTERVAL_PATTERN.test(throttleInterval);
 
