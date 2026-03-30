@@ -22,11 +22,13 @@ export const notificationPolicySavedObjectAttributesSchema = schema.object({
     schema.nullable(schema.arrayOf(schema.string(), { minSize: 1, maxSize: 10 }))
   ),
   groupingMode: schema.maybe(
-    schema.oneOf([
-      schema.literal('per_episode'),
-      schema.literal('all'),
-      schema.literal('per_field'),
-    ])
+    schema.nullable(
+      schema.oneOf([
+        schema.literal('per_episode'),
+        schema.literal('all'),
+        schema.literal('per_field'),
+      ])
+    )
   ),
   throttle: schema.maybe(
     schema.nullable(

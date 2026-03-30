@@ -62,6 +62,7 @@ import {
   EncryptedSavedObjectsClientToken,
   WorkflowsManagementApiToken,
 } from '../lib/dispatcher/steps/dispatch_step_tokens';
+import { MatcherSuggestionsService } from '../lib/services/matcher_suggestions_service/matcher_suggestions_service';
 import type { AlertingServerSetupDependencies, AlertingServerStartDependencies } from '../types';
 
 export function bindServices({ bind }: ContainerModuleLoadOptions) {
@@ -219,6 +220,8 @@ export function bindServices({ bind }: ContainerModuleLoadOptions) {
       return wfm.management;
     })
     .inSingletonScope();
+
+  bind(MatcherSuggestionsService).toSelf().inRequestScope();
 
   bind(DispatcherService).toSelf().inSingletonScope();
   bind(DispatcherServiceInternalToken).toService(DispatcherService);
