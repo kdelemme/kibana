@@ -134,7 +134,6 @@ export class DispatchStep implements DispatcherStep {
 
     const payload: NotificationPolicyWorkflowPayload = {
       id: group.id,
-      ruleId: group.ruleId,
       policyId: group.policyId,
       groupKey: group.groupKey,
       episodes: group.episodes,

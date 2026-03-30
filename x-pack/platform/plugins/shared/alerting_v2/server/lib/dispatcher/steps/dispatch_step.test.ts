@@ -78,7 +78,6 @@ describe('DispatchStep', () => {
       'default',
       expect.objectContaining({
         id: 'g1',
-        ruleId: group.ruleId,
         policyId: 'p1',
         groupKey: group.groupKey,
         episodes: group.episodes,

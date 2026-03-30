@@ -52,7 +52,6 @@ export function buildNotificationGroups(matched: readonly MatchedPair[]): Notifi
     }
 
     const notificationGroupId = objectHash({
-      ruleId: episode.rule_id,
       policyId: policy.id,
       groupKey,
     });
@@ -61,7 +60,6 @@ export function buildNotificationGroups(matched: readonly MatchedPair[]): Notifi
       groupMap.set(notificationGroupId, {
         id: notificationGroupId,
         spaceId: policy.spaceId,
-        ruleId: episode.rule_id,
         policyId: policy.id,
         destinations: policy.destinations,
         groupKey,

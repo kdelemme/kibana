@@ -91,7 +91,6 @@ export interface MatchedPair {
 export interface NotificationGroup {
   id: NotificationGroupId;
   spaceId: string;
-  ruleId: RuleId;
   policyId: NotificationPolicyId;
   destinations: NotificationPolicyDestination[];
   groupKey: Record<string, unknown>;
@@ -100,7 +99,6 @@ export interface NotificationGroup {
 
 export interface NotificationPolicyWorkflowPayload {
   id: NotificationGroupId;
-  ruleId: RuleId;
   policyId: NotificationPolicyId;
   groupKey: Record<string, unknown>;
   episodes: AlertEpisode[];

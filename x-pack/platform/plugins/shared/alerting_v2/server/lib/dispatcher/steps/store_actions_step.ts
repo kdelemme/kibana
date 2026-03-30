@@ -73,7 +73,7 @@ export class StoreActionsStep implements DispatcherStep {
             '@timestamp': now.toISOString(),
             actor: 'system',
             action_type: 'notified',
-            rule_id: group.ruleId,
+            rule_id: group.episodes[0]?.rule_id ?? 'unknown',
             group_hash: group.episodes[0]?.group_hash ?? 'unknown',
             last_series_event_timestamp: now.toISOString(),
             notification_group_id: group.id,

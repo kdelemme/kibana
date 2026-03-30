@@ -34,7 +34,6 @@ describe('BuildGroupsStep', () => {
     expect(result.type).toBe('continue');
     if (result.type !== 'continue') return;
     expect(result.data?.groups).toHaveLength(1);
-    expect(result.data?.groups?.[0].ruleId).toBe('r1');
     expect(result.data?.groups?.[0].policyId).toBe('p1');
     expect(result.data?.groups?.[0].episodes).toHaveLength(1);
   });
@@ -270,7 +269,7 @@ describe('buildNotificationGroups', () => {
     expect(groups[0].groupKey).toEqual({});
   });
 
-  it('creates separate groups for different rules in all mode', () => {
+  it('merges episodes from different rules into one group in all mode', () => {
     const policy = createNotificationPolicy({
       id: 'p1',
       groupingMode: 'all',
@@ -289,9 +288,10 @@ describe('buildNotificationGroups', () => {
 
     const groups = buildNotificationGroups(matched);
 
-    expect(groups).toHaveLength(2);
-    expect(groups[0].ruleId).toBe('r1');
-    expect(groups[1].ruleId).toBe('r2');
+    expect(groups).toHaveLength(1);
+    expect(groups[0].episodes).toHaveLength(2);
+    expect(groups[0].episodes[0].rule_id).toBe('r1');
+    expect(groups[0].episodes[1].rule_id).toBe('r2');
   });
 
   it('creates one group per episode for explicit per_episode mode', () => {
