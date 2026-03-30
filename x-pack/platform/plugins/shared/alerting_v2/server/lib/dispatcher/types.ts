@@ -68,8 +68,11 @@ export interface NotificationPolicy {
   matcher?: string; // e.g. 'data.severity == "critical" AND data.env != "dev"'
   /** data.* fields used to group episodes into a single notification */
   groupBy: string[];
-  /** Minimum interval between notifications for the same group */
+  /** How episodes are grouped into notification payloads */
+  groupingMode?: 'per_episode' | 'all' | 'per_field';
+  /** Throttle configuration controlling notification frequency */
   throttle?: {
+    strategy?: 'on_status_change' | 'per_status_interval' | 'time_interval' | 'every_time';
     interval?: string; // e.g. '1h', '30m', '5m'
   };
   snoozedUntil?: string | null;
@@ -106,6 +109,7 @@ export interface NotificationPolicyWorkflowPayload {
 export interface LastNotifiedRecord {
   notification_group_id: NotificationGroupId;
   last_notified: string;
+  episode_status?: string;
 }
 
 export interface DispatcherPipelineInput {

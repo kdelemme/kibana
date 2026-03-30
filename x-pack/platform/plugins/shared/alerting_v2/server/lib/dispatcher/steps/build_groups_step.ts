@@ -33,16 +33,22 @@ export function buildNotificationGroups(matched: readonly MatchedPair[]): Notifi
   const groupMap = new Map<string, NotificationGroup>();
 
   for (const { episode, policy } of matched) {
-    let groupKey: Record<string, unknown> = {};
-    if (policy.groupBy.length === 0) {
-      groupKey = {
-        groupHash: episode.group_hash,
-        episodeId: episode.episode_id,
-      };
-    } else {
-      groupKey = Object.fromEntries(
-        policy.groupBy.map((field) => [field, get(episode.data, field, null)])
-      );
+    let groupKey: Record<string, unknown>;
+    switch (policy.groupingMode ?? 'per_episode') {
+      case 'per_episode':
+        groupKey = {
+          groupHash: episode.group_hash,
+          episodeId: episode.episode_id,
+        };
+        break;
+      case 'all':
+        groupKey = {};
+        break;
+      case 'per_field':
+        groupKey = Object.fromEntries(
+          policy.groupBy.map((field) => [field, get(episode.data, field, null)])
+        );
+        break;
     }
 
     const notificationGroupId = objectHash({

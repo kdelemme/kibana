@@ -549,7 +549,7 @@ describe('DispatcherService integration tests', () => {
 
       const fireEvents = actionsResponse.hits.hits.map((hit) => hit._source as Record<string, any>);
 
-      expect(fireEvents).toHaveLength(5);
+      expect(fireEvents).toHaveLength(3);
       fireEvents.forEach((event) => {
         expect(event).toMatchObject({
           '@timestamp': expect.any(String),
@@ -562,10 +562,8 @@ describe('DispatcherService integration tests', () => {
       });
       const timestamps = fireEvents.map((event) => event.last_series_event_timestamp).sort();
       expect(timestamps).toEqual([
-        '2026-01-22T07:10:00.000Z', // Episode 1
-        '2026-01-22T07:15:00.000Z', // Episode 1
-        '2026-01-22T07:20:00.000Z', // Episode 2
-        '2026-01-22T07:25:00.000Z', // Episode 2
+        '2026-01-22T07:15:00.000Z', // Episode 1 (collapsed: latest status inactive)
+        '2026-01-22T07:25:00.000Z', // Episode 2 (collapsed: latest status inactive)
         '2026-01-22T07:50:00.000Z', // Episode 3
       ]);
 
@@ -575,7 +573,7 @@ describe('DispatcherService integration tests', () => {
         size: 100,
       });
 
-      expect(notifiedActionsResponse.hits.hits).toHaveLength(0);
+      expect(notifiedActionsResponse.hits.hits).toHaveLength(3);
     });
   });
 
@@ -609,11 +607,11 @@ describe('DispatcherService integration tests', () => {
           actor: 'system',
           action_type: 'notified',
           rule_id: 'rule-1',
-          group_hash: 'irrelevant',
           source: 'internal',
-          reason: 'notified by policy np-1 with throttle interval',
+          reason: 'notified by policy np-1',
         });
         expect(action.notification_group_id).toEqual(expect.any(String));
+        expect(action.group_hash).not.toBe('irrelevant');
       });
     });
   });
@@ -700,11 +698,11 @@ describe('DispatcherService integration tests', () => {
         (hit) => hit._source as Record<string, unknown>
       );
 
-      expect(dispatchedActions).toHaveLength(10);
+      expect(dispatchedActions).toHaveLength(9);
 
       const fireActions = dispatchedActions.filter((a) => a.action_type === 'fire');
       const suppressActions = dispatchedActions.filter((a) => a.action_type === 'suppress');
-      expect(fireActions).toHaveLength(6);
+      expect(fireActions).toHaveLength(5);
       expect(suppressActions).toHaveLength(4);
 
       // rule-001: fire (ack then unack cancels suppression)
@@ -732,18 +730,14 @@ describe('DispatcherService integration tests', () => {
       );
 
       // rule-003: all fire (no user actions)
+      // series-1: 1 episode (active) → 1 fire
+      // series-2: ep1 collapsed to inactive (16:05), ep2 collapsed to active (16:15) → 2 fires
       expect(dispatchedActions).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             rule_id: 'rule-003',
             group_hash: 'rule-003-series-1',
             last_series_event_timestamp: '2026-01-27T16:15:00.000Z',
-            action_type: 'fire',
-          }),
-          expect.objectContaining({
-            rule_id: 'rule-003',
-            group_hash: 'rule-003-series-2',
-            last_series_event_timestamp: '2026-01-27T16:00:00.000Z',
             action_type: 'fire',
           }),
           expect.objectContaining({
@@ -993,6 +987,7 @@ async function seedRulesAndPolicies(
     description: 'Groups by host.name',
     enabled: false,
     groupBy: ['host.name'],
+    groupingMode: 'per_field',
   };
   await npSoService.create({ attrs: groupByPolicyAttrs, id: NOTIFICATION_POLICY_GROUPBY_ID });
 

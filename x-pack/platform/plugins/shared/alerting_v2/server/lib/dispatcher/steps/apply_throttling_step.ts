@@ -25,6 +25,11 @@ import { queryResponseToRecords } from '../../services/query_service/query_respo
 import { getLastNotifiedTimestampsQuery } from '../queries';
 import { parseDurationToMs } from '../../duration';
 
+export interface LastNotifiedInfo {
+  lastNotified: Date;
+  episodeStatus?: string;
+}
+
 @injectable()
 export class ApplyThrottlingStep implements DispatcherStep {
   public readonly name = 'apply_throttling';
@@ -60,14 +65,20 @@ export class ApplyThrottlingStep implements DispatcherStep {
 
   private async fetchLastNotifiedTimestamps(
     notificationGroupIds: NotificationGroupId[]
-  ): Promise<Map<NotificationGroupId, Date>> {
+  ): Promise<Map<NotificationGroupId, LastNotifiedInfo>> {
     const result = await this.queryService.executeQuery({
       query: getLastNotifiedTimestampsQuery(notificationGroupIds).query,
     });
 
     const records = queryResponseToRecords<LastNotifiedRecord>(result);
-    return new Map<NotificationGroupId, Date>(
-      records.map((record) => [record.notification_group_id, new Date(record.last_notified)])
+    return new Map<NotificationGroupId, LastNotifiedInfo>(
+      records.map((record) => [
+        record.notification_group_id,
+        {
+          lastNotified: new Date(record.last_notified),
+          episodeStatus: record.episode_status,
+        },
+      ])
     );
   }
 }
@@ -75,7 +86,7 @@ export class ApplyThrottlingStep implements DispatcherStep {
 export function applyThrottling(
   groups: readonly NotificationGroup[],
   policies: ReadonlyMap<string, NotificationPolicy>,
-  lastNotifiedMap: ReadonlyMap<NotificationGroupId, Date>,
+  lastNotifiedMap: ReadonlyMap<NotificationGroupId, LastNotifiedInfo>,
   now: Date
 ): { dispatch: NotificationGroup[]; throttled: NotificationGroup[] } {
   const dispatch: NotificationGroup[] = [];
@@ -83,17 +94,53 @@ export function applyThrottling(
 
   for (const group of groups) {
     const policy = policies.get(group.policyId)!;
-    const lastNotified = lastNotifiedMap.get(group.id);
+    const groupingMode = policy.groupingMode ?? 'per_episode';
+    const strategy =
+      policy.throttle?.strategy ??
+      (groupingMode === 'per_episode' ? 'on_status_change' : 'time_interval');
+    const lastRecord = lastNotifiedMap.get(group.id);
 
-    if (
-      lastNotified &&
-      policy.throttle &&
-      policy.throttle.interval &&
-      isWithinInterval(lastNotified, policy.throttle.interval, now)
-    ) {
-      throttled.push(group);
-    } else {
+    if (!lastRecord) {
       dispatch.push(group);
+      continue;
+    }
+
+    if (strategy === 'every_time') {
+      dispatch.push(group);
+      continue;
+    }
+
+    if (groupingMode === 'per_episode') {
+      const currentStatus = group.episodes[0]?.episode_status;
+      const statusChanged = lastRecord.episodeStatus !== currentStatus;
+
+      if (strategy === 'on_status_change') {
+        if (statusChanged) {
+          dispatch.push(group);
+        } else {
+          throttled.push(group);
+        }
+      } else if (strategy === 'per_status_interval') {
+        if (statusChanged) {
+          dispatch.push(group);
+        } else if (
+          policy.throttle?.interval &&
+          !isWithinInterval(lastRecord.lastNotified, policy.throttle.interval, now)
+        ) {
+          dispatch.push(group);
+        } else {
+          throttled.push(group);
+        }
+      }
+    } else {
+      if (
+        policy.throttle?.interval &&
+        isWithinInterval(lastRecord.lastNotified, policy.throttle.interval, now)
+      ) {
+        throttled.push(group);
+      } else {
+        dispatch.push(group);
+      }
     }
   }
 

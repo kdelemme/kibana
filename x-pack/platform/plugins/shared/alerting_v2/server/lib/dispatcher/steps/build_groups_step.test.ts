@@ -106,6 +106,7 @@ describe('buildNotificationGroups', () => {
     const policy = createNotificationPolicy({
       id: 'p1',
       groupBy: ['host.name'],
+      groupingMode: 'per_field' as const,
       destinations: [{ type: 'workflow', id: 'w1' }],
     });
     const matched = [
@@ -138,6 +139,7 @@ describe('buildNotificationGroups', () => {
     const policy = createNotificationPolicy({
       id: 'p1',
       groupBy: ['host.name'],
+      groupingMode: 'per_field' as const,
       destinations: [{ type: 'workflow', id: 'w1' }],
     });
     const matched = [
@@ -170,6 +172,7 @@ describe('buildNotificationGroups', () => {
     const policy = createNotificationPolicy({
       id: 'p1',
       groupBy: ['host.name', 'env'],
+      groupingMode: 'per_field' as const,
       destinations: [{ type: 'workflow', id: 'w1' }],
     });
     const matched = [
@@ -212,6 +215,7 @@ describe('buildNotificationGroups', () => {
     const policy = createNotificationPolicy({
       id: 'p1',
       groupBy: ['host.name', 'env'],
+      groupingMode: 'per_field' as const,
       destinations: [{ type: 'workflow', id: 'w1' }],
     });
     const matched = [
@@ -240,5 +244,75 @@ describe('buildNotificationGroups', () => {
 
     const groupWithoutHost = groups.find((g) => g.groupKey['host.name'] === null)!;
     expect(groupWithoutHost.groupKey).toEqual({ 'host.name': null, env: null });
+  });
+
+  it('creates one group per rule for all mode', () => {
+    const policy = createNotificationPolicy({
+      id: 'p1',
+      groupingMode: 'all',
+      destinations: [{ type: 'workflow', id: 'w1' }],
+    });
+    const matched = [
+      createMatchedPair({
+        episode: createAlertEpisode({ rule_id: 'r1', episode_id: 'e1' }),
+        policy,
+      }),
+      createMatchedPair({
+        episode: createAlertEpisode({ rule_id: 'r1', episode_id: 'e2' }),
+        policy,
+      }),
+    ];
+
+    const groups = buildNotificationGroups(matched);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].episodes).toHaveLength(2);
+    expect(groups[0].groupKey).toEqual({});
+  });
+
+  it('creates separate groups for different rules in all mode', () => {
+    const policy = createNotificationPolicy({
+      id: 'p1',
+      groupingMode: 'all',
+      destinations: [{ type: 'workflow', id: 'w1' }],
+    });
+    const matched = [
+      createMatchedPair({
+        episode: createAlertEpisode({ rule_id: 'r1', episode_id: 'e1' }),
+        policy,
+      }),
+      createMatchedPair({
+        episode: createAlertEpisode({ rule_id: 'r2', episode_id: 'e2' }),
+        policy,
+      }),
+    ];
+
+    const groups = buildNotificationGroups(matched);
+
+    expect(groups).toHaveLength(2);
+    expect(groups[0].ruleId).toBe('r1');
+    expect(groups[1].ruleId).toBe('r2');
+  });
+
+  it('creates one group per episode for explicit per_episode mode', () => {
+    const policy = createNotificationPolicy({
+      id: 'p1',
+      groupingMode: 'per_episode',
+      destinations: [{ type: 'workflow', id: 'w1' }],
+    });
+    const matched = [
+      createMatchedPair({
+        episode: createAlertEpisode({ rule_id: 'r1', group_hash: 'h1', episode_id: 'e1' }),
+        policy,
+      }),
+      createMatchedPair({
+        episode: createAlertEpisode({ rule_id: 'r1', group_hash: 'h1', episode_id: 'e2' }),
+        policy,
+      }),
+    ];
+
+    const groups = buildNotificationGroups(matched);
+
+    expect(groups).toHaveLength(2);
   });
 });
