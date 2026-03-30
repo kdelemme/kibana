@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { EuiButtonGroup, EuiComboBox, EuiFieldText, EuiFormRow, EuiSelect } from '@elastic/eui';
+import { EuiButtonGroup, EuiComboBox, EuiFormRow, EuiSelect } from '@elastic/eui';
 import type { GroupingMode } from '@kbn/alerting-v2-schemas';
 import { i18n } from '@kbn/i18n';
 import React, { useMemo } from 'react';
@@ -20,6 +20,7 @@ import {
 import { needsInterval } from '../form_utils';
 import type { NotificationPolicyFormState } from '../types';
 import { useFetchDataFields } from '../../../../hooks/use_fetch_data_fields';
+import { DurationInput } from './duration_input';
 
 export const DispatchSection: React.FC = () => {
   const { control, setValue } = useFormContext<NotificationPolicyFormState>();
@@ -78,6 +79,13 @@ export const DispatchSection: React.FC = () => {
                 defaultMessage: 'Group by',
               })}
               fullWidth
+              helpText={i18n.translate(
+                'xpack.alertingV2.notificationPolicy.form.groupBy.helpText',
+                {
+                  defaultMessage:
+                    'Episodes that share these field values are notified as one group.',
+                }
+              )}
             >
               <EuiComboBox
                 fullWidth
@@ -126,39 +134,29 @@ export const DispatchSection: React.FC = () => {
           name="throttleInterval"
           control={control}
           rules={{
-            pattern: {
-              value: THROTTLE_INTERVAL_PATTERN,
-              message: i18n.translate(
-                'xpack.alertingV2.notificationPolicy.form.throttleInterval.pattern',
-                {
-                  defaultMessage: 'Invalid throttle interval. Must be in the format of 1h, 5m, 30s',
-                }
-              ),
+            validate: (val) => {
+              if (!val || !THROTTLE_INTERVAL_PATTERN.test(val)) {
+                return i18n.translate(
+                  'xpack.alertingV2.notificationPolicy.form.throttleInterval.required',
+                  { defaultMessage: 'Repeat interval is required.' }
+                );
+              }
+              return true;
             },
-            required: i18n.translate(
-              'xpack.alertingV2.notificationPolicy.form.throttleInterval.required',
-              { defaultMessage: 'Repeat interval is required.' }
-            ),
           }}
-          render={({ field: { ref, ...field }, fieldState: { error } }) => (
+          render={({ field, fieldState: { error } }) => (
             <EuiFormRow
               label={i18n.translate(
                 'xpack.alertingV2.notificationPolicy.form.dispatch.repeatInterval',
                 { defaultMessage: 'Repeat interval' }
               )}
-              helpText={i18n.translate(
-                'xpack.alertingV2.notificationPolicy.form.throttleInterval.help',
-                { defaultMessage: 'e.g. 1h, 5m, 30s' }
-              )}
               fullWidth
               isInvalid={!!error}
               error={error?.message}
             >
-              <EuiFieldText
-                {...field}
-                inputRef={ref}
-                value={field.value ?? ''}
-                fullWidth
+              <DurationInput
+                value={field.value}
+                onChange={field.onChange}
                 isInvalid={!!error}
                 data-test-subj="throttleIntervalInput"
               />
