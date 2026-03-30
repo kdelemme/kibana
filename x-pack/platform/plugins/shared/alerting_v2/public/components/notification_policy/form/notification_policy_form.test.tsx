@@ -162,6 +162,33 @@ describe('NotificationPolicyForm', () => {
     expect(screen.getByTestId(TEST_SUBJ.throttleIntervalInput)).toHaveValue(5);
   });
 
+  it('preserves groupBy fields when switching away from per_field and back', async () => {
+    const user = userEvent.setup();
+    renderForm({
+      ...DEFAULT_FORM_STATE,
+      groupingMode: 'per_field',
+      groupBy: ['host.name', 'service.name'],
+      throttleStrategy: 'time_interval',
+      throttleInterval: '5m',
+    });
+
+    const toggle = screen.getByTestId(TEST_SUBJ.groupingModeToggle);
+    const buttons = toggle.querySelectorAll('button');
+
+    // Switch to Per Episode
+    await user.click(buttons[0]);
+    expect(screen.queryByTestId(TEST_SUBJ.groupByInput)).not.toBeInTheDocument();
+
+    // Switch back to Per Group
+    await user.click(buttons[1]);
+    const groupByInput = screen.getByTestId(TEST_SUBJ.groupByInput);
+    expect(groupByInput).toBeInTheDocument();
+
+    // The previously selected groupBy values should still be present as pills
+    expect(screen.getByTitle('host.name')).toBeInTheDocument();
+    expect(screen.getByTitle('service.name')).toBeInTheDocument();
+  });
+
   it('pre-fills interval with 5m on mount when strategy needs interval and interval is empty', () => {
     renderForm({
       ...DEFAULT_FORM_STATE,

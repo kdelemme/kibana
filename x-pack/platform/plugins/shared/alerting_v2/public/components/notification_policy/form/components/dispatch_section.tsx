@@ -69,9 +69,6 @@ export const DispatchSection: React.FC = () => {
                   'throttleInterval',
                   needsInterval(DEFAULT_STRATEGY_FOR_MODE[mode]) ? DEFAULT_THROTTLE_INTERVAL : ''
                 );
-                if (mode !== 'per_field') {
-                  setValue('groupBy', []);
-                }
               }}
               isFullWidth
               type="single"
