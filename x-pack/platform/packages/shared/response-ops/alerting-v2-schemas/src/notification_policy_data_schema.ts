@@ -164,6 +164,7 @@ export const updateNotificationPolicyDataSchema = z
   })
   .check((payload) => {
     if (payload.value.throttle === null || payload.value.throttle === undefined) return;
+    if (payload.value.groupingMode === undefined) return;
     validateGroupingModeAndStrategy(payload);
   });
 

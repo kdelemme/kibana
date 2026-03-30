@@ -5,7 +5,10 @@
  * 2.0.
  */
 
-import { bulkActionNotificationPoliciesBodySchema } from './notification_policy_data_schema';
+import {
+  bulkActionNotificationPoliciesBodySchema,
+  updateNotificationPolicyDataSchema,
+} from './notification_policy_data_schema';
 
 describe('bulkActionNotificationPoliciesBodySchema', () => {
   it('accepts a delete action', () => {
@@ -47,5 +50,34 @@ describe('bulkActionNotificationPoliciesBodySchema', () => {
         actions: [],
       })
     ).toThrow();
+  });
+});
+
+describe('updateNotificationPolicyDataSchema', () => {
+  it('accepts updating throttle strategy without groupingMode', () => {
+    const result = updateNotificationPolicyDataSchema.parse({
+      throttle: { strategy: 'time_interval', interval: '5m' },
+    });
+
+    expect(result.throttle).toEqual({ strategy: 'time_interval', interval: '5m' });
+  });
+
+  it('rejects invalid strategy when groupingMode is provided', () => {
+    expect(() =>
+      updateNotificationPolicyDataSchema.parse({
+        groupingMode: 'per_episode',
+        throttle: { strategy: 'time_interval', interval: '5m' },
+      })
+    ).toThrow('not valid for grouping mode');
+  });
+
+  it('accepts valid strategy when groupingMode is provided', () => {
+    const result = updateNotificationPolicyDataSchema.parse({
+      groupingMode: 'all',
+      throttle: { strategy: 'time_interval', interval: '5m' },
+    });
+
+    expect(result.groupingMode).toBe('all');
+    expect(result.throttle).toEqual({ strategy: 'time_interval', interval: '5m' });
   });
 });
