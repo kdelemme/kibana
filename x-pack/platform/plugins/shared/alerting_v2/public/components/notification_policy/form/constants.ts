@@ -5,23 +5,76 @@
  * 2.0.
  */
 
+import type { GroupingMode, ThrottleStrategy } from '@kbn/alerting-v2-schemas';
 import { i18n } from '@kbn/i18n';
 import type { NotificationPolicyFormState } from './types';
 
-export const FREQUENCY_OPTIONS = [
+export const GROUPING_MODE_OPTIONS: Array<{ id: GroupingMode; label: string }> = [
   {
-    value: 'immediate',
-    text: i18n.translate('xpack.alertingV2.notificationPolicy.form.frequency.immediate', {
-      defaultMessage: 'Immediate',
+    id: 'per_episode',
+    label: i18n.translate('xpack.alertingV2.notificationPolicy.form.dispatch.mode.perEpisode', {
+      defaultMessage: 'Per Episode',
     }),
   },
   {
-    value: 'throttle',
-    text: i18n.translate('xpack.alertingV2.notificationPolicy.form.frequency.throttle', {
-      defaultMessage: 'Throttle',
+    id: 'per_field',
+    label: i18n.translate('xpack.alertingV2.notificationPolicy.form.dispatch.mode.perGroup', {
+      defaultMessage: 'Per Group',
+    }),
+  },
+  {
+    id: 'all',
+    label: i18n.translate('xpack.alertingV2.notificationPolicy.form.dispatch.mode.digest', {
+      defaultMessage: 'Digest',
     }),
   },
 ];
+
+export const PER_EPISODE_STRATEGY_OPTIONS: Array<{ value: ThrottleStrategy; text: string }> = [
+  {
+    value: 'on_status_change',
+    text: i18n.translate(
+      'xpack.alertingV2.notificationPolicy.form.dispatch.strategy.onStatusChange',
+      { defaultMessage: 'On status change' }
+    ),
+  },
+  {
+    value: 'per_status_interval',
+    text: i18n.translate(
+      'xpack.alertingV2.notificationPolicy.form.dispatch.strategy.perStatusInterval',
+      { defaultMessage: 'On status change + repeat on interval' }
+    ),
+  },
+  {
+    value: 'every_time',
+    text: i18n.translate('xpack.alertingV2.notificationPolicy.form.dispatch.strategy.everyTime', {
+      defaultMessage: 'Every evaluation (no throttle)',
+    }),
+  },
+];
+
+export const AGGREGATE_STRATEGY_OPTIONS: Array<{ value: ThrottleStrategy; text: string }> = [
+  {
+    value: 'time_interval',
+    text: i18n.translate(
+      'xpack.alertingV2.notificationPolicy.form.dispatch.strategy.timeInterval',
+      { defaultMessage: 'At most once every...' }
+    ),
+  },
+  {
+    value: 'every_time',
+    text: i18n.translate(
+      'xpack.alertingV2.notificationPolicy.form.dispatch.strategy.everyTimeAggregate',
+      { defaultMessage: 'Every evaluation (no throttle)' }
+    ),
+  },
+];
+
+export const DEFAULT_STRATEGY_FOR_MODE: Record<GroupingMode, ThrottleStrategy> = {
+  per_episode: 'on_status_change',
+  per_field: 'time_interval',
+  all: 'time_interval',
+};
 
 export const THROTTLE_INTERVAL_PATTERN = /^[1-9][0-9]*[dhms]$/;
 
@@ -29,7 +82,9 @@ export const DEFAULT_FORM_STATE: NotificationPolicyFormState = {
   name: '',
   description: '',
   matcher: '',
+  groupingMode: 'per_episode',
   groupBy: [],
-  frequency: { type: 'immediate' },
+  throttleStrategy: 'on_status_change',
+  throttleInterval: '',
   destinations: [],
 };

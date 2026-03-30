@@ -7,7 +7,7 @@
 
 import React from 'react';
 import '@testing-library/jest-dom';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { I18nProvider } from '@kbn/i18n-react';
 import { FormProvider, useForm } from 'react-hook-form';
@@ -61,9 +61,10 @@ const renderForm = (defaultValues: NotificationPolicyFormState = DEFAULT_FORM_ST
 
 const TEST_SUBJ = {
   nameInput: 'nameInput',
-  descriptionInput: 'descriptionInput',
-  frequencySelect: 'frequencySelect',
+  groupingModeToggle: 'groupingModeToggle',
+  strategySelect: 'strategySelect',
   throttleIntervalInput: 'throttleIntervalInput',
+  groupByInput: 'groupByInput',
 } as const;
 
 describe('NotificationPolicyForm', () => {
@@ -76,30 +77,64 @@ describe('NotificationPolicyForm', () => {
     expect(await screen.findByText('Name is required.')).toBeInTheDocument();
   });
 
-  it('shows throttle interval input only when throttle frequency is selected', async () => {
+  it('renders grouping mode toggle with Per Episode selected by default', () => {
+    renderForm();
+
+    const toggle = screen.getByTestId(TEST_SUBJ.groupingModeToggle);
+    expect(toggle).toBeInTheDocument();
+    expect(within(toggle).getByText('Per Episode')).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_SUBJ.strategySelect)).toHaveValue('on_status_change');
+  });
+
+  it('shows strategy select for per_episode mode', () => {
+    renderForm();
+
+    const strategySelect = screen.getByTestId(TEST_SUBJ.strategySelect);
+    expect(strategySelect).toBeInTheDocument();
+    expect(strategySelect).toHaveValue('on_status_change');
+  });
+
+  it('shows interval input when per_status_interval strategy is selected', async () => {
     const user = userEvent.setup();
     renderForm();
 
     expect(screen.queryByTestId(TEST_SUBJ.throttleIntervalInput)).not.toBeInTheDocument();
 
-    await user.selectOptions(screen.getByTestId(TEST_SUBJ.frequencySelect), 'throttle');
+    await user.selectOptions(screen.getByTestId(TEST_SUBJ.strategySelect), 'per_status_interval');
 
     expect(screen.getByTestId(TEST_SUBJ.throttleIntervalInput)).toBeInTheDocument();
   });
 
-  it('validates throttle interval format when in throttle mode', async () => {
+  it('shows group by and strategy when Per Group mode is selected', async () => {
     const user = userEvent.setup();
     renderForm();
 
-    await user.selectOptions(screen.getByTestId(TEST_SUBJ.frequencySelect), 'throttle');
+    const toggle = screen.getByTestId(TEST_SUBJ.groupingModeToggle);
+    await user.click(within(toggle).getByText('Per Group'));
 
-    const intervalInput = screen.getByTestId(TEST_SUBJ.throttleIntervalInput);
-    await user.clear(intervalInput);
-    await user.type(intervalInput, '10x');
-    await user.tab();
+    expect(screen.getByTestId(TEST_SUBJ.groupByInput)).toBeInTheDocument();
+    expect(screen.getByTestId(TEST_SUBJ.strategySelect)).toBeInTheDocument();
+  });
 
-    expect(
-      await screen.findByText('Invalid throttle interval. Must be in the format of 1h, 5m, 30s')
-    ).toBeInTheDocument();
+  it('shows strategy select with time_interval when Digest mode is selected', async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    const toggle = screen.getByTestId(TEST_SUBJ.groupingModeToggle);
+    await user.click(within(toggle).getByText('Digest'));
+
+    const strategySelect = screen.getByTestId(TEST_SUBJ.strategySelect);
+    expect(strategySelect).toBeInTheDocument();
+    expect(strategySelect).toHaveValue('time_interval');
+  });
+
+  it('shows interval input when time_interval is the default strategy in digest mode', async () => {
+    const user = userEvent.setup();
+    renderForm();
+
+    const toggle = screen.getByTestId(TEST_SUBJ.groupingModeToggle);
+    await user.click(within(toggle).getByText('Digest'));
+
+    expect(screen.getByTestId(TEST_SUBJ.throttleIntervalInput)).toBeInTheDocument();
   });
 });

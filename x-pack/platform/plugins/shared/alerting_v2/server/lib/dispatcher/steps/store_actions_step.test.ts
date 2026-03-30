@@ -169,7 +169,6 @@ describe('StoreActionsStep', () => {
 
     const group = createNotificationGroup({
       id: 'group-1',
-      ruleId: 'rule-1',
       policyId: 'policy-1',
       episodes: [episode],
     });
@@ -223,7 +222,6 @@ describe('StoreActionsStep', () => {
 
     const group = createNotificationGroup({
       id: 'group-1',
-      ruleId: 'rule-1',
       policyId: 'policy-1',
       episodes: [episode],
     });
@@ -266,7 +264,6 @@ describe('StoreActionsStep', () => {
 
     const group = createNotificationGroup({
       id: 'group-1',
-      ruleId: 'rule-1',
       policyId: 'policy-1',
       episodes: [episode],
     });
@@ -293,7 +290,7 @@ describe('StoreActionsStep', () => {
       (d: Record<string, unknown>) => d.action_type === 'notified'
     );
     expect(notifiedDoc).toBeDefined();
-    expect(notifiedDoc.episode_status).toBeUndefined();
+    expect(notifiedDoc?.episode_status).toBeUndefined();
   });
 
   it('handles combined suppressed, throttled, and dispatch arrays', async () => {
@@ -329,7 +326,6 @@ describe('StoreActionsStep', () => {
 
     const dispatchGroup = createNotificationGroup({
       id: 'dispatch-group',
-      ruleId: 'rule-dispatch',
       policyId: 'dispatch-policy',
       episodes: [dispatchEpisode],
     });
@@ -500,7 +496,6 @@ describe('StoreActionsStep', () => {
 
     const dispatchGroup = createNotificationGroup({
       id: 'dispatch-group',
-      ruleId: 'rule-dispatch',
       policyId: 'dispatch-policy',
       episodes: [dispatchedEpisode],
     });
@@ -567,7 +562,6 @@ describe('StoreActionsStep', () => {
 
     const group = createNotificationGroup({
       id: 'group-1',
-      ruleId: 'rule-1',
       policyId: 'policy-1',
       episodes: [episode1, episode2],
     });
