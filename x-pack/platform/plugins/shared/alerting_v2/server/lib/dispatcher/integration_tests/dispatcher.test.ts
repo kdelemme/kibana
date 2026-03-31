@@ -489,7 +489,9 @@ describe('DispatcherService integration tests', () => {
         page: 1,
         perPage: 1000,
       });
-      return allPolicies.map((doc) => ({ id: doc.id, attributes: doc.attributes }));
+      return allPolicies
+        .filter((doc) => doc.attributes.enabled)
+        .map((doc) => ({ id: doc.id, attributes: doc.attributes }));
     });
 
     const pipeline = new DispatcherPipeline(mockLoggerService, [
@@ -579,7 +581,10 @@ describe('DispatcherService integration tests', () => {
 
   describe('when the notification policy has a throttle interval', () => {
     it('should persist notified actions for dispatched notification groups', async () => {
-      await setNotificationPolicyThrottle(npSoService, { interval: '1h' });
+      await setNotificationPolicyThrottle(npSoService, {
+        strategy: 'per_status_interval',
+        interval: '1h',
+      });
       await seedAlertEvents(esClient, ALERT_EVENTS_TEST_DATA);
 
       const result = await dispatcherService.run({
@@ -851,7 +856,7 @@ describe('DispatcherService integration tests', () => {
     it('should group episodes by the specified data fields', async () => {
       await setNotificationPolicyThrottle(
         npSoService,
-        { interval: '1h' },
+        { strategy: 'time_interval', interval: '1h' },
         NOTIFICATION_POLICY_GROUPBY_ID
       );
       await seedAlertEvents(esClient, GROUPBY_ALERT_EVENTS);
@@ -905,6 +910,232 @@ describe('DispatcherService integration tests', () => {
           source: 'internal',
         });
       });
+    });
+  });
+
+  describe('throttle strategies', () => {
+    it('per_episode + on_status_change: throttles on second dispatch when status unchanged', async () => {
+      await setNotificationPolicyThrottle(npSoService, { strategy: 'on_status_change' });
+      await seedAlertEvents(esClient, ALERT_EVENTS_TEST_DATA);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-01-22T07:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ALERT_ACTIONS_DATA_STREAM });
+
+      const firstRunFires = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'fire' } },
+        size: 100,
+      });
+      expect(firstRunFires.hits.hits).toHaveLength(3);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-01-22T07:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ALERT_ACTIONS_DATA_STREAM });
+
+      const totalFires = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'fire' } },
+        size: 100,
+      });
+      expect(totalFires.hits.hits).toHaveLength(3);
+    });
+
+    it('per_episode + per_status_interval: throttles within interval when status unchanged', async () => {
+      await setNotificationPolicyThrottle(npSoService, {
+        strategy: 'per_status_interval',
+        interval: '1h',
+      });
+      await seedAlertEvents(esClient, ALERT_EVENTS_TEST_DATA);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-01-22T07:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ALERT_ACTIONS_DATA_STREAM });
+
+      const firstRunFires = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'fire' } },
+        size: 100,
+      });
+      expect(firstRunFires.hits.hits).toHaveLength(3);
+
+      const notifiedActions = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'notified' } },
+        size: 100,
+      });
+      const notifiedSources = notifiedActions.hits.hits.map(
+        (hit) => hit._source as Record<string, unknown>
+      );
+      notifiedSources.forEach((action) => {
+        expect(action.notification_group_id).toEqual(expect.any(String));
+        expect(action.episode_status).toEqual(expect.any(String));
+      });
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-01-22T07:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ALERT_ACTIONS_DATA_STREAM });
+
+      const totalFires = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'fire' } },
+        size: 100,
+      });
+      expect(totalFires.hits.hits).toHaveLength(3);
+    });
+
+    it('per_episode + every_time: dispatches new event even when status unchanged', async () => {
+      await setNotificationPolicyThrottle(npSoService, { strategy: 'every_time' });
+      await seedAlertEvents(esClient, ALERT_EVENTS_TEST_DATA);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-01-22T07:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ALERT_ACTIONS_DATA_STREAM });
+
+      const firstRunFires = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'fire' } },
+        size: 100,
+      });
+      expect(firstRunFires.hits.hits).toHaveLength(3);
+
+      await seedAlertEvents(esClient, [
+        {
+          '@timestamp': '2026-01-22T07:55:00.000Z',
+          type: 'alert',
+          rule: { id: 'rule-1', version: 1 },
+          group_hash: 'rule-1-series-1',
+          episode: {
+            id: 'rule-1-series-1-episode-3',
+            status: 'active',
+          },
+          data: {},
+          status: 'breached',
+          source: 'internal',
+        },
+      ]);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-01-22T07:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ALERT_ACTIONS_DATA_STREAM });
+
+      const totalFires = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'fire' } },
+        size: 100,
+      });
+      expect(totalFires.hits.hits).toHaveLength(4);
+    });
+
+    it('all + time_interval: digest mode groups all episodes and throttles on second dispatch', async () => {
+      await updateNotificationPolicy(npSoService, NOTIFICATION_POLICY_ID, {
+        groupingMode: 'all',
+        throttle: { strategy: 'time_interval', interval: '1h' },
+      });
+      await seedAlertEvents(esClient, ALERT_EVENTS_TEST_DATA);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-01-22T07:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ALERT_ACTIONS_DATA_STREAM });
+
+      const fireActions = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'fire' } },
+        size: 100,
+      });
+      expect(fireActions.hits.hits).toHaveLength(3);
+
+      const notifiedActions = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'notified' } },
+        size: 100,
+      });
+      expect(notifiedActions.hits.hits).toHaveLength(1);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-01-22T07:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ALERT_ACTIONS_DATA_STREAM });
+
+      const totalFires = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'fire' } },
+        size: 100,
+      });
+      expect(totalFires.hits.hits).toHaveLength(3);
+
+      const totalNotified = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'notified' } },
+        size: 100,
+      });
+      expect(totalNotified.hits.hits).toHaveLength(1);
+    });
+
+    it('per_field + time_interval: throttles groups on second dispatch within interval', async () => {
+      await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
+      await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, true);
+      await setNotificationPolicyThrottle(
+        npSoService,
+        { strategy: 'time_interval', interval: '1h' },
+        NOTIFICATION_POLICY_GROUPBY_ID
+      );
+      await seedAlertEvents(esClient, GROUPBY_ALERT_EVENTS);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-02-01T10:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ALERT_ACTIONS_DATA_STREAM });
+
+      const firstRunFires = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'fire' } },
+        size: 100,
+      });
+      expect(firstRunFires.hits.hits).toHaveLength(4);
+
+      const firstRunNotified = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'notified' } },
+        size: 100,
+      });
+      expect(firstRunNotified.hits.hits).toHaveLength(2);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-02-01T10:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ALERT_ACTIONS_DATA_STREAM });
+
+      const totalFires = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'fire' } },
+        size: 100,
+      });
+      expect(totalFires.hits.hits).toHaveLength(4);
+
+      const totalNotified = await esClient.search({
+        index: ALERT_ACTIONS_DATA_STREAM,
+        query: { term: { action_type: 'notified' } },
+        size: 100,
+      });
+      expect(totalNotified.hits.hits).toHaveLength(2);
     });
   });
 });
@@ -986,7 +1217,7 @@ async function seedRulesAndPolicies(
     name: 'GroupBy Policy',
     description: 'Groups by host.name',
     enabled: false,
-    groupBy: ['host.name'],
+    groupBy: ['data.host.name'],
     groupingMode: 'per_field',
   };
   await npSoService.create({ attrs: groupByPolicyAttrs, id: NOTIFICATION_POLICY_GROUPBY_ID });
@@ -1034,6 +1265,20 @@ async function setNotificationPolicyEnabled(
     id: policyId,
     version: policy.version,
     attrs: { enabled },
+  });
+}
+
+async function updateNotificationPolicy(
+  npSoService: NotificationPolicySavedObjectServiceContract,
+  policyId: string,
+  attrs: Partial<NotificationPolicySavedObjectAttributes>
+): Promise<void> {
+  const policy = await npSoService.get(policyId);
+
+  await npSoService.update({
+    id: policyId,
+    version: policy.version,
+    attrs,
   });
 }
 
