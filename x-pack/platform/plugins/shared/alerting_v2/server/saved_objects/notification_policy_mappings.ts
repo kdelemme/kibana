@@ -25,6 +25,12 @@ export const notificationPolicyMappings: SavedObjectsTypeMappingDefinition = {
         id: { type: 'keyword' },
       },
     },
+    throttle: {
+      type: 'object',
+      properties: {
+        strategy: { type: 'keyword' },
+      },
+    },
     snoozedUntil: { type: 'date' },
     auth: {
       type: 'object',
