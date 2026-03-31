@@ -88,57 +88,52 @@ export function applyThrottling(
 
   for (const group of groups) {
     const policy = policies.get(group.policyId)!;
-    const groupingMode = policy.groupingMode ?? 'per_episode';
-    const strategy =
-      policy.throttle?.strategy ??
-      (groupingMode === 'per_episode' ? 'on_status_change' : 'time_interval');
-    const lastRecord = lastNotifiedMap.get(group.id);
-
-    if (!lastRecord) {
-      dispatch.push(group);
-      continue;
-    }
-
-    if (strategy === 'every_time') {
-      dispatch.push(group);
-      continue;
-    }
-
-    if (groupingMode === 'per_episode') {
-      const currentStatus = group.episodes[0]?.episode_status;
-      const statusChanged = lastRecord.episodeStatus !== currentStatus;
-
-      if (strategy === 'on_status_change') {
-        if (statusChanged) {
-          dispatch.push(group);
-        } else {
-          throttled.push(group);
-        }
-      } else if (strategy === 'per_status_interval') {
-        if (statusChanged) {
-          dispatch.push(group);
-        } else if (
-          policy.throttle?.interval &&
-          !isWithinInterval(lastRecord.lastNotified, policy.throttle.interval, now)
-        ) {
-          dispatch.push(group);
-        } else {
-          throttled.push(group);
-        }
-      }
-    } else {
-      if (
-        policy.throttle?.interval &&
-        isWithinInterval(lastRecord.lastNotified, policy.throttle.interval, now)
-      ) {
-        throttled.push(group);
-      } else {
-        dispatch.push(group);
-      }
-    }
+    const bucket = shouldDispatch(group, policy, lastNotifiedMap.get(group.id), now)
+      ? dispatch
+      : throttled;
+    bucket.push(group);
   }
 
   return { dispatch, throttled };
+}
+
+function shouldDispatch(
+  group: NotificationGroup,
+  policy: NotificationPolicy,
+  lastRecord: LastNotifiedInfo | undefined,
+  now: Date
+): boolean {
+  if (!lastRecord) return true;
+
+  const groupingMode = policy.groupingMode ?? 'per_episode';
+  const strategy =
+    policy.throttle?.strategy ??
+    (groupingMode === 'per_episode' ? 'on_status_change' : 'time_interval');
+
+  if (strategy === 'every_time') return true;
+
+  // Aggregate modes (per_field, all): throttle by interval only
+  if (groupingMode !== 'per_episode') {
+    return (
+      !policy.throttle?.interval ||
+      !isWithinInterval(lastRecord.lastNotified, policy.throttle.interval, now)
+    );
+  }
+
+  // per_episode: always dispatch on status change
+  const statusChanged = lastRecord.episodeStatus !== group.episodes[0]?.episode_status;
+  if (statusChanged) return true;
+
+  // per_status_interval: also dispatch when interval has elapsed
+  if (strategy === 'per_status_interval') {
+    return (
+      !!policy.throttle?.interval &&
+      !isWithinInterval(lastRecord.lastNotified, policy.throttle.interval, now)
+    );
+  }
+
+  // on_status_change with no change → throttle
+  return false;
 }
 
 function isWithinInterval(lastNotifiedAt: Date, interval: string, now: Date): boolean {
