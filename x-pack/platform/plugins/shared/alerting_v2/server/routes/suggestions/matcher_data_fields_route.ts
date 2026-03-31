@@ -12,12 +12,12 @@ import type { KibanaResponseFactory } from '@kbn/core/server';
 import { inject, injectable } from 'inversify';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { MatcherSuggestionsService } from '../../lib/services/matcher_suggestions_service/matcher_suggestions_service';
-import { INTERNAL_ALERTING_V2_DATA_FIELDS_API_PATH } from '../constants';
+import { ALERTING_V2_NOTIFICATION_POLICY_API_PATH } from '../constants';
 
 @injectable()
 export class MatcherDataFieldsRoute {
   static method = 'get' as const;
-  static path = INTERNAL_ALERTING_V2_DATA_FIELDS_API_PATH;
+  static path = `${ALERTING_V2_NOTIFICATION_POLICY_API_PATH}/suggestions/data_fields`;
   static security: RouteSecurity = {
     authz: {
       requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.read],

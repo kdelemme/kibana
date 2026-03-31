@@ -5,11 +5,9 @@
  * 2.0.
  */
 
-export { ALERTING_V2_RULE_API_PATH } from '@kbn/alerting-v2-constants';
-export const INTERNAL_ALERTING_V2_ALERT_API_PATH = '/internal/alerting/v2/alerts' as const;
-export const INTERNAL_ALERTING_V2_NOTIFICATION_POLICY_API_PATH =
-  '/internal/alerting/v2/notification_policies' as const;
-export const INTERNAL_ALERTING_V2_SUGGESTIONS_API_PATH =
-  '/internal/notification_policies/suggestions/values' as const;
-export const INTERNAL_ALERTING_V2_DATA_FIELDS_API_PATH =
-  `${INTERNAL_ALERTING_V2_NOTIFICATION_POLICY_API_PATH}/suggestions/data_fields` as const;
+export {
+  ALERTING_V2_RULE_API_PATH,
+  ALERTING_V2_ALERT_API_PATH,
+  ALERTING_V2_NOTIFICATION_POLICY_API_PATH,
+  INTERNAL_ALERTING_V2_SUGGESTIONS_API_PATH,
+} from '@kbn/alerting-v2-constants';

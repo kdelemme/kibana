@@ -5,17 +5,17 @@
  * 2.0.
  */
 
+import { useService } from '@kbn/core-di-browser';
 import { useQuery } from '@kbn/react-query';
-import { useService, CoreStart } from '@kbn/core-di-browser';
-import { INTERNAL_ALERTING_V2_DATA_FIELDS_API_PATH } from '../constants';
+import { NotificationPoliciesApi } from '../services/notification_policies_api';
 import { matcherSuggestionKeys } from './query_key_factory';
 
 export const useFetchDataFields = () => {
-  const http = useService(CoreStart('http'));
+  const notificationPoliciesApi = useService(NotificationPoliciesApi);
 
   return useQuery<string[], Error>({
     queryKey: matcherSuggestionKeys.dataFields(),
-    queryFn: () => http.get<string[]>(INTERNAL_ALERTING_V2_DATA_FIELDS_API_PATH),
+    queryFn: () => notificationPoliciesApi.fetchDataFields(),
     refetchOnWindowFocus: false,
     staleTime: 30 * 60 * 1000,
   });
