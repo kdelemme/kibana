@@ -10,7 +10,10 @@ import { inject, injectable } from 'inversify';
 import { flattenObject } from '@kbn/object-utils';
 import { EsServiceScopedToken } from '../es_service/tokens';
 import { RuleSavedObjectsClientToken } from '../rules_saved_object_service/tokens';
-import { ALERT_EVENTS_DATA_STREAM, alertEpisodeStatus } from '../../../resources/alert_events';
+import {
+  ALERT_EVENTS_DATA_STREAM,
+  alertEpisodeStatus,
+} from '../../../resources/datastreams/alert_events';
 import { RULE_SAVED_OBJECT_TYPE, type RuleSavedObjectAttributes } from '../../../saved_objects';
 
 const MAX_SUGGESTIONS = 10;
