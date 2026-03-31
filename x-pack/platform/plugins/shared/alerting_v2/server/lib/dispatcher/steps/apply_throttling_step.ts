@@ -6,29 +6,24 @@
  */
 
 import { inject, injectable } from 'inversify';
-import type {
-  LastNotifiedRecord,
-  NotificationGroup,
-  NotificationGroupId,
-  NotificationPolicy,
-  DispatcherStep,
-  DispatcherPipelineState,
-  DispatcherStepOutput,
-} from '../types';
+import { parseDurationToMs } from '../../duration';
 import {
   LoggerServiceToken,
   type LoggerServiceContract,
 } from '../../services/logger_service/logger_service';
 import type { QueryServiceContract } from '../../services/query_service/query_service';
 import { QueryServiceInternalToken } from '../../services/query_service/tokens';
-import { queryResponseToRecords } from '../../services/query_service/query_response_to_records';
 import { getLastNotifiedTimestampsQuery } from '../queries';
-import { parseDurationToMs } from '../../duration';
-
-export interface LastNotifiedInfo {
-  lastNotified: Date;
-  episodeStatus?: string;
-}
+import type {
+  DispatcherPipelineState,
+  DispatcherStep,
+  DispatcherStepOutput,
+  LastNotifiedInfo,
+  LastNotifiedRecord,
+  NotificationGroup,
+  NotificationGroupId,
+  NotificationPolicy,
+} from '../types';
 
 @injectable()
 export class ApplyThrottlingStep implements DispatcherStep {
@@ -66,11 +61,10 @@ export class ApplyThrottlingStep implements DispatcherStep {
   private async fetchLastNotifiedTimestamps(
     notificationGroupIds: NotificationGroupId[]
   ): Promise<Map<NotificationGroupId, LastNotifiedInfo>> {
-    const result = await this.queryService.executeQuery({
+    const records = await this.queryService.executeQueryRows<LastNotifiedRecord>({
       query: getLastNotifiedTimestampsQuery(notificationGroupIds).query,
     });
 
-    const records = queryResponseToRecords<LastNotifiedRecord>(result);
     return new Map<NotificationGroupId, LastNotifiedInfo>(
       records.map((record) => [
         record.notification_group_id,

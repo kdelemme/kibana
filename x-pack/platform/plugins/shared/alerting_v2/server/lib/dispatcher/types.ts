@@ -110,6 +110,11 @@ export interface LastNotifiedRecord {
   episode_status?: string;
 }
 
+export interface LastNotifiedInfo {
+  lastNotified: Date;
+  episodeStatus?: string;
+}
+
 export interface DispatcherPipelineInput {
   readonly startedAt: Date;
   readonly previousStartedAt: Date;

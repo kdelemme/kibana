@@ -5,13 +5,13 @@
  * 2.0.
  */
 
-import { applyThrottling, type LastNotifiedInfo } from './apply_throttling_step';
+import { applyThrottling } from './apply_throttling_step';
 import {
   createAlertEpisode,
   createNotificationGroup,
   createNotificationPolicy,
 } from '../fixtures/test_utils';
-import type { NotificationGroupId } from '../types';
+import type { NotificationGroupId, LastNotifiedInfo } from '../types';
 
 const info = (lastNotified: string, episodeStatus?: string): LastNotifiedInfo => ({
   lastNotified: new Date(lastNotified),
