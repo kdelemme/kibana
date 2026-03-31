@@ -117,6 +117,7 @@ export class MatcherSuggestionsService {
               { term: { type: 'alert' } },
               { range: { '@timestamp': { gte: ALERT_EVENTS_LOOKBACK } } },
               { exists: { field: 'data' } },
+              { terms: { 'episode.status': ['pending', 'active', 'recovering'] } },
             ],
           },
         },
