@@ -5,12 +5,11 @@
  * 2.0.
  */
 
-import type { GroupingMode, ThrottleStrategy } from '@kbn/alerting-v2-schemas';
-
-export interface NotificationPolicyDestination {
-  type: 'workflow';
-  id: string;
-}
+import type {
+  GroupingMode,
+  NotificationPolicyDestination,
+  ThrottleStrategy,
+} from '@kbn/alerting-v2-schemas';
 
 export interface NotificationPolicyFormState {
   name: string;
