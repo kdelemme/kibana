@@ -337,9 +337,9 @@ describe('evaluateKql', () => {
         const kql = 'timestamp > now-7d';
         // now-7d is 2025-01-08T12:00:00Z
         expect(evaluateKql(kql, { timestamp: '2025-01-09T00:00:00.000Z' })).toBe(true);
-        expect(
-          evaluateKql(kql, { timestamp: dateMath.parse('now-7d')!.toISOString() })
-        ).toBe(false);
+        expect(evaluateKql(kql, { timestamp: dateMath.parse('now-7d')!.toISOString() })).toBe(
+          false
+        );
       });
 
       it('should evaluate <= with datemath on the right side', () => {
