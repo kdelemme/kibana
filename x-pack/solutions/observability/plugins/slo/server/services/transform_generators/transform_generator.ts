@@ -18,7 +18,7 @@ import {
   getSLOPipelineId,
   getSLOTransformId,
 } from '../../../common/constants';
-import type { TransformSettings } from '../../assets/transform_templates/slo_transform_template';
+import type { TransformSettings } from './slo_transform_template';
 import type { SLODefinition } from '../../domain/models';
 import {
   getElasticsearchQueryOrThrow,

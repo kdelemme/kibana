@@ -12,7 +12,7 @@ import {
   timeslicesBudgetingMethodSchema,
 } from '@kbn/slo-schema';
 import { TransformGenerator } from '.';
-import { getSLOTransformTemplate } from '../../assets/transform_templates/slo_transform_template';
+import { getSLOTransformTemplate } from './slo_transform_template';
 import type { SLODefinition } from '../../domain/models';
 import { InvalidTransformError } from '../../errors';
 import { getTimesliceMetricIndicatorAggregation } from '../aggregations';

@@ -15,7 +15,7 @@ import {
 } from '@kbn/slo-schema';
 import { getElasticsearchQueryOrThrow, TransformGenerator } from '.';
 import { SYNTHETICS_DEFAULT_GROUPINGS, SYNTHETICS_INDEX_PATTERN } from '../../../common/constants';
-import { getSLOTransformTemplate } from '../../assets/transform_templates/slo_transform_template';
+import { getSLOTransformTemplate } from './slo_transform_template';
 import type { SLODefinition } from '../../domain/models';
 import { InvalidTransformError } from '../../errors';
 import { getFilterRange } from './common';
