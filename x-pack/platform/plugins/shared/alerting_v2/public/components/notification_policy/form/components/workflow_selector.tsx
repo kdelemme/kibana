@@ -72,7 +72,7 @@ export const WorkflowSelector = () => {
       >
         <FormattedMessage
           id="xpack.alertingV2.notificationPolicy.form.destination.workflowsDisabled.description"
-          defaultMessage="Enable the {settingName} setting in {advancedSettingsLink} to use workflows as destinations."
+          defaultMessage="Notification policies use Workflows for destinations, you'll need to enable them first. Enable the {settingName} setting in {advancedSettingsLink}, then refresh this page."
           values={{
             settingName: WORKFLOWS_UI_SETTING_ID,
             advancedSettingsLink: (
