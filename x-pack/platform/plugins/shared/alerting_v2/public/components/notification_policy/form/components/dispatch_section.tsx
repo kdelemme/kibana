@@ -12,13 +12,14 @@ import React, { useEffect, useMemo } from 'react';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { useFetchDataFields } from '../../../../hooks/use_fetch_data_fields';
 import {
+  AGGREGATE_STRATEGY_HELP_TEXT,
   AGGREGATE_STRATEGY_OPTIONS,
   DEFAULT_STRATEGY_FOR_MODE,
   DEFAULT_THROTTLE_INTERVAL,
   GROUPING_MODE_HELP_TEXT,
   GROUPING_MODE_OPTIONS,
+  PER_EPISODE_STRATEGY_HELP_TEXT,
   PER_EPISODE_STRATEGY_OPTIONS,
-  STRATEGY_HELP_TEXT,
   THROTTLE_INTERVAL_PATTERN,
 } from '../constants';
 import { needsInterval } from '../form_utils';
@@ -46,6 +47,8 @@ export const DispatchSection: React.FC = () => {
 
   const strategyOptions =
     groupingMode === 'per_episode' ? PER_EPISODE_STRATEGY_OPTIONS : AGGREGATE_STRATEGY_OPTIONS;
+  const strategyHelpText =
+    groupingMode === 'per_episode' ? PER_EPISODE_STRATEGY_HELP_TEXT : AGGREGATE_STRATEGY_HELP_TEXT;
 
   return (
     <>
@@ -53,11 +56,18 @@ export const DispatchSection: React.FC = () => {
         name="groupingMode"
         control={control}
         render={({ field }) => (
-          <EuiFormRow fullWidth helpText={GROUPING_MODE_HELP_TEXT[field.value]}>
+          <EuiFormRow
+            label={i18n.translate(
+              'xpack.alertingV2.notificationPolicy.form.dispatch.dispatchPer',
+              { defaultMessage: 'Dispatch per' }
+            )}
+            fullWidth
+            helpText={GROUPING_MODE_HELP_TEXT[field.value]}
+          >
             <EuiButtonGroup
               legend={i18n.translate(
                 'xpack.alertingV2.notificationPolicy.form.dispatch.modeLegend',
-                { defaultMessage: 'Dispatch mode' }
+                { defaultMessage: 'Dispatch per' }
               )}
               options={GROUPING_MODE_OPTIONS}
               idSelected={field.value}
@@ -104,7 +114,7 @@ export const DispatchSection: React.FC = () => {
                 'xpack.alertingV2.notificationPolicy.form.groupBy.helpText',
                 {
                   defaultMessage:
-                    'Episodes that share these field values are notified as one group.',
+                    'Episodes that share these field values are grouped together for dispatch.',
                 }
               )}
             >
@@ -114,7 +124,7 @@ export const DispatchSection: React.FC = () => {
                 data-test-subj="groupByInput"
                 placeholder={i18n.translate(
                   'xpack.alertingV2.notificationPolicy.form.groupBy.placeholder',
-                  { defaultMessage: 'Select or type a field name' }
+                  { defaultMessage: 'Add field…' }
                 )}
                 selectedOptions={field.value.map((g: string) => ({ label: g }))}
                 options={groupByOptions}
@@ -139,7 +149,7 @@ export const DispatchSection: React.FC = () => {
               defaultMessage: 'Frequency',
             })}
             fullWidth
-            helpText={STRATEGY_HELP_TEXT[throttleStrategy]}
+            helpText={strategyHelpText[throttleStrategy]}
           >
             <EuiSelect
               {...field}
