@@ -6,9 +6,9 @@
  */
 
 import { createTimesliceMetricIndicator } from '../fixtures/slo';
-import { GetTimesliceMetricIndicatorAggregation } from './get_timeslice_metric_indicator_aggregation';
+import { getTimesliceMetricIndicatorAggregation } from './get_timeslice_metric_indicator_aggregation';
 
-describe('GetTimesliceMetricIndicatorAggregation', () => {
+describe('getTimesliceMetricIndicatorAggregation', () => {
   it('should generate an aggregation for basic metrics', () => {
     const indicator = createTimesliceMetricIndicator(
       [
@@ -41,8 +41,9 @@ describe('GetTimesliceMetricIndicatorAggregation', () => {
       ],
       '(A + B + C + D + E) / A'
     );
-    const getIndicatorAggregation = new GetTimesliceMetricIndicatorAggregation(indicator);
-    expect(getIndicatorAggregation.execute('_metric')).toMatchSnapshot();
+    expect(
+      getTimesliceMetricIndicatorAggregation({ indicator, aggregationKey: '_metric' })
+    ).toMatchSnapshot();
   });
 
   it('should generate an aggregation for doc_count', () => {
@@ -56,8 +57,9 @@ describe('GetTimesliceMetricIndicatorAggregation', () => {
       ],
       'A'
     );
-    const getIndicatorAggregation = new GetTimesliceMetricIndicatorAggregation(indicator);
-    expect(getIndicatorAggregation.execute('_metric')).toMatchSnapshot();
+    expect(
+      getTimesliceMetricIndicatorAggregation({ indicator, aggregationKey: '_metric' })
+    ).toMatchSnapshot();
   });
 
   it('should generate an aggregation for std_deviation', () => {
@@ -71,8 +73,9 @@ describe('GetTimesliceMetricIndicatorAggregation', () => {
       ],
       'A'
     );
-    const getIndicatorAggregation = new GetTimesliceMetricIndicatorAggregation(indicator);
-    expect(getIndicatorAggregation.execute('_metric')).toMatchSnapshot();
+    expect(
+      getTimesliceMetricIndicatorAggregation({ indicator, aggregationKey: '_metric' })
+    ).toMatchSnapshot();
   });
 
   it('should generate an aggregation for percentile', () => {
@@ -87,8 +90,9 @@ describe('GetTimesliceMetricIndicatorAggregation', () => {
       ],
       'A'
     );
-    const getIndicatorAggregation = new GetTimesliceMetricIndicatorAggregation(indicator);
-    expect(getIndicatorAggregation.execute('_metric')).toMatchSnapshot();
+    expect(
+      getTimesliceMetricIndicatorAggregation({ indicator, aggregationKey: '_metric' })
+    ).toMatchSnapshot();
   });
 
   it('should generate an aggregation for last_value', () => {
@@ -102,7 +106,39 @@ describe('GetTimesliceMetricIndicatorAggregation', () => {
       ],
       'A'
     );
-    const getIndicatorAggregation = new GetTimesliceMetricIndicatorAggregation(indicator);
-    expect(getIndicatorAggregation.execute('_metric')).toMatchSnapshot();
+    expect(
+      getTimesliceMetricIndicatorAggregation({ indicator, aggregationKey: '_metric' })
+    ).toMatchSnapshot();
+  });
+
+  it('should throw when percentile value is missing', () => {
+    const indicator = createTimesliceMetricIndicator(
+      [
+        {
+          name: 'A',
+          aggregation: 'percentile' as const,
+          field: 'test.field',
+        },
+      ],
+      'A'
+    );
+    expect(() =>
+      getTimesliceMetricIndicatorAggregation({ indicator, aggregationKey: '_metric' })
+    ).toThrow('You must provide a percentile value for percentile aggregations.');
+  });
+
+  it('should throw when field is missing for basic metric aggregations', () => {
+    const indicator = createTimesliceMetricIndicator(
+      [
+        {
+          name: 'A',
+          aggregation: 'avg' as const,
+        },
+      ],
+      'A'
+    );
+    expect(() =>
+      getTimesliceMetricIndicatorAggregation({ indicator, aggregationKey: '_metric' })
+    ).toThrow('You must provide a field for basic metric aggregations.');
   });
 });

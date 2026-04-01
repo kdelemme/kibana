@@ -11,7 +11,7 @@ import { TransformGenerator } from '.';
 import { getSLOTransformTemplate } from '../../assets/transform_templates/slo_transform_template';
 import type { SLODefinition } from '../../domain/models';
 import { InvalidTransformError } from '../../errors';
-import { GetHistogramIndicatorAggregation } from '../aggregations';
+import { getHistogramIndicatorAggregation } from '../aggregations';
 
 export class HistogramTransformGenerator extends TransformGenerator {
   public async getTransformParams(slo: SLODefinition): Promise<TransformPutTransformRequest> {
@@ -20,10 +20,6 @@ export class HistogramTransformGenerator extends TransformGenerator {
     }
 
     const { dataView, source } = await this.buildDefaultSource(slo, slo.indicator);
-    const getHistogramIndicatorAggregations = new GetHistogramIndicatorAggregation(
-      slo.indicator,
-      dataView
-    );
 
     return getSLOTransformTemplate(
       this.buildTransformId(slo),
@@ -32,13 +28,17 @@ export class HistogramTransformGenerator extends TransformGenerator {
       this.buildDestination(slo),
       this.buildCommonGroupBy(slo, slo.indicator.params.timestampField),
       {
-        ...getHistogramIndicatorAggregations.execute({
+        ...getHistogramIndicatorAggregation({
+          indicator: slo.indicator,
           type: 'good',
           aggregationKey: 'slo.numerator',
+          dataView,
         }),
-        ...getHistogramIndicatorAggregations.execute({
+        ...getHistogramIndicatorAggregation({
+          indicator: slo.indicator,
           type: 'total',
           aggregationKey: 'slo.denominator',
+          dataView,
         }),
         ...this.buildTimesliceAggregation(slo, 'slo.numerator>value', 'slo.denominator>value'),
       },

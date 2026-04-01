@@ -14,86 +14,98 @@ type HistogramIndicatorDef =
   | HistogramIndicator['params']['good']
   | HistogramIndicator['params']['total'];
 
-export class GetHistogramIndicatorAggregation {
-  constructor(private indicator: HistogramIndicator, private dataView?: DataView) {}
-
-  private buildAggregation(indicator: HistogramIndicatorDef): AggregationsAggregationContainer {
-    const filter = indicator.filter
-      ? getElasticsearchQueryOrThrow(indicator.filter, this.dataView)
-      : { match_all: {} };
-    if (indicator.aggregation === 'value_count') {
-      return {
-        filter,
-        aggs: {
-          total: {
-            value_count: { field: indicator.field },
-          },
-        },
-      };
-    }
-
-    if (indicator.aggregation === 'range' && (indicator.from == null || indicator.to == null)) {
-      throw new Error('Invalid Range: both "from" or "to" are required for a range aggregation.');
-    }
-
-    if (
-      indicator.aggregation === 'range' &&
-      indicator.from != null &&
-      indicator.to != null &&
-      indicator.from >= indicator.to
-    ) {
-      throw new Error('Invalid Range: "from" should be less that "to".');
-    }
-
+const buildAggregation = (
+  indicatorDef: HistogramIndicatorDef,
+  dataView?: DataView
+): AggregationsAggregationContainer => {
+  const filter = indicatorDef.filter
+    ? getElasticsearchQueryOrThrow(indicatorDef.filter, dataView)
+    : { match_all: {} };
+  if (indicatorDef.aggregation === 'value_count') {
     return {
       filter,
       aggs: {
         total: {
-          range: {
-            field: indicator.field,
-            keyed: true,
-            ranges: [
-              {
-                key: 'target',
-                from: indicator.from,
-                to: indicator.to,
-              },
-            ],
-          },
+          value_count: { field: indicatorDef.field },
         },
       },
     };
   }
 
-  private buildBucketScript(
-    type: 'good' | 'total',
-    indicator: HistogramIndicatorDef
-  ): AggregationsAggregationContainer {
-    if (indicator.aggregation === 'value_count') {
-      return {
-        bucket_script: {
-          buckets_path: {
-            value: `_${type}>total`,
-          },
-          script: 'params.value',
+  if (
+    indicatorDef.aggregation === 'range' &&
+    (indicatorDef.from == null || indicatorDef.to == null)
+  ) {
+    throw new Error('Invalid Range: both "from" or "to" are required for a range aggregation.');
+  }
+
+  if (
+    indicatorDef.aggregation === 'range' &&
+    indicatorDef.from != null &&
+    indicatorDef.to != null &&
+    indicatorDef.from >= indicatorDef.to
+  ) {
+    throw new Error('Invalid Range: "from" should be less that "to".');
+  }
+
+  return {
+    filter,
+    aggs: {
+      total: {
+        range: {
+          field: indicatorDef.field,
+          keyed: true,
+          ranges: [
+            {
+              key: 'target',
+              from: indicatorDef.from,
+              to: indicatorDef.to,
+            },
+          ],
         },
-      };
-    }
+      },
+    },
+  };
+};
+
+const buildBucketScript = (
+  type: 'good' | 'total',
+  indicatorDef: HistogramIndicatorDef
+): AggregationsAggregationContainer => {
+  if (indicatorDef.aggregation === 'value_count') {
     return {
       bucket_script: {
         buckets_path: {
-          value: `_${type}>total['target']>_count`,
+          value: `_${type}>total`,
         },
         script: 'params.value',
       },
     };
   }
+  return {
+    bucket_script: {
+      buckets_path: {
+        value: `_${type}>total['target']>_count`,
+      },
+      script: 'params.value',
+    },
+  };
+};
 
-  public execute({ type, aggregationKey }: { type: 'good' | 'total'; aggregationKey: string }) {
-    const indicatorDef = this.indicator.params[type];
-    return {
-      [`_${type}`]: this.buildAggregation(indicatorDef),
-      [aggregationKey]: this.buildBucketScript(type, indicatorDef),
-    };
-  }
-}
+export const getHistogramIndicatorAggregation = ({
+  indicator,
+  type,
+  aggregationKey,
+  dataView,
+}: {
+  indicator: HistogramIndicator;
+  type: 'good' | 'total';
+  aggregationKey: string;
+  dataView?: DataView;
+}) => {
+  const indicatorDef = indicator.params[type];
+  return {
+    [`_${type}`]: buildAggregation(indicatorDef, dataView),
+    [aggregationKey]: buildBucketScript(type, indicatorDef),
+  };
+};

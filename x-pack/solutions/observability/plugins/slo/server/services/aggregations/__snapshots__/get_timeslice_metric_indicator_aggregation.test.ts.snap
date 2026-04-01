@@ -1,6 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`GetTimesliceMetricIndicatorAggregation should generate an aggregation for basic metrics 1`] = `
+exports[
+  `getTimesliceMetricIndicatorAggregation should generate an aggregation for basic metrics 1`
+] = `
 Object {
   "_A": Object {
     "aggs": Object {
@@ -98,7 +100,7 @@ Object {
 }
 `;
 
-exports[`GetTimesliceMetricIndicatorAggregation should generate an aggregation for doc_count 1`] = `
+exports[`getTimesliceMetricIndicatorAggregation should generate an aggregation for doc_count 1`] = `
 Object {
   "_A": Object {
     "filter": Object {
@@ -137,7 +139,9 @@ Object {
 }
 `;
 
-exports[`GetTimesliceMetricIndicatorAggregation should generate an aggregation for last_value 1`] = `
+exports[
+  `getTimesliceMetricIndicatorAggregation should generate an aggregation for last_value 1`
+] = `
 Object {
   "_A": Object {
     "aggs": Object {
@@ -170,7 +174,9 @@ Object {
 }
 `;
 
-exports[`GetTimesliceMetricIndicatorAggregation should generate an aggregation for percentile 1`] = `
+exports[
+  `getTimesliceMetricIndicatorAggregation should generate an aggregation for percentile 1`
+] = `
 Object {
   "_A": Object {
     "aggs": Object {
@@ -202,7 +208,9 @@ Object {
 }
 `;
 
-exports[`GetTimesliceMetricIndicatorAggregation should generate an aggregation for std_deviation 1`] = `
+exports[
+  `getTimesliceMetricIndicatorAggregation should generate an aggregation for std_deviation 1`
+] = `
 Object {
   "_A": Object {
     "aggs": Object {

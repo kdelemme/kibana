@@ -14,67 +14,80 @@ type MetricCustomMetricDef =
   | MetricCustomIndicator['params']['good']
   | MetricCustomIndicator['params']['total'];
 
-export class GetCustomMetricIndicatorAggregation {
-  constructor(private indicator: MetricCustomIndicator, private dataView?: DataView) {}
+const buildMetricAggregations = (
+  type: 'good' | 'total',
+  metricDef: MetricCustomMetricDef,
+  dataView?: DataView
+) => {
+  return metricDef.metrics.reduce((acc, metric) => {
+    const filter = metric.filter
+      ? getElasticsearchQueryOrThrow(metric.filter, dataView)
+      : { match_all: {} };
 
-  private buildMetricAggregations(type: 'good' | 'total', metricDef: MetricCustomMetricDef) {
-    return metricDef.metrics.reduce((acc, metric) => {
-      const filter = metric.filter
-        ? getElasticsearchQueryOrThrow(metric.filter, this.dataView)
-        : { match_all: {} };
-
-      if (metricCustomDocCountMetric.is(metric)) {
-        return {
-          ...acc,
-          [`_${type}_${metric.name}`]: {
-            filter,
-          },
-        };
-      }
-
+    if (metricCustomDocCountMetric.is(metric)) {
       return {
         ...acc,
         [`_${type}_${metric.name}`]: {
           filter,
-          aggs: {
-            metric: {
-              [metric.aggregation]: { field: metric.field },
-            },
-          },
         },
       };
-    }, {});
-  }
-
-  private convertEquationToPainless(bucketsPath: Record<string, string>, equation: string) {
-    const workingEquation = equation || Object.keys(bucketsPath).join(' + ');
-    return Object.keys(bucketsPath).reduce((acc, key) => {
-      return acc.replaceAll(key, `params.${key}`);
-    }, workingEquation);
-  }
-
-  private buildMetricEquation(type: 'good' | 'total', metricDef: MetricCustomMetricDef) {
-    const bucketsPath = metricDef.metrics.reduce((acc, metric) => {
-      const path = metricCustomDocCountMetric.is(metric) ? '_count' : 'metric';
-      return { ...acc, [metric.name]: `_${type}_${metric.name}>${path}` };
-    }, {});
+    }
 
     return {
-      bucket_script: {
-        buckets_path: bucketsPath,
-        script: {
-          source: this.convertEquationToPainless(bucketsPath, metricDef.equation),
-          lang: 'painless',
+      ...acc,
+      [`_${type}_${metric.name}`]: {
+        filter,
+        aggs: {
+          metric: {
+            [metric.aggregation]: { field: metric.field },
+          },
         },
       },
     };
-  }
+  }, {});
+};
 
-  public execute({ type, aggregationKey }: { type: 'good' | 'total'; aggregationKey: string }) {
-    const indicatorDef = this.indicator.params[type];
-    return {
-      ...this.buildMetricAggregations(type, indicatorDef),
-      [aggregationKey]: this.buildMetricEquation(type, indicatorDef),
-    };
-  }
-}
+const convertEquationToPainless = (
+  bucketsPath: Record<string, string>,
+  equation: string
+): string => {
+  const workingEquation = equation || Object.keys(bucketsPath).join(' + ');
+  return Object.keys(bucketsPath).reduce((acc, key) => {
+    return acc.replaceAll(key, `params.${key}`);
+  }, workingEquation);
+};
+
+const buildMetricEquation = (type: 'good' | 'total', metricDef: MetricCustomMetricDef) => {
+  const bucketsPath = metricDef.metrics.reduce((acc, metric) => {
+    const path = metricCustomDocCountMetric.is(metric) ? '_count' : 'metric';
+    return { ...acc, [metric.name]: `_${type}_${metric.name}>${path}` };
+  }, {});
+
+  return {
+    bucket_script: {
+      buckets_path: bucketsPath,
+      script: {
+        source: convertEquationToPainless(bucketsPath, metricDef.equation),
+        lang: 'painless',
+      },
+    },
+  };
+};
+
+export const getCustomMetricIndicatorAggregation = ({
+  indicator,
+  type,
+  aggregationKey,
+  dataView,
+}: {
+  indicator: MetricCustomIndicator;
+  type: 'good' | 'total';
+  aggregationKey: string;
+  dataView?: DataView;
+}) => {
+  const indicatorDef = indicator.params[type];
+  return {
+    ...buildMetricAggregations(type, indicatorDef, dataView),
+    [aggregationKey]: buildMetricEquation(type, indicatorDef),
+  };
+};

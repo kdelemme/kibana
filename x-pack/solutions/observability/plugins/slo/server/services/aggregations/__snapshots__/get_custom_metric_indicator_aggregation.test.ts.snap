@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`GetHistogramIndicatorAggregation should generate a aggregation for good events 1`] = `
+exports[`getCustomMetricIndicatorAggregation should generate a aggregation for good events 1`] = `
 Object {
   "_good_A": Object {
     "aggs": Object {
@@ -41,7 +41,7 @@ Object {
 }
 `;
 
-exports[`GetHistogramIndicatorAggregation should generate a aggregation for total events 1`] = `
+exports[`getCustomMetricIndicatorAggregation should generate a aggregation for total events 1`] = `
 Object {
   "_total_A": Object {
     "aggs": Object {
@@ -59,6 +59,93 @@ Object {
     "bucket_script": Object {
       "buckets_path": Object {
         "A": "_total_A>metric",
+      },
+      "script": Object {
+        "lang": "painless",
+        "source": "params.A",
+      },
+    },
+  },
+}
+`;
+
+exports[`getCustomMetricIndicatorAggregation should generate a doc_count aggregation 1`] = `
+Object {
+  "_good_A": Object {
+    "filter": Object {
+      "bool": Object {
+        "filter": Array [
+          Object {
+            "bool": Object {
+              "minimum_should_match": 1,
+              "should": Array [
+                Object {
+                  "match": Object {
+                    "outcome": "success",
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        "must": Array [],
+        "must_not": Array [],
+        "should": Array [],
+      },
+    },
+  },
+  "goodEvents": Object {
+    "bucket_script": Object {
+      "buckets_path": Object {
+        "A": "_good_A>_count",
+      },
+      "script": Object {
+        "lang": "painless",
+        "source": "params.A",
+      },
+    },
+  },
+}
+`;
+
+exports[
+  `getCustomMetricIndicatorAggregation should include the filter when provided on a metric 1`
+] = `
+Object {
+  "_good_A": Object {
+    "aggs": Object {
+      "metric": Object {
+        "sum": Object {
+          "field": "total",
+        },
+      },
+    },
+    "filter": Object {
+      "bool": Object {
+        "filter": Array [
+          Object {
+            "bool": Object {
+              "minimum_should_match": 1,
+              "should": Array [
+                Object {
+                  "match": Object {
+                    "outcome": "success",
+                  },
+                },
+              ],
+            },
+          },
+        ],
+        "must": Array [],
+        "must_not": Array [],
+        "should": Array [],
+      },
+    },
+  },
+  "goodEvents": Object {
+    "bucket_script": Object {
+      "buckets_path": Object {
+        "A": "_good_A>metric",
       },
       "script": Object {
         "lang": "painless",

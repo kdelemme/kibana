@@ -28,9 +28,9 @@ import type { APMTransactionDurationIndicator, Groupings } from '../domain/model
 import { computeSLIForPreview } from '../domain/services';
 import { typedSearch } from '../utils/queries';
 import {
-  GetCustomMetricIndicatorAggregation,
-  GetHistogramIndicatorAggregation,
-  GetTimesliceMetricIndicatorAggregation,
+  getCustomMetricIndicatorAggregation,
+  getHistogramIndicatorAggregation,
+  getTimesliceMetricIndicatorAggregation,
 } from './aggregations';
 import { getElasticsearchQueryOrThrow } from './transform_generators';
 import { buildParamValues } from './transform_generators/synthetics_availability';
@@ -353,10 +353,6 @@ export class GetPreviewData {
     options: Options
   ): Promise<GetPreviewDataResponse> {
     const dataView = await this.getDataView(indicator.params.dataViewId);
-    const getHistogramIndicatorAggregations = new GetHistogramIndicatorAggregation(
-      indicator,
-      dataView
-    );
     const filterQuery = getElasticsearchQueryOrThrow(indicator.params.filter, dataView);
     const timestampField = indicator.params.timestampField;
 
@@ -396,13 +392,17 @@ export class GetPreviewData {
             },
           },
           aggs: {
-            ...getHistogramIndicatorAggregations.execute({
+            ...getHistogramIndicatorAggregation({
+              indicator,
               type: 'good',
               aggregationKey: 'good',
+              dataView,
             }),
-            ...getHistogramIndicatorAggregations.execute({
+            ...getHistogramIndicatorAggregation({
+              indicator,
               type: 'total',
               aggregationKey: 'total',
+              dataView,
             }),
           },
         },
@@ -462,11 +462,6 @@ export class GetPreviewData {
     const timestampField = indicator.params.timestampField;
     const filterQuery = getElasticsearchQueryOrThrow(indicator.params.filter, dataView);
 
-    const getCustomMetricIndicatorAggregation = new GetCustomMetricIndicatorAggregation(
-      indicator,
-      dataView
-    );
-
     const filter: estypes.QueryDslQueryContainer[] = [
       { range: { [timestampField]: { gte: options.range.start, lte: options.range.end } } },
       filterQuery,
@@ -503,13 +498,17 @@ export class GetPreviewData {
             },
           },
           aggs: {
-            ...getCustomMetricIndicatorAggregation.execute({
+            ...getCustomMetricIndicatorAggregation({
+              indicator,
               type: 'good',
               aggregationKey: 'good',
+              dataView,
             }),
-            ...getCustomMetricIndicatorAggregation.execute({
+            ...getCustomMetricIndicatorAggregation({
+              indicator,
               type: 'total',
               aggregationKey: 'total',
+              dataView,
             }),
           },
         },
@@ -568,11 +567,6 @@ export class GetPreviewData {
     const dataView = await this.getDataView(indicator.params.dataViewId);
     const timestampField = indicator.params.timestampField;
     const filterQuery = getElasticsearchQueryOrThrow(indicator.params.filter, dataView);
-    const getCustomMetricIndicatorAggregation = new GetTimesliceMetricIndicatorAggregation(
-      indicator,
-      dataView
-    );
-
     const filter: estypes.QueryDslQueryContainer[] = [
       { range: { [timestampField]: { gte: options.range.start, lte: options.range.end } } },
       filterQuery,
@@ -608,7 +602,11 @@ export class GetPreviewData {
               max: options.range.end,
             },
           },
-          aggs: getCustomMetricIndicatorAggregation.execute('metric'),
+          aggs: getTimesliceMetricIndicatorAggregation({
+            indicator,
+            aggregationKey: 'metric',
+            dataView,
+          }),
         },
         options.groupBy
       ),

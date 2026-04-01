@@ -15,117 +15,128 @@ import { getElasticsearchQueryOrThrow } from '../transform_generators';
 type TimesliceMetricDef = TimesliceMetricIndicator['params']['metric'];
 type TimesliceMetricMetricDef = t.TypeOf<typeof timesliceMetricMetricDef>;
 
-export class GetTimesliceMetricIndicatorAggregation {
-  constructor(private indicator: TimesliceMetricIndicator, private dataView?: DataView) {}
-
-  private buildAggregation(metric: TimesliceMetricMetricDef) {
-    const { aggregation } = metric;
-    switch (aggregation) {
-      case 'doc_count':
-        return {};
-      case 'std_deviation':
-        return {
-          extended_stats: { field: metric.field },
-        };
-      case 'percentile':
-        if (metric.percentile == null) {
-          throw new Error('You must provide a percentile value for percentile aggregations.');
-        }
-        return {
-          percentiles: {
-            field: metric.field,
-            percents: [metric.percentile],
-            keyed: true,
-          },
-        };
-      case 'last_value':
-        return {
-          top_metrics: {
-            metrics: { field: metric.field },
-            sort: { [this.indicator.params.timestampField]: 'desc' },
-          },
-        };
-      case 'avg':
-      case 'max':
-      case 'min':
-      case 'sum':
-      case 'cardinality':
-        if (metric.field == null) {
-          throw new Error('You must provide a field for basic metric aggregations.');
-        }
-        return {
-          [aggregation]: { field: metric.field },
-        };
-      default:
-        assertNever(aggregation);
-    }
-  }
-
-  private buildBucketPath(prefix: string, metric: TimesliceMetricMetricDef) {
-    const { aggregation } = metric;
-    switch (aggregation) {
-      case 'doc_count':
-        return `${prefix}>_count`;
-      case 'std_deviation':
-        return `${prefix}>metric[std_deviation]`;
-      case 'percentile':
-        return `${prefix}>metric[${metric.percentile}]`;
-      case 'last_value':
-        return `${prefix}>metric[${metric.field}]`;
-      case 'avg':
-      case 'max':
-      case 'min':
-      case 'sum':
-      case 'cardinality':
-        return `${prefix}>metric`;
-      default:
-        assertNever(aggregation);
-    }
-  }
-
-  private buildMetricAggregations(metricDef: TimesliceMetricDef) {
-    return metricDef.metrics.reduce((acc, metric) => {
-      const filter = metric.filter
-        ? getElasticsearchQueryOrThrow(metric.filter, this.dataView)
-        : { match_all: {} };
-      const aggs = { metric: this.buildAggregation(metric) };
+const buildAggregation = (metric: TimesliceMetricMetricDef, timestampField: string) => {
+  const { aggregation } = metric;
+  switch (aggregation) {
+    case 'doc_count':
+      return {};
+    case 'std_deviation':
       return {
-        ...acc,
-        [`_${metric.name}`]: {
-          filter,
-          ...(metric.aggregation !== 'doc_count' ? { aggs } : {}),
+        extended_stats: { field: metric.field },
+      };
+    case 'percentile':
+      if (metric.percentile == null) {
+        throw new Error('You must provide a percentile value for percentile aggregations.');
+      }
+      return {
+        percentiles: {
+          field: metric.field,
+          percents: [metric.percentile],
+          keyed: true,
         },
       };
-    }, {});
-  }
-
-  private convertEquationToPainless(bucketsPath: Record<string, string>, equation: string) {
-    const workingEquation = equation || Object.keys(bucketsPath).join(' + ');
-    return Object.keys(bucketsPath).reduce((acc, key) => {
-      return acc.replaceAll(key, `params.${key}`);
-    }, workingEquation);
-  }
-
-  private buildMetricEquation(definition: TimesliceMetricDef) {
-    const bucketsPath = definition.metrics.reduce(
-      (acc, metric) => ({ ...acc, [metric.name]: this.buildBucketPath(`_${metric.name}`, metric) }),
-      {}
-    );
-    return {
-      bucket_script: {
-        buckets_path: bucketsPath,
-        script: {
-          source: this.convertEquationToPainless(bucketsPath, definition.equation),
-          lang: 'painless',
+    case 'last_value':
+      return {
+        top_metrics: {
+          metrics: { field: metric.field },
+          sort: { [timestampField]: 'desc' },
         },
+      };
+    case 'avg':
+    case 'max':
+    case 'min':
+    case 'sum':
+    case 'cardinality':
+      if (metric.field == null) {
+        throw new Error('You must provide a field for basic metric aggregations.');
+      }
+      return {
+        [aggregation]: { field: metric.field },
+      };
+    default:
+      assertNever(aggregation);
+  }
+};
+
+const buildBucketPath = (prefix: string, metric: TimesliceMetricMetricDef) => {
+  const { aggregation } = metric;
+  switch (aggregation) {
+    case 'doc_count':
+      return `${prefix}>_count`;
+    case 'std_deviation':
+      return `${prefix}>metric[std_deviation]`;
+    case 'percentile':
+      return `${prefix}>metric[${metric.percentile}]`;
+    case 'last_value':
+      return `${prefix}>metric[${metric.field}]`;
+    case 'avg':
+    case 'max':
+    case 'min':
+    case 'sum':
+    case 'cardinality':
+      return `${prefix}>metric`;
+    default:
+      assertNever(aggregation);
+  }
+};
+
+const buildMetricAggregations = (
+  metricDef: TimesliceMetricDef,
+  timestampField: string,
+  dataView?: DataView
+) => {
+  return metricDef.metrics.reduce((acc, metric) => {
+    const filter = metric.filter
+      ? getElasticsearchQueryOrThrow(metric.filter, dataView)
+      : { match_all: {} };
+    const aggs = { metric: buildAggregation(metric, timestampField) };
+    return {
+      ...acc,
+      [`_${metric.name}`]: {
+        filter,
+        ...(metric.aggregation !== 'doc_count' ? { aggs } : {}),
       },
     };
-  }
+  }, {});
+};
 
-  public execute(aggregationKey: string) {
-    return {
-      ...this.buildMetricAggregations(this.indicator.params.metric),
-      [aggregationKey]: this.buildMetricEquation(this.indicator.params.metric),
-    };
-  }
-}
+const convertEquationToPainless = (
+  bucketsPath: Record<string, string>,
+  equation: string
+): string => {
+  const workingEquation = equation || Object.keys(bucketsPath).join(' + ');
+  return Object.keys(bucketsPath).reduce((acc, key) => {
+    return acc.replaceAll(key, `params.${key}`);
+  }, workingEquation);
+};
+
+const buildMetricEquation = (definition: TimesliceMetricDef) => {
+  const bucketsPath = definition.metrics.reduce(
+    (acc, metric) => ({ ...acc, [metric.name]: buildBucketPath(`_${metric.name}`, metric) }),
+    {}
+  );
+  return {
+    bucket_script: {
+      buckets_path: bucketsPath,
+      script: {
+        source: convertEquationToPainless(bucketsPath, definition.equation),
+        lang: 'painless',
+      },
+    },
+  };
+};
+
+export const getTimesliceMetricIndicatorAggregation = ({
+  indicator,
+  aggregationKey,
+  dataView,
+}: {
+  indicator: TimesliceMetricIndicator;
+  aggregationKey: string;
+  dataView?: DataView;
+}) => {
+  return {
+    ...buildMetricAggregations(indicator.params.metric, indicator.params.timestampField, dataView),
+    [aggregationKey]: buildMetricEquation(indicator.params.metric),
+  };
+};

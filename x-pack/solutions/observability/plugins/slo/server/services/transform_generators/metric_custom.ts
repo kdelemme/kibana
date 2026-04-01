@@ -11,7 +11,7 @@ import { TransformGenerator } from '.';
 import { getSLOTransformTemplate } from '../../assets/transform_templates/slo_transform_template';
 import type { SLODefinition } from '../../domain/models';
 import { InvalidTransformError } from '../../errors';
-import { GetCustomMetricIndicatorAggregation } from '../aggregations';
+import { getCustomMetricIndicatorAggregation } from '../aggregations';
 import { INVALID_EQUATION_REGEX } from './common';
 
 export class MetricCustomTransformGenerator extends TransformGenerator {
@@ -29,10 +29,6 @@ export class MetricCustomTransformGenerator extends TransformGenerator {
     }
 
     const { dataView, source } = await this.buildDefaultSource(slo, slo.indicator);
-    const getCustomMetricIndicatorAggregation = new GetCustomMetricIndicatorAggregation(
-      slo.indicator,
-      dataView
-    );
 
     return getSLOTransformTemplate(
       this.buildTransformId(slo),
@@ -41,13 +37,17 @@ export class MetricCustomTransformGenerator extends TransformGenerator {
       this.buildDestination(slo),
       this.buildCommonGroupBy(slo, slo.indicator.params.timestampField),
       {
-        ...getCustomMetricIndicatorAggregation.execute({
+        ...getCustomMetricIndicatorAggregation({
+          indicator: slo.indicator,
           type: 'good',
           aggregationKey: 'slo.numerator',
+          dataView,
         }),
-        ...getCustomMetricIndicatorAggregation.execute({
+        ...getCustomMetricIndicatorAggregation({
+          indicator: slo.indicator,
           type: 'total',
           aggregationKey: 'slo.denominator',
+          dataView,
         }),
         ...this.buildTimesliceAggregation(slo, 'slo.numerator>value', 'slo.denominator>value'),
       },

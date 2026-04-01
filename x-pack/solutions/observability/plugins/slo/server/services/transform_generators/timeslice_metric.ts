@@ -15,7 +15,7 @@ import { TransformGenerator } from '.';
 import { getSLOTransformTemplate } from '../../assets/transform_templates/slo_transform_template';
 import type { SLODefinition } from '../../domain/models';
 import { InvalidTransformError } from '../../errors';
-import { GetTimesliceMetricIndicatorAggregation } from '../aggregations';
+import { getTimesliceMetricIndicatorAggregation } from '../aggregations';
 import { INVALID_EQUATION_REGEX } from './common';
 
 export class TimesliceMetricTransformGenerator extends TransformGenerator {
@@ -33,10 +33,6 @@ export class TimesliceMetricTransformGenerator extends TransformGenerator {
     }
 
     const { dataView, source } = await this.buildDefaultSource(slo, slo.indicator);
-    const getIndicatorAggregation = new GetTimesliceMetricIndicatorAggregation(
-      slo.indicator,
-      dataView
-    );
     const comparator = timesliceMetricComparatorMapping[slo.indicator.params.metric.comparator];
 
     return getSLOTransformTemplate(
@@ -46,7 +42,11 @@ export class TimesliceMetricTransformGenerator extends TransformGenerator {
       this.buildDestination(slo),
       this.buildCommonGroupBy(slo, slo.indicator.params.timestampField),
       {
-        ...getIndicatorAggregation.execute('_metric'),
+        ...getTimesliceMetricIndicatorAggregation({
+          indicator: slo.indicator,
+          aggregationKey: '_metric',
+          dataView,
+        }),
         'slo.numerator': {
           bucket_script: {
             buckets_path: { value: '_metric>value' },
