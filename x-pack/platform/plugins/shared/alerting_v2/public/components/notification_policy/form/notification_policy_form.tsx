@@ -192,7 +192,7 @@ export const NotificationPolicyForm = () => {
           <EuiText size="xs" color="subdued">
             <FormattedMessage
               id="xpack.alertingV2.notificationPolicy.form.destination.description"
-              defaultMessage="Where should dispatches be sent."
+              defaultMessage="Select the workflows that should be triggered when dispatches are sent."
             />
           </EuiText>
         </EuiSplitPanel.Inner>
