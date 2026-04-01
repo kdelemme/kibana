@@ -5,10 +5,7 @@
  * 2.0.
  */
 
-import type {
-  AggregationsAggregationContainer,
-  TransformPutTransformRequest,
-} from '@elastic/elasticsearch/lib/api/types';
+import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/api/types';
 import { apmTransactionErrorRateIndicatorSchema } from '@kbn/slo-schema';
 import { TransformGenerator } from '.';
 import { getSLOTransformTemplate } from '../../assets/transform_templates/slo_transform_template';
@@ -62,7 +59,7 @@ export class ApmTransactionErrorRateTransformGenerator extends TransformGenerato
           filter: { match_all: {} },
         },
         ...this.buildTimesliceAggregation(slo, 'slo.numerator>_count', 'slo.denominator>_count'),
-      } as Record<string, AggregationsAggregationContainer>,
+      },
       this.buildSettings(slo, '@timestamp'),
       slo
     );

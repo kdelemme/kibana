@@ -9,6 +9,7 @@ import type { MetricCustomIndicator } from '@kbn/slo-schema';
 import { metricCustomDocCountMetric } from '@kbn/slo-schema';
 import type { DataView } from '@kbn/data-views-plugin/common';
 import { getElasticsearchQueryOrThrow } from '../transform_generators';
+import { convertEquationToPainless } from './convert_equation_to_painless';
 
 type MetricCustomMetricDef =
   | MetricCustomIndicator['params']['good']
@@ -45,16 +46,6 @@ const buildMetricAggregations = (
       },
     };
   }, {});
-};
-
-const convertEquationToPainless = (
-  bucketsPath: Record<string, string>,
-  equation: string
-): string => {
-  const workingEquation = equation || Object.keys(bucketsPath).join(' + ');
-  return Object.keys(bucketsPath).reduce((acc, key) => {
-    return acc.replaceAll(key, `params.${key}`);
-  }, workingEquation);
 };
 
 const buildMetricEquation = (type: 'good' | 'total', metricDef: MetricCustomMetricDef) => {

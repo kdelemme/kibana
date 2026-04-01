@@ -5,7 +5,6 @@
  * 2.0.
  */
 
-import type { AggregationsAggregationContainer } from '@elastic/elasticsearch/lib/api/types';
 import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/api/types';
 import { apmTransactionDurationIndicatorSchema } from '@kbn/slo-schema';
 import { TransformGenerator } from '.';
@@ -66,7 +65,7 @@ export class ApmTransactionDurationTransformGenerator extends TransformGenerator
           value_count: { field: 'transaction.duration.histogram' },
         },
         ...this.buildTimesliceAggregation(slo, 'slo.numerator.value', 'slo.denominator.value'),
-      } as Record<string, AggregationsAggregationContainer>,
+      },
       this.buildSettings(slo, '@timestamp'),
       slo
     );

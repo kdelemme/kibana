@@ -6,6 +6,7 @@
  */
 
 import type {
+  AggregationsAggregationContainer,
   MappingRuntimeFields,
   TransformPutTransformRequest,
 } from '@elastic/elasticsearch/lib/api/types';
@@ -145,7 +146,7 @@ export abstract class TransformGenerator {
     slo: SLODefinition,
     numeratorPath: string,
     denominatorPath: string
-  ) {
+  ): Record<string, AggregationsAggregationContainer> {
     if (!timeslicesBudgetingMethodSchema.is(slo.budgetingMethod)) {
       return {};
     }
