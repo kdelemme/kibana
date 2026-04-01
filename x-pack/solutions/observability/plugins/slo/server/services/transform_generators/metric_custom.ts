@@ -5,7 +5,10 @@
  * 2.0.
  */
 
-import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/api/types';
+import type {
+  AggregationsAggregationContainer,
+  TransformPutTransformRequest,
+} from '@elastic/elasticsearch/lib/api/types';
 import { metricCustomIndicatorSchema } from '@kbn/slo-schema';
 import { TransformGenerator } from '.';
 import { getSLOTransformTemplate } from '../../assets/transform_templates/slo_transform_template';
@@ -50,7 +53,7 @@ export class MetricCustomTransformGenerator extends TransformGenerator {
           dataView,
         }),
         ...this.buildTimesliceAggregation(slo, 'slo.numerator>value', 'slo.denominator>value'),
-      },
+      } as Record<string, AggregationsAggregationContainer>,
       this.buildSettings(slo, slo.indicator.params.timestampField),
       slo
     );
