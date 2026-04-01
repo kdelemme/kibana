@@ -11,6 +11,7 @@ import { oneMinute, twoMinute } from '../fixtures/duration';
 import {
   createAPMTransactionErrorRateIndicator,
   createSLO,
+  createSLOWithCalendarTimeWindow,
   createSLOWithTimeslicesBudgetingMethod,
 } from '../fixtures/slo';
 import { ApmTransactionErrorRateTransformGenerator } from './apm_transaction_error_rate';
@@ -154,6 +155,16 @@ describe('APM Transaction Error Rate Transform Generator', () => {
 
     expect(transform.source.query).toMatchSnapshot();
     expect(transform.pivot?.group_by).toMatchSnapshot();
+  });
+
+  it('returns the expected transform params with calendar-aligned time window', async () => {
+    const slo = createSLOWithCalendarTimeWindow({
+      id: 'irrelevant',
+      indicator: createAPMTransactionErrorRateIndicator(),
+    });
+    const transform = await generator.getTransformParams(slo);
+
+    expect(transform).toMatchSnapshot();
   });
 
   it("overrides the range filter when 'preventInitialBackfill' is true", async () => {

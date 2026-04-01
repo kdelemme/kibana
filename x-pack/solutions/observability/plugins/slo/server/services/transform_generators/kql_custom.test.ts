@@ -9,6 +9,7 @@ import { twoMinute } from '../fixtures/duration';
 import {
   createKQLCustomIndicator,
   createSLO,
+  createSLOWithCalendarTimeWindow,
   createSLOWithTimeslicesBudgetingMethod,
 } from '../fixtures/slo';
 import { KQLCustomTransformGenerator } from './kql_custom';
@@ -122,6 +123,27 @@ describe('KQL Custom Transform Generator', () => {
     const transform = await generator.getTransformParams(anSLO);
 
     expect(transform.pivot!.aggregations!['slo.denominator']).toMatchSnapshot();
+  });
+
+  it('returns the expected transform params with calendar-aligned time window', async () => {
+    const anSLO = createSLOWithCalendarTimeWindow({
+      id: 'irrelevant',
+      indicator: createKQLCustomIndicator(),
+    });
+    const transform = await generator.getTransformParams(anSLO);
+
+    expect(transform).toMatchSnapshot();
+  });
+
+  it('returns the expected transform params with groupBy', async () => {
+    const anSLO = createSLO({
+      id: 'irrelevant',
+      indicator: createKQLCustomIndicator(),
+      groupBy: ['host.name'],
+    });
+    const transform = await generator.getTransformParams(anSLO);
+
+    expect(transform).toMatchSnapshot();
   });
 
   it("overrides the range filter when 'preventInitialBackfill' is true", async () => {

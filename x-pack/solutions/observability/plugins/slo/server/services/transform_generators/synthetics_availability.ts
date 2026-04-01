@@ -7,7 +7,6 @@
 
 import type { estypes } from '@elastic/elasticsearch';
 import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/api/types';
-import type { DataViewsService } from '@kbn/data-views-plugin/common';
 import type { SyntheticsAvailabilityIndicator } from '@kbn/slo-schema';
 import {
   ALL_VALUE,
@@ -15,23 +14,13 @@ import {
   syntheticsAvailabilityIndicatorSchema,
 } from '@kbn/slo-schema';
 import { getElasticsearchQueryOrThrow, TransformGenerator } from '.';
-import {
-  getSLOPipelineId,
-  getSLOTransformId,
-  SLI_DESTINATION_INDEX_NAME,
-  SYNTHETICS_DEFAULT_GROUPINGS,
-  SYNTHETICS_INDEX_PATTERN,
-} from '../../../common/constants';
+import { SYNTHETICS_DEFAULT_GROUPINGS, SYNTHETICS_INDEX_PATTERN } from '../../../common/constants';
 import { getSLOTransformTemplate } from '../../assets/transform_templates/slo_transform_template';
 import type { SLODefinition } from '../../domain/models';
 import { InvalidTransformError } from '../../errors';
 import { getFilterRange } from './common';
 
 export class SyntheticsAvailabilityTransformGenerator extends TransformGenerator {
-  constructor(spaceId: string, dataViewService: DataViewsService, isServerless: boolean) {
-    super(spaceId, dataViewService, isServerless);
-  }
-
   public async getTransformParams(slo: SLODefinition): Promise<TransformPutTransformRequest> {
     if (!syntheticsAvailabilityIndicatorSchema.is(slo.indicator)) {
       throw new InvalidTransformError(`Cannot handle SLO of indicator type: ${slo.indicator.type}`);
@@ -47,10 +36,6 @@ export class SyntheticsAvailabilityTransformGenerator extends TransformGenerator
       this.buildSettings(slo, this.isServerless ? '@timestamp' : 'event.ingested'),
       slo
     );
-  }
-
-  private buildTransformId(slo: SLODefinition): string {
-    return getSLOTransformId(slo.id, slo.revision);
   }
 
   private buildGroupBy(slo: SLODefinition, indicator: SyntheticsAvailabilityIndicator) {
@@ -156,13 +141,6 @@ export class SyntheticsAvailabilityTransformGenerator extends TransformGenerator
           filter: queryFilter,
         },
       },
-    };
-  }
-
-  private buildDestination(slo: SLODefinition) {
-    return {
-      pipeline: getSLOPipelineId(slo.id, slo.revision),
-      index: SLI_DESTINATION_INDEX_NAME,
     };
   }
 

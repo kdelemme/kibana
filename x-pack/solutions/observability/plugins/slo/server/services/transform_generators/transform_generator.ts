@@ -11,8 +11,20 @@ import type {
 } from '@elastic/elasticsearch/lib/api/types';
 import type { DataView, DataViewsService } from '@kbn/data-views-plugin/common';
 import { ALL_VALUE, timeslicesBudgetingMethodSchema } from '@kbn/slo-schema';
+import type { QuerySchema } from '@kbn/slo-schema';
+import {
+  SLI_DESTINATION_INDEX_NAME,
+  getSLOPipelineId,
+  getSLOTransformId,
+} from '../../../common/constants';
 import type { TransformSettings } from '../../assets/transform_templates/slo_transform_template';
 import type { SLODefinition } from '../../domain/models';
+import {
+  getElasticsearchQueryOrThrow,
+  getFilterRange,
+  getTimesliceTargetComparator,
+  parseIndex,
+} from './common';
 
 export abstract class TransformGenerator {
   constructor(
@@ -91,6 +103,64 @@ export abstract class TransformGenerator {
       sync_delay: slo.settings.syncDelay.format(),
       // 8.17: use settings.syncField if truthy or default to sourceIndexTimestampField which is the indicator timestampField
       sync_field: !!slo.settings.syncField ? slo.settings.syncField : sourceIndexTimestampField,
+    };
+  }
+
+  public buildTransformId(slo: SLODefinition): string {
+    return getSLOTransformId(slo.id, slo.revision);
+  }
+
+  public buildDestination(slo: SLODefinition) {
+    return {
+      pipeline: getSLOPipelineId(slo.id, slo.revision),
+      index: SLI_DESTINATION_INDEX_NAME,
+    };
+  }
+
+  public async buildDefaultSource(
+    slo: SLODefinition,
+    indicator: {
+      params: { index: string; timestampField: string; filter?: QuerySchema; dataViewId?: string };
+    }
+  ) {
+    const dataView = await this.getIndicatorDataView(indicator.params.dataViewId);
+    return {
+      dataView,
+      source: {
+        index: parseIndex(indicator.params.index),
+        runtime_mappings: this.buildCommonRuntimeMappings(dataView),
+        query: {
+          bool: {
+            filter: [
+              getFilterRange(slo, indicator.params.timestampField, this.isServerless),
+              getElasticsearchQueryOrThrow(indicator.params.filter, dataView),
+            ],
+          },
+        },
+      },
+    };
+  }
+
+  public buildTimesliceAggregation(
+    slo: SLODefinition,
+    numeratorPath: string,
+    denominatorPath: string
+  ) {
+    if (!timeslicesBudgetingMethodSchema.is(slo.budgetingMethod)) {
+      return {};
+    }
+    return {
+      'slo.isGoodSlice': {
+        bucket_script: {
+          buckets_path: {
+            goodEvents: numeratorPath,
+            totalEvents: denominatorPath,
+          },
+          script: `if (params.totalEvents == 0) { return 1 } else { return params.goodEvents / params.totalEvents ${getTimesliceTargetComparator(
+            slo.objective.timesliceTarget!
+          )} ${slo.objective.timesliceTarget} ? 1 : 0 }`,
+        },
+      },
     };
   }
 }

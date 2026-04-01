@@ -11,6 +11,7 @@ import { twoMinute } from '../fixtures/duration';
 import {
   createAPMTransactionDurationIndicator,
   createSLO,
+  createSLOWithCalendarTimeWindow,
   createSLOWithTimeslicesBudgetingMethod,
 } from '../fixtures/slo';
 import { ApmTransactionDurationTransformGenerator } from './apm_transaction_duration';
@@ -151,6 +152,16 @@ describe('APM Transaction Duration Transform Generator', () => {
 
     expect(transform.source.query).toMatchSnapshot();
     expect(transform.pivot?.group_by).toMatchSnapshot();
+  });
+
+  it('returns the expected transform params with calendar-aligned time window', async () => {
+    const slo = createSLOWithCalendarTimeWindow({
+      id: 'irrelevant',
+      indicator: createAPMTransactionDurationIndicator(),
+    });
+    const transform = await generator.getTransformParams(slo);
+
+    expect(transform).toMatchSnapshot();
   });
 
   it("overrides the range filter when 'preventInitialBackfill' is true", async () => {

@@ -7,6 +7,7 @@
 
 import { dataViewsService } from '@kbn/data-views-plugin/server/mocks';
 import { twoMinute } from '../fixtures/duration';
+import { weeklyCalendarAligned } from '../fixtures/time_window';
 import {
   createSLO,
   createSLOWithTimeslicesBudgetingMethod,
@@ -166,6 +167,28 @@ describe('Timeslice Metric Transform Generator', () => {
         script: '1',
       },
     });
+  });
+
+  it('returns the expected transform params with calendar-aligned time window', async () => {
+    const anSLO = createSLOWithTimeslicesBudgetingMethod({
+      id: 'irrelevant',
+      indicator: everythingIndicator,
+      timeWindow: weeklyCalendarAligned(),
+    });
+    const transform = await generator.getTransformParams(anSLO);
+
+    expect(transform).toMatchSnapshot();
+  });
+
+  it('returns the expected transform params with groupBy', async () => {
+    const anSLO = createSLOWithTimeslicesBudgetingMethod({
+      id: 'irrelevant',
+      indicator: everythingIndicator,
+      groupBy: ['host.name'],
+    });
+    const transform = await generator.getTransformParams(anSLO);
+
+    expect(transform).toMatchSnapshot();
   });
 
   it("overrides the range filter when 'preventInitialBackfill' is true", async () => {

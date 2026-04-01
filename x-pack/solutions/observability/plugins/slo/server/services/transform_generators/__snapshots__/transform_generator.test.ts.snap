@@ -64,6 +64,78 @@ Object {
 }
 `;
 
+exports[`Transform Generator buildDefaultSource returns the source and dataView 1`] = `
+Object {
+  "index": Array [
+    "my-index*",
+    "my-other-index*",
+  ],
+  "query": Object {
+    "bool": Object {
+      "filter": Array [
+        Object {
+          "range": Object {
+            "log_timestamp": Object {
+              "gte": "now-7d/d",
+            },
+          },
+        },
+        Object {
+          "bool": Object {
+            "filter": Array [
+              Object {
+                "bool": Object {
+                  "minimum_should_match": 1,
+                  "should": Array [
+                    Object {
+                      "match": Object {
+                        "labels.groupId": "group-3",
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            "must": Array [],
+            "must_not": Array [],
+            "should": Array [],
+          },
+        },
+      ],
+    },
+  },
+  "runtime_mappings": Object {},
+}
+`;
+
+exports[`Transform Generator buildTimesliceAggregation returns slo.isGoodSlice bucket_script when budgeting method is timeslices 1`] = `
+Object {
+  "slo.isGoodSlice": Object {
+    "bucket_script": Object {
+      "buckets_path": Object {
+        "goodEvents": "slo.numerator>_count",
+        "totalEvents": "slo.denominator>_count",
+      },
+      "script": "if (params.totalEvents == 0) { return 1 } else { return params.goodEvents / params.totalEvents >= 0.95 ? 1 : 0 }",
+    },
+  },
+}
+`;
+
+exports[`Transform Generator buildTimesliceAggregation uses > comparator when timesliceTarget is 0 1`] = `
+Object {
+  "slo.isGoodSlice": Object {
+    "bucket_script": Object {
+      "buckets_path": Object {
+        "goodEvents": "slo.numerator>_count",
+        "totalEvents": "slo.denominator>_count",
+      },
+      "script": "if (params.totalEvents == 0) { return 1 } else { return params.goodEvents / params.totalEvents > 0 ? 1 : 0 }",
+    },
+  },
+}
+`;
+
 exports[`Transform Generator settings builds the transform settings 1`] = `
 Object {
   "frequency": "2m",

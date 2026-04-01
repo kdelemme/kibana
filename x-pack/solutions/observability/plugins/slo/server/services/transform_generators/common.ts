@@ -5,9 +5,10 @@
  * 2.0.
  */
 
+import type { estypes } from '@elastic/elasticsearch';
 import { buildEsQuery } from '@kbn/es-query';
 import type { QuerySchema } from '@kbn/slo-schema';
-import { kqlQuerySchema } from '@kbn/slo-schema';
+import { ALL_VALUE, kqlQuerySchema } from '@kbn/slo-schema';
 import type { Logger } from '@kbn/logging';
 import type { DataView } from '@kbn/data-views-plugin/common';
 import { isEmpty } from 'lodash';
@@ -65,6 +66,61 @@ export function parseIndex(index: string): string | string[] {
 export function getTimesliceTargetComparator(timesliceTarget: number) {
   return timesliceTarget === 0 ? '>' : '>=';
 }
+
+export const INVALID_EQUATION_REGEX = /[^A-Z|+|\-|\s|\d+|\.|\(|\)|\/|\*|>|<|=|\?|\:|&|\!|\|]+/g;
+
+export const buildApmSourceFilters = (
+  indicator: {
+    params: {
+      service: string;
+      environment: string;
+      transactionName: string;
+      transactionType: string;
+      filter?: QuerySchema;
+    };
+  },
+  dataView?: DataView
+): estypes.QueryDslQueryContainer[] => {
+  const filters: estypes.QueryDslQueryContainer[] = [];
+  if (indicator.params.service !== ALL_VALUE) {
+    filters.push({ match: { 'service.name': indicator.params.service } });
+  }
+  if (indicator.params.environment !== ALL_VALUE) {
+    filters.push({ match: { 'service.environment': indicator.params.environment } });
+  }
+  if (indicator.params.transactionName !== ALL_VALUE) {
+    filters.push({ match: { 'transaction.name': indicator.params.transactionName } });
+  }
+  if (indicator.params.transactionType !== ALL_VALUE) {
+    filters.push({ match: { 'transaction.type': indicator.params.transactionType } });
+  }
+  if (indicator.params.filter) {
+    filters.push(getElasticsearchQueryOrThrow(indicator.params.filter, dataView));
+  }
+  return filters;
+};
+
+export const buildApmExtraGroupByFields = (indicator: {
+  params: {
+    service: string;
+    environment: string;
+    transactionName: string;
+    transactionType: string;
+  };
+}) => ({
+  ...(indicator.params.service !== ALL_VALUE && {
+    'service.name': { terms: { field: 'service.name' } },
+  }),
+  ...(indicator.params.environment !== ALL_VALUE && {
+    'service.environment': { terms: { field: 'service.environment' } },
+  }),
+  ...(indicator.params.transactionName !== ALL_VALUE && {
+    'transaction.name': { terms: { field: 'transaction.name' } },
+  }),
+  ...(indicator.params.transactionType !== ALL_VALUE && {
+    'transaction.type': { terms: { field: 'transaction.type' } },
+  }),
+});
 
 /**
  * Use the settings.preventInitialBackfill flag to determine the range filter for the rollup transform

@@ -5,11 +5,15 @@
  * 2.0.
  */
 
+import { ALL_VALUE } from '@kbn/slo-schema';
 import { fiveMinute, twoMinute } from '../fixtures/duration';
-import { createSLO } from '../fixtures/slo';
+import { createAPMTransactionDurationIndicator, createSLO } from '../fixtures/slo';
 import { thirtyDaysRolling } from '../fixtures/time_window';
 import {
+  buildApmExtraGroupByFields,
+  buildApmSourceFilters,
   getTimesliceTargetComparator,
+  INVALID_EQUATION_REGEX,
   parseIndex,
   getFilterRange,
   getElasticsearchQueryOrThrow,
@@ -238,6 +242,104 @@ describe('common', () => {
       });
       expect(getElasticsearchQueryOrThrow({} as any)).toEqual({
         match_all: {},
+      });
+    });
+  });
+
+  describe('INVALID_EQUATION_REGEX', () => {
+    it('allows valid equations with uppercase letters, operators, digits, and spaces', () => {
+      expect('A + B'.match(INVALID_EQUATION_REGEX)).toBeNull();
+      expect('(A - B) / C * 100'.match(INVALID_EQUATION_REGEX)).toBeNull();
+      expect('A > 0 ? A : 0'.match(INVALID_EQUATION_REGEX)).toBeNull();
+    });
+
+    it('rejects equations with lowercase letters', () => {
+      expect('a + b'.match(INVALID_EQUATION_REGEX)).not.toBeNull();
+      expect('Math.floor(A)'.match(INVALID_EQUATION_REGEX)).not.toBeNull();
+    });
+  });
+
+  describe('buildApmSourceFilters', () => {
+    it('returns match filters for each non-ALL_VALUE param', () => {
+      const indicator = createAPMTransactionDurationIndicator({
+        service: 'my-service',
+        environment: 'production',
+        transactionName: 'GET /api',
+        transactionType: 'request',
+      });
+      const filters = buildApmSourceFilters({ type: indicator.type, params: indicator.params });
+      expect(filters).toEqual([
+        { match: { 'service.name': 'my-service' } },
+        { match: { 'service.environment': 'production' } },
+        { match: { 'transaction.name': 'GET /api' } },
+        { match: { 'transaction.type': 'request' } },
+      ]);
+    });
+
+    it('returns empty array when all params are ALL_VALUE', () => {
+      const indicator = createAPMTransactionDurationIndicator({
+        service: ALL_VALUE,
+        environment: ALL_VALUE,
+        transactionName: ALL_VALUE,
+        transactionType: ALL_VALUE,
+      });
+      const filters = buildApmSourceFilters({ type: indicator.type, params: indicator.params });
+      expect(filters).toEqual([]);
+    });
+
+    it('includes KQL filter when filter is truthy', () => {
+      const indicator = createAPMTransactionDurationIndicator({
+        service: ALL_VALUE,
+        environment: ALL_VALUE,
+        transactionName: ALL_VALUE,
+        transactionType: ALL_VALUE,
+        filter: 'host.name: "my-host"',
+      });
+      const filters = buildApmSourceFilters({ type: indicator.type, params: indicator.params });
+      expect(filters).toHaveLength(1);
+      expect(filters[0]).toHaveProperty('bool');
+    });
+  });
+
+  describe('buildApmExtraGroupByFields', () => {
+    it('returns terms entries for each non-ALL_VALUE param', () => {
+      const indicator = createAPMTransactionDurationIndicator({
+        service: 'my-service',
+        environment: 'production',
+        transactionName: 'GET /api',
+        transactionType: 'request',
+      });
+      const fields = buildApmExtraGroupByFields({ type: indicator.type, params: indicator.params });
+      expect(fields).toEqual({
+        'service.name': { terms: { field: 'service.name' } },
+        'service.environment': { terms: { field: 'service.environment' } },
+        'transaction.name': { terms: { field: 'transaction.name' } },
+        'transaction.type': { terms: { field: 'transaction.type' } },
+      });
+    });
+
+    it('returns empty object when all params are ALL_VALUE', () => {
+      const indicator = createAPMTransactionDurationIndicator({
+        service: ALL_VALUE,
+        environment: ALL_VALUE,
+        transactionName: ALL_VALUE,
+        transactionType: ALL_VALUE,
+      });
+      const fields = buildApmExtraGroupByFields({ type: indicator.type, params: indicator.params });
+      expect(fields).toEqual({});
+    });
+
+    it('includes only non-ALL_VALUE fields', () => {
+      const indicator = createAPMTransactionDurationIndicator({
+        service: 'my-service',
+        environment: ALL_VALUE,
+        transactionName: ALL_VALUE,
+        transactionType: 'request',
+      });
+      const fields = buildApmExtraGroupByFields({ type: indicator.type, params: indicator.params });
+      expect(fields).toEqual({
+        'service.name': { terms: { field: 'service.name' } },
+        'transaction.type': { terms: { field: 'transaction.type' } },
       });
     });
   });

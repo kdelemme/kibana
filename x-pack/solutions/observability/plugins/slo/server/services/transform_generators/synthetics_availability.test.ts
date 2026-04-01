@@ -9,7 +9,11 @@ import { dataViewsService } from '@kbn/data-views-plugin/server/mocks';
 import { ALL_VALUE } from '@kbn/slo-schema';
 import type { SLODefinition } from '../../domain/models';
 import { twoMinute } from '../fixtures/duration';
-import { createSLO, createSyntheticsAvailabilityIndicator } from '../fixtures/slo';
+import {
+  createSLO,
+  createSLOWithCalendarTimeWindow,
+  createSyntheticsAvailabilityIndicator,
+} from '../fixtures/slo';
 import { SyntheticsAvailabilityTransformGenerator } from './synthetics_availability';
 
 const SPACE_ID = 'custom-space';
@@ -310,6 +314,16 @@ describe('Synthetics Availability Transform Generator', () => {
           },
         },
       });
+    });
+
+    it('returns the expected transform params with calendar-aligned time window', async () => {
+      const slo = createSLOWithCalendarTimeWindow({
+        id: 'irrelevant',
+        indicator: createSyntheticsAvailabilityIndicator(),
+      });
+      const transform = await generator.getTransformParams(slo);
+
+      expect(transform).toMatchSnapshot();
     });
 
     it("uses the 'event.ingested' as syncField", async () => {

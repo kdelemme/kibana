@@ -6,100 +6,44 @@
  */
 
 import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/api/types';
-import type { DataViewsService } from '@kbn/data-views-plugin/common';
-import type { HistogramIndicator } from '@kbn/slo-schema';
-import { histogramIndicatorSchema, timeslicesBudgetingMethodSchema } from '@kbn/slo-schema';
-import { TransformGenerator, getElasticsearchQueryOrThrow, parseIndex } from '.';
-import {
-  SLI_DESTINATION_INDEX_NAME,
-  getSLOPipelineId,
-  getSLOTransformId,
-} from '../../../common/constants';
+import { histogramIndicatorSchema } from '@kbn/slo-schema';
+import { TransformGenerator } from '.';
 import { getSLOTransformTemplate } from '../../assets/transform_templates/slo_transform_template';
 import type { SLODefinition } from '../../domain/models';
 import { InvalidTransformError } from '../../errors';
 import { GetHistogramIndicatorAggregation } from '../aggregations';
-import { getFilterRange, getTimesliceTargetComparator } from './common';
 
 export class HistogramTransformGenerator extends TransformGenerator {
-  constructor(spaceId: string, dataViewService: DataViewsService, isServerless: boolean) {
-    super(spaceId, dataViewService, isServerless);
-  }
-
   public async getTransformParams(slo: SLODefinition): Promise<TransformPutTransformRequest> {
     if (!histogramIndicatorSchema.is(slo.indicator)) {
       throw new InvalidTransformError(`Cannot handle SLO of indicator type: ${slo.indicator.type}`);
     }
 
-    return getSLOTransformTemplate(
-      this.buildTransformId(slo),
-      this.buildDescription(slo),
-      await this.buildSource(slo, slo.indicator),
-      this.buildDestination(slo),
-      this.buildCommonGroupBy(slo, slo.indicator.params.timestampField),
-      await this.buildAggregations(slo, slo.indicator),
-      this.buildSettings(slo, slo.indicator.params.timestampField),
-      slo
-    );
-  }
-
-  private buildTransformId(slo: SLODefinition): string {
-    return getSLOTransformId(slo.id, slo.revision);
-  }
-
-  private async buildSource(slo: SLODefinition, indicator: HistogramIndicator) {
-    const dataView = await this.getIndicatorDataView(indicator.params.dataViewId);
-
-    return {
-      index: parseIndex(indicator.params.index),
-      runtime_mappings: this.buildCommonRuntimeMappings(dataView),
-      query: {
-        bool: {
-          filter: [
-            getFilterRange(slo, indicator.params.timestampField, this.isServerless),
-            getElasticsearchQueryOrThrow(indicator.params.filter, dataView),
-          ],
-        },
-      },
-    };
-  }
-
-  private buildDestination(slo: SLODefinition) {
-    return {
-      pipeline: getSLOPipelineId(slo.id, slo.revision),
-      index: SLI_DESTINATION_INDEX_NAME,
-    };
-  }
-
-  private async buildAggregations(slo: SLODefinition, indicator: HistogramIndicator) {
-    const dataView = await this.getIndicatorDataView(indicator.params.dataViewId);
+    const { dataView, source } = await this.buildDefaultSource(slo, slo.indicator);
     const getHistogramIndicatorAggregations = new GetHistogramIndicatorAggregation(
-      indicator,
+      slo.indicator,
       dataView
     );
 
-    return {
-      ...getHistogramIndicatorAggregations.execute({
-        type: 'good',
-        aggregationKey: 'slo.numerator',
-      }),
-      ...getHistogramIndicatorAggregations.execute({
-        type: 'total',
-        aggregationKey: 'slo.denominator',
-      }),
-      ...(timeslicesBudgetingMethodSchema.is(slo.budgetingMethod) && {
-        'slo.isGoodSlice': {
-          bucket_script: {
-            buckets_path: {
-              goodEvents: 'slo.numerator>value',
-              totalEvents: 'slo.denominator>value',
-            },
-            script: `if (params.totalEvents == 0) { return 1 } else { return params.goodEvents / params.totalEvents ${getTimesliceTargetComparator(
-              slo.objective.timesliceTarget!
-            )} ${slo.objective.timesliceTarget} ? 1 : 0 }`,
-          },
-        },
-      }),
-    };
+    return getSLOTransformTemplate(
+      this.buildTransformId(slo),
+      this.buildDescription(slo),
+      source,
+      this.buildDestination(slo),
+      this.buildCommonGroupBy(slo, slo.indicator.params.timestampField),
+      {
+        ...getHistogramIndicatorAggregations.execute({
+          type: 'good',
+          aggregationKey: 'slo.numerator',
+        }),
+        ...getHistogramIndicatorAggregations.execute({
+          type: 'total',
+          aggregationKey: 'slo.denominator',
+        }),
+        ...this.buildTimesliceAggregation(slo, 'slo.numerator>value', 'slo.denominator>value'),
+      },
+      this.buildSettings(slo, slo.indicator.params.timestampField),
+      slo
+    );
   }
 }

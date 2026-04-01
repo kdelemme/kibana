@@ -9,6 +9,7 @@ import { twoMinute } from '../fixtures/duration';
 import {
   createMetricCustomIndicator,
   createSLO,
+  createSLOWithCalendarTimeWindow,
   createSLOWithTimeslicesBudgetingMethod,
 } from '../fixtures/slo';
 import { MetricCustomTransformGenerator } from './metric_custom';
@@ -217,6 +218,42 @@ describe('Metric Custom Transform Generator', () => {
     const transform = await generator.getTransformParams(anSLO);
 
     expect(transform.pivot!.aggregations!['slo.denominator']).toMatchSnapshot();
+  });
+
+  it('returns the expected transform params with calendar-aligned time window', async () => {
+    const anSLO = createSLOWithCalendarTimeWindow({
+      id: 'irrelevant',
+      indicator: createMetricCustomIndicator(),
+    });
+    const transform = await generator.getTransformParams(anSLO);
+
+    expect(transform).toMatchSnapshot();
+  });
+
+  it('returns the expected transform params with groupBy', async () => {
+    const anSLO = createSLO({
+      id: 'irrelevant',
+      indicator: createMetricCustomIndicator(),
+      groupBy: ['host.name'],
+    });
+    const transform = await generator.getTransformParams(anSLO);
+
+    expect(transform).toMatchSnapshot();
+  });
+
+  it('returns the expected transform params for timeslices slo using timesliceTarget = 0', async () => {
+    const anSLO = createSLOWithTimeslicesBudgetingMethod({
+      id: 'irrelevant',
+      indicator: createMetricCustomIndicator(),
+      objective: {
+        target: 0.98,
+        timesliceTarget: 0,
+        timesliceWindow: twoMinute(),
+      },
+    });
+    const transform = await generator.getTransformParams(anSLO);
+
+    expect(transform).toMatchSnapshot();
   });
 
   it("overrides the range filter when 'preventInitialBackfill' is true", async () => {

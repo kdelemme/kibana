@@ -9,6 +9,7 @@ import { twoMinute } from '../fixtures/duration';
 import {
   createHistogramIndicator,
   createSLO,
+  createSLOWithCalendarTimeWindow,
   createSLOWithTimeslicesBudgetingMethod,
 } from '../fixtures/slo';
 import { HistogramTransformGenerator } from './histogram';
@@ -168,6 +169,27 @@ describe('Histogram Transform Generator', () => {
     const transform = await generator.getTransformParams(anSLO);
 
     expect(transform.pivot!.aggregations!['slo.denominator']).toMatchSnapshot();
+  });
+
+  it('returns the expected transform params with calendar-aligned time window', async () => {
+    const anSLO = createSLOWithCalendarTimeWindow({
+      id: 'irrelevant',
+      indicator: createHistogramIndicator(),
+    });
+    const transform = await generator.getTransformParams(anSLO);
+
+    expect(transform).toMatchSnapshot();
+  });
+
+  it('returns the expected transform params with groupBy', async () => {
+    const anSLO = createSLO({
+      id: 'irrelevant',
+      indicator: createHistogramIndicator(),
+      groupBy: ['host.name'],
+    });
+    const transform = await generator.getTransformParams(anSLO);
+
+    expect(transform).toMatchSnapshot();
   });
 
   it("overrides the range filter when 'preventInitialBackfill' is true", async () => {

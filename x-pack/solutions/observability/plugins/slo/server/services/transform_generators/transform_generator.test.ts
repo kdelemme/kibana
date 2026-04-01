@@ -6,9 +6,20 @@
  */
 
 import { Duration, DurationUnit } from '../../domain/models';
-import { createAPMTransactionErrorRateIndicator, createSLO } from '../fixtures/slo';
+import { twoMinute } from '../fixtures/duration';
+import {
+  createAPMTransactionErrorRateIndicator,
+  createKQLCustomIndicator,
+  createSLO,
+  createSLOWithTimeslicesBudgetingMethod,
+} from '../fixtures/slo';
 import { ApmTransactionErrorRateTransformGenerator } from './apm_transaction_error_rate';
 import { dataViewsService } from '@kbn/data-views-plugin/server/mocks';
+import {
+  getSLOPipelineId,
+  getSLOTransformId,
+  SLI_DESTINATION_INDEX_NAME,
+} from '../../../common/constants';
 
 const generator = new ApmTransactionErrorRateTransformGenerator(
   'my-space-id',
@@ -48,6 +59,71 @@ describe('Transform Generator', () => {
     it('builds empty runtime mappings without data view', async () => {
       const runtimeMappings = generator.buildCommonRuntimeMappings();
       expect(runtimeMappings).toEqual({});
+    });
+  });
+
+  describe('buildTransformId', () => {
+    it('returns the expected transform id', () => {
+      const slo = createSLO({ id: 'test-id', revision: 3 });
+      const transformId = generator.buildTransformId(slo);
+      expect(transformId).toEqual(getSLOTransformId('test-id', 3));
+    });
+  });
+
+  describe('buildDestination', () => {
+    it('returns the expected destination', () => {
+      const slo = createSLO({ id: 'test-id', revision: 2 });
+      const destination = generator.buildDestination(slo);
+      expect(destination).toEqual({
+        pipeline: getSLOPipelineId('test-id', 2),
+        index: SLI_DESTINATION_INDEX_NAME,
+      });
+    });
+  });
+
+  describe('buildDefaultSource', () => {
+    it('returns the source and dataView', async () => {
+      const slo = createSLO({
+        id: 'irrelevant',
+        indicator: createKQLCustomIndicator(),
+      });
+      const result = await generator.buildDefaultSource(slo, slo.indicator);
+      expect(result.source).toMatchSnapshot();
+      expect(result.dataView).toBeUndefined();
+    });
+  });
+
+  describe('buildTimesliceAggregation', () => {
+    it('returns empty object when budgeting method is occurrences', () => {
+      const slo = createSLO();
+      const result = generator.buildTimesliceAggregation(
+        slo,
+        'slo.numerator>_count',
+        'slo.denominator>_count'
+      );
+      expect(result).toEqual({});
+    });
+
+    it('returns slo.isGoodSlice bucket_script when budgeting method is timeslices', () => {
+      const slo = createSLOWithTimeslicesBudgetingMethod();
+      const result = generator.buildTimesliceAggregation(
+        slo,
+        'slo.numerator>_count',
+        'slo.denominator>_count'
+      );
+      expect(result).toMatchSnapshot();
+    });
+
+    it('uses > comparator when timesliceTarget is 0', () => {
+      const slo = createSLOWithTimeslicesBudgetingMethod({
+        objective: { target: 0.98, timesliceTarget: 0, timesliceWindow: twoMinute() },
+      });
+      const result = generator.buildTimesliceAggregation(
+        slo,
+        'slo.numerator>_count',
+        'slo.denominator>_count'
+      );
+      expect(result).toMatchSnapshot();
     });
   });
 
