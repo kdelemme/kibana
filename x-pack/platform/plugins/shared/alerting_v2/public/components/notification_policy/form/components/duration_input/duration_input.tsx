@@ -52,6 +52,8 @@ const parseDuration = (raw: string): { value: number | ''; unit: DurationUnit } 
   return { value: Number.isNaN(parsed) ? '' : parsed, unit };
 };
 
+const DEFAULT_DURATION = '5m';
+
 interface DurationInputProps {
   value: string;
   onChange: (value: string) => void;
@@ -91,6 +93,15 @@ export function DurationInput({
     }
   };
 
+  const handleBlur = () => {
+    if (!value || durationValue === '') {
+      const parsed = parseDuration(DEFAULT_DURATION);
+      setDurationValue(parsed.value);
+      setDurationUnit(parsed.unit);
+      onChange(DEFAULT_DURATION);
+    }
+  };
+
   const handleUnitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newUnit = e.target.value as DurationUnit;
     setDurationUnit(newUnit);
@@ -120,6 +131,7 @@ export function DurationInput({
       min={1}
       value={durationValue}
       onChange={handleValueChange}
+      onBlur={handleBlur}
       fullWidth
       isInvalid={isInvalid}
       data-test-subj={dataTestSubj ?? 'durationValueInput'}

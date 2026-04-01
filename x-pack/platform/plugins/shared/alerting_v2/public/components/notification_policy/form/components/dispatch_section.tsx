@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { EuiButtonGroup, EuiComboBox, EuiFormRow, EuiSelect } from '@elastic/eui';
+import { EuiButtonGroup, EuiComboBox, EuiFormRow, EuiSelect, EuiSpacer } from '@elastic/eui';
 import type { GroupingMode, ThrottleStrategy } from '@kbn/alerting-v2-schemas';
 import { i18n } from '@kbn/i18n';
 import React, { useEffect, useMemo } from 'react';
@@ -24,12 +24,15 @@ import {
 } from '../constants';
 import { needsInterval } from '../form_utils';
 import type { NotificationPolicyFormState } from '../types';
+import { DispatchConfigSummary } from './dispatch_config_summary';
 import { DurationInput } from './duration_input/duration_input';
 
 export const DispatchSection: React.FC = () => {
   const { control, setValue, getValues } = useFormContext<NotificationPolicyFormState>();
   const groupingMode = useWatch({ control, name: 'groupingMode' });
+  const groupBy = useWatch({ control, name: 'groupBy' });
   const throttleStrategy = useWatch({ control, name: 'throttleStrategy' });
+  const throttleInterval = useWatch({ control, name: 'throttleInterval' });
   const { data: dataFieldNames } = useFetchDataFields();
 
   useEffect(() => {
@@ -57,10 +60,9 @@ export const DispatchSection: React.FC = () => {
         control={control}
         render={({ field }) => (
           <EuiFormRow
-            label={i18n.translate(
-              'xpack.alertingV2.notificationPolicy.form.dispatch.dispatchPer',
-              { defaultMessage: 'Dispatch per' }
-            )}
+            label={i18n.translate('xpack.alertingV2.notificationPolicy.form.dispatch.dispatchPer', {
+              defaultMessage: 'Dispatch per',
+            })}
             fullWidth
             helpText={GROUPING_MODE_HELP_TEXT[field.value]}
           >
@@ -204,6 +206,14 @@ export const DispatchSection: React.FC = () => {
           )}
         />
       )}
+
+      <EuiSpacer size="m" />
+      <DispatchConfigSummary
+        groupingMode={groupingMode}
+        groupBy={groupBy}
+        throttleStrategy={throttleStrategy}
+        throttleInterval={throttleInterval}
+      />
     </>
   );
 };
