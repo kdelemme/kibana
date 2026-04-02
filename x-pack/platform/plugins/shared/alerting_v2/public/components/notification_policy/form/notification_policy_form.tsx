@@ -6,6 +6,7 @@
  */
 
 import {
+  EuiComboBox,
   EuiFieldText,
   EuiFormRow,
   EuiSpacer,
@@ -16,13 +17,14 @@ import {
 } from '@elastic/eui';
 import { i18n } from '@kbn/i18n';
 import { FormattedMessage } from '@kbn/i18n-react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { MatcherInput } from './components/matcher_input';
 import { DispatchSection } from './components/dispatch_section';
 import { WorkflowSelector } from './components/workflow_selector';
 import type { NotificationPolicyFormState } from './types';
 import { useFetchDataFields } from '../../../hooks/use_fetch_data_fields';
+import { useFetchTags } from '../../../hooks/use_fetch_tags';
 
 const optionalLabel = (
   <EuiText color="subdued" size="xs">
@@ -35,6 +37,11 @@ const optionalLabel = (
 export const NotificationPolicyForm = () => {
   const { control } = useFormContext<NotificationPolicyFormState>();
   const { data: dataFieldNames } = useFetchDataFields();
+  const { data: existingTags } = useFetchTags();
+  const tagOptions = useMemo(
+    () => (existingTags ?? []).map((tag) => ({ label: tag })),
+    [existingTags]
+  );
 
   return (
     <>
@@ -108,6 +115,42 @@ export const NotificationPolicyForm = () => {
                     { defaultMessage: 'Add policy description' }
                   )}
                   rows={3}
+                />
+              </EuiFormRow>
+            )}
+          />
+          <Controller
+            name="tags"
+            control={control}
+            render={({ field }) => (
+              <EuiFormRow
+                label={i18n.translate('xpack.alertingV2.notificationPolicy.form.tags', {
+                  defaultMessage: 'Tags',
+                })}
+                labelAppend={optionalLabel}
+                fullWidth
+                helpText={i18n.translate(
+                  'xpack.alertingV2.notificationPolicy.form.tags.helpText',
+                  { defaultMessage: 'Add tags to organize and filter policies.' }
+                )}
+              >
+                <EuiComboBox
+                  fullWidth
+                  data-test-subj="tagsInput"
+                  placeholder={i18n.translate(
+                    'xpack.alertingV2.notificationPolicy.form.tags.placeholder',
+                    { defaultMessage: 'Type to add a tag' }
+                  )}
+                  selectedOptions={field.value.map((t: string) => ({ label: t }))}
+                  options={tagOptions}
+                  onCreateOption={(val) => {
+                    if (val.trim().length > 0 && !field.value.includes(val.trim())) {
+                      field.onChange([...field.value, val.trim()]);
+                    }
+                  }}
+                  onChange={(options) => {
+                    field.onChange(options.map((o) => o.label));
+                  }}
                 />
               </EuiFormRow>
             )}
