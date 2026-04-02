@@ -23,7 +23,13 @@ export class MatcherDataFieldsRoute {
       requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.read],
     },
   };
-  static options = { access: 'internal' } as const;
+  static options = {
+    access: 'public',
+    summary: 'Get matcher data fields suggestions',
+    description: 'Get suggestions for matcher data fields.',
+    tags: ['oas-tag:alerting-v2'],
+    availability: { stability: 'experimental' },
+  } as const;
   static validate = false as const;
 
   constructor(

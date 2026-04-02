@@ -37,7 +37,14 @@ export class MatcherValueSuggestionsRoute {
       ],
     },
   };
-  static options = { access: 'internal' } as const;
+  static options = {
+    access: 'public',
+    summary: 'Get matcher value suggestions',
+    description:
+      'Get suggestions for notification policy matcher values based on an optional search query.',
+    tags: ['oas-tag:alerting-v2'],
+    availability: { stability: 'experimental' },
+  } as const;
   static validate = {
     request: {
       body: suggestionsBodySchema,
