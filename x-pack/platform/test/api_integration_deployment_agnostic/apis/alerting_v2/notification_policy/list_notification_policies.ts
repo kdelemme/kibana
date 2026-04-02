@@ -23,6 +23,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
     overrides?: {
       description?: string;
       destinations?: Array<{ type: string; id: string }>;
+      tags?: string[];
     }
   ) {
     return supertestWithoutAuth
@@ -33,6 +34,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
         name,
         description: overrides?.description ?? `${name} description`,
         destinations: overrides?.destinations ?? [{ type: 'workflow', id: `${name}-workflow-id` }],
+        ...(overrides?.tags ? { tags: overrides.tags } : {}),
       });
   }
 
@@ -262,6 +264,70 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
             .set(roleAuthc.apiKeyHeader)
             .set(samlAuth.getInternalRequestHeader())
             .expect(200);
+        });
+      });
+
+      describe('filter by tags', () => {
+        before(async () => {
+          await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+
+          const prodResp = await createPolicy(roleAuthc, 'Prod Alert', {
+            tags: ['production', 'critical'],
+          });
+          expect(prodResp.status).to.be(200);
+
+          const stagingResp = await createPolicy(roleAuthc, 'Staging Alert', {
+            tags: ['staging'],
+          });
+          expect(stagingResp.status).to.be(200);
+
+          const untaggedResp = await createPolicy(roleAuthc, 'Untagged Alert');
+          expect(untaggedResp.status).to.be(200);
+        });
+
+        after(async () => {
+          await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+        });
+
+        it('should filter by a single tag', async () => {
+          const response = await listPolicies(roleAuthc, { tags: 'production' });
+
+          expect(response.status).to.be(200);
+          expect(response.body.total).to.be(1);
+          expect(response.body.items[0].name).to.be('Prod Alert');
+          expect(response.body.items[0].tags).to.eql(['production', 'critical']);
+        });
+
+        it('should filter by multiple comma-separated tags', async () => {
+          const response = await listPolicies(roleAuthc, { tags: 'production,staging' });
+
+          expect(response.status).to.be(200);
+          expect(response.body.total).to.be(2);
+          const names = response.body.items.map((item: { name: string }) => item.name);
+          expect(names).to.contain('Prod Alert');
+          expect(names).to.contain('Staging Alert');
+        });
+
+        it('should return empty results when no policies match the tag', async () => {
+          const response = await listPolicies(roleAuthc, { tags: 'nonexistent' });
+
+          expect(response.status).to.be(200);
+          expect(response.body.total).to.be(0);
+          expect(response.body.items.length).to.be(0);
+        });
+
+        it('should return all policies when tags param is not provided', async () => {
+          const response = await listPolicies(roleAuthc);
+
+          expect(response.status).to.be(200);
+          expect(response.body.total).to.be(3);
+        });
+
+        it('should handle tags with whitespace in comma-separated list', async () => {
+          const response = await listPolicies(roleAuthc, { tags: ' production , staging ' });
+
+          expect(response.status).to.be(200);
+          expect(response.body.total).to.be(2);
         });
       });
 
