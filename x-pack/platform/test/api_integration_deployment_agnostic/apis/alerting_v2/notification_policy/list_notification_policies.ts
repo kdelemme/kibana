@@ -145,6 +145,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
         const alphaResp = await createPolicy(roleAuthc, 'Alpha Policy', {
           description: 'Monitors CPU usage',
           destinations: [{ type: 'workflow', id: 'wf-alpha-001' }],
+          tags: ['production', 'critical'],
         });
         expect(alphaResp.status).to.be(200);
         seedCreatedBy = alphaResp.body.createdBy;
@@ -152,6 +153,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
         const betaResp = await createPolicy(roleAuthc, 'Beta Policy', {
           description: 'Tracks memory alerts',
           destinations: [{ type: 'workflow', id: 'wf-beta-002' }],
+          tags: ['staging'],
         });
         expect(betaResp.status).to.be(200);
 
@@ -268,33 +270,12 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       });
 
       describe('filter by tags', () => {
-        before(async () => {
-          await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
-
-          const prodResp = await createPolicy(roleAuthc, 'Prod Alert', {
-            tags: ['production', 'critical'],
-          });
-          expect(prodResp.status).to.be(200);
-
-          const stagingResp = await createPolicy(roleAuthc, 'Staging Alert', {
-            tags: ['staging'],
-          });
-          expect(stagingResp.status).to.be(200);
-
-          const untaggedResp = await createPolicy(roleAuthc, 'Untagged Alert');
-          expect(untaggedResp.status).to.be(200);
-        });
-
-        after(async () => {
-          await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
-        });
-
         it('should filter by a single tag', async () => {
           const response = await listPolicies(roleAuthc, { tags: 'production' });
 
           expect(response.status).to.be(200);
           expect(response.body.total).to.be(1);
-          expect(response.body.items[0].name).to.be('Prod Alert');
+          expect(response.body.items[0].name).to.be('Alpha Policy');
           expect(response.body.items[0].tags).to.eql(['production', 'critical']);
         });
 
@@ -304,8 +285,8 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           expect(response.status).to.be(200);
           expect(response.body.total).to.be(2);
           const names = response.body.items.map((item: { name: string }) => item.name);
-          expect(names).to.contain('Prod Alert');
-          expect(names).to.contain('Staging Alert');
+          expect(names).to.contain('Alpha Policy');
+          expect(names).to.contain('Beta Policy');
         });
 
         it('should return empty results when no policies match the tag', async () => {
