@@ -35,8 +35,10 @@ export const notificationPolicyKeys = {
     page: number;
     perPage: number;
     search?: string;
+    tags?: string[];
     enabled?: boolean;
     sortField?: string;
     sortOrder?: 'asc' | 'desc';
   }) => [...notificationPolicyKeys.lists(), filters] as const,
+  tags: (search?: string) => [...notificationPolicyKeys.all, 'tags', { search }] as const,
 };
