@@ -471,6 +471,30 @@ describe('NotificationPolicySavedObjectService', () => {
       });
     });
 
+    it('escapes special regex characters in search', async () => {
+      mockSoClient.find.mockResolvedValue({
+        saved_objects: [],
+        total: 0,
+        per_page: 0,
+        page: 1,
+        aggregations: { tags: { buckets: [] } },
+      } as any);
+
+      await service.getDistinctTags({ search: 'test[foo' });
+
+      expect(mockSoClient.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          aggs: {
+            tags: {
+              terms: expect.objectContaining({
+                include: 'test\\[foo.*',
+              }),
+            },
+          },
+        })
+      );
+    });
+
     it('returns empty array when aggregations are missing', async () => {
       mockSoClient.find.mockResolvedValue({
         saved_objects: [],
