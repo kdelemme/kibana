@@ -5,13 +5,7 @@
  * 2.0.
  */
 
-import {
-  EuiComboBox,
-  EuiFieldSearch,
-  EuiFlexGroup,
-  EuiFlexItem,
-  EuiSelect,
-} from '@elastic/eui';
+import { EuiComboBox, EuiFieldSearch, EuiFlexGroup, EuiFlexItem, EuiSelect } from '@elastic/eui';
 import { i18n } from '@kbn/i18n';
 import { useDebouncedValue } from '@kbn/react-hooks';
 import React, { useState } from 'react';

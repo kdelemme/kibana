@@ -2031,9 +2031,7 @@ describe('NotificationPolicyClient', () => {
     });
 
     it('returns empty array when no tags exist', async () => {
-      jest
-        .spyOn(notificationPolicySavedObjectService, 'getDistinctTags')
-        .mockResolvedValue([]);
+      jest.spyOn(notificationPolicySavedObjectService, 'getDistinctTags').mockResolvedValue([]);
 
       const result = await client.getAllTags();
 
