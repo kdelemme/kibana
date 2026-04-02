@@ -256,9 +256,7 @@ export class NotificationPolicySavedObjectService
           terms: {
             field: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
             size: 100,
-            ...(search
-              ? { include: `(?i)${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*` }
-              : {}),
+            ...(search ? { include: `${search}.*` } : {}),
           },
         },
       },

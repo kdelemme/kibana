@@ -440,7 +440,7 @@ describe('NotificationPolicySavedObjectService', () => {
       });
     });
 
-    it('passes include regex when search is provided', async () => {
+    it('passes include prefix pattern when search is provided', async () => {
       mockSoClient.find.mockResolvedValue({
         saved_objects: [],
         total: 0,
@@ -464,37 +464,11 @@ describe('NotificationPolicySavedObjectService', () => {
             terms: {
               field: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
               size: 100,
-              include: '(?i)prod.*',
+              include: 'prod.*',
             },
           },
         },
       });
-    });
-
-    it('escapes special regex characters in search', async () => {
-      mockSoClient.find.mockResolvedValue({
-        saved_objects: [],
-        total: 0,
-        per_page: 0,
-        page: 1,
-        aggregations: {
-          tags: { buckets: [] },
-        },
-      } as any);
-
-      await service.getDistinctTags({ search: 'a.b' });
-
-      expect(mockSoClient.find).toHaveBeenCalledWith(
-        expect.objectContaining({
-          aggs: {
-            tags: {
-              terms: expect.objectContaining({
-                include: '(?i)a\\.b.*',
-              }),
-            },
-          },
-        })
-      );
     });
 
     it('returns empty array when aggregations are missing', async () => {
