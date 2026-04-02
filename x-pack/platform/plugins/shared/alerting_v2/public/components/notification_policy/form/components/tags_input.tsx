@@ -29,14 +29,14 @@ export const TagsInput = ({ value, onChange }: TagsInputProps) => {
   return (
     <EuiComboBox
       aria-label={i18n.translate('xpack.alertingV2.notificationPolicy.form.tags.ariaLabel', {
-        defaultMessage: 'Tags input',
+        defaultMessage: 'Tags',
       })}
       fullWidth
       async
       isLoading={isLoading}
       data-test-subj="tagsInput"
       placeholder={i18n.translate('xpack.alertingV2.notificationPolicy.form.tags.placeholder', {
-        defaultMessage: 'Type to add a tag',
+        defaultMessage: 'Add tags to organize and filter policies.',
       })}
       selectedOptions={value.map((t) => ({ label: t }))}
       options={tagOptions}
