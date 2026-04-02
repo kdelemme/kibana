@@ -20,7 +20,6 @@ export const useFetchWorkflow = (id: string | undefined, isEnabled = true) => {
     queryKey: workflowKeys.detail(id!),
     queryFn: () => workflowsApi.getWorkflow(id!),
     enabled: !!id && isEnabled,
-    staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
     onError: (error: Error) => {
       toasts.addError(error, {
