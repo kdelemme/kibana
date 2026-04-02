@@ -242,4 +242,28 @@ export class NotificationPolicySavedObjectService
       sortOrder,
     });
   }
+
+  public async getDistinctTags(params?: { search?: string }): Promise<string[]> {
+    const search = params?.search;
+    const result = await this.client.find<
+      NotificationPolicySavedObjectAttributes,
+      { tags: { buckets: Array<{ key: string }> } }
+    >({
+      type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+      perPage: 0,
+      aggs: {
+        tags: {
+          terms: {
+            field: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
+            size: 100,
+            ...(search
+              ? { include: `(?i)${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.*` }
+              : {}),
+          },
+        },
+      },
+    });
+
+    return result.aggregations?.tags.buckets.map((bucket) => bucket.key) ?? [];
+  }
 }

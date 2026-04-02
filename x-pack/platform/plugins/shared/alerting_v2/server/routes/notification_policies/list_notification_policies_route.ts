@@ -27,6 +27,15 @@ const listNotificationPoliciesQuerySchema = z.object({
   page: z.coerce.number().min(1).optional(),
   perPage: z.coerce.number().min(1).max(100).optional(),
   search: z.string().optional(),
+  tags: z
+    .string()
+    .transform((v) =>
+      v
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+    )
+    .optional(),
   destinationType: z.string().optional(),
   createdBy: z.string().optional(),
   enabled: z
@@ -74,12 +83,22 @@ export class ListNotificationPoliciesRoute {
 
   async handle() {
     try {
-      const { page, perPage, search, destinationType, createdBy, enabled, sortField, sortOrder } =
-        this.request.query ?? {};
+      const {
+        page,
+        perPage,
+        search,
+        tags,
+        destinationType,
+        createdBy,
+        enabled,
+        sortField,
+        sortOrder,
+      } = this.request.query ?? {};
       const result = await this.notificationPolicyClient.findNotificationPolicies({
         page,
         perPage,
         search,
+        tags,
         destinationType,
         createdBy,
         enabled,
