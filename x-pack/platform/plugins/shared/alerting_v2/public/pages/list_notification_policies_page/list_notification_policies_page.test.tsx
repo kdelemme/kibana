@@ -250,8 +250,8 @@ describe('ListNotificationPoliciesPage', () => {
 
     expect(columnHeaders).toEqual([
       'Name',
-      'Tags',
       'Destinations',
+      'Tags',
       'Last update',
       'Updated by',
       'State',

@@ -17,5 +17,6 @@ export const useFetchTags = (params?: { search?: string }) => {
     queryKey: notificationPolicyKeys.tags(params?.search),
     queryFn: () => notificationPoliciesApi.fetchTags({ search: params?.search }),
     refetchOnWindowFocus: false,
+    staleTime: 30 * 1000, // 30 seconds
   });
 };

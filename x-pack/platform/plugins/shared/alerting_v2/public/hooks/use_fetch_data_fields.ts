@@ -17,5 +17,6 @@ export const useFetchDataFields = () => {
     queryKey: matcherSuggestionKeys.dataFields(),
     queryFn: () => notificationPoliciesApi.fetchDataFields(),
     refetchOnWindowFocus: false,
+    staleTime: 30 * 1000, // 30 seconds
   });
 };
