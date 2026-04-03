@@ -12,7 +12,7 @@ import type { TypeOf } from '@kbn/config-schema';
 import { inject, injectable } from 'inversify';
 import { Request } from '@kbn/core-di-server';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
-import { INTERNAL_ALERTING_V2_SUGGESTIONS_API_PATH } from '../constants';
+import { ALERTING_V2_MATCHER_VALUE_SUGGESTIONS_API_PATH } from '../constants';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
 import { MatcherSuggestionsService } from '../../lib/services/matcher_suggestions_service/matcher_suggestions_service';
@@ -29,7 +29,7 @@ type SuggestionsBody = TypeOf<typeof suggestionsBodySchema>;
 @injectable()
 export class MatcherValueSuggestionsRoute extends BaseAlertingRoute {
   static method = 'post' as const;
-  static path = INTERNAL_ALERTING_V2_SUGGESTIONS_API_PATH;
+  static path = ALERTING_V2_MATCHER_VALUE_SUGGESTIONS_API_PATH;
   static security: RouteSecurity = {
     authz: {
       requiredPrivileges: [
