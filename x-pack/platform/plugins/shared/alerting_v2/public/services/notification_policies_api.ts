@@ -55,7 +55,7 @@ export class NotificationPoliciesApi {
           page: params.page,
           perPage: params.perPage,
           search: params.search || undefined,
-          tags: params.tags?.join(',') || undefined,
+          tags: params.tags && params.tags.length > 0 ? params.tags : undefined,
           enabled: params.enabled,
           sortField: params.sortField,
           sortOrder: params.sortOrder,

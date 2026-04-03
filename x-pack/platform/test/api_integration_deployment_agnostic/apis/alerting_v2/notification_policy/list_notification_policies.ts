@@ -38,7 +38,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       });
   }
 
-  async function listPolicies(roleAuthc: RoleCredentials, query?: Record<string, string | number>) {
+  async function listPolicies(roleAuthc: RoleCredentials, query?: Record<string, string | number | string[]>) {
     const req = supertestWithoutAuth
       .get(NOTIFICATION_POLICY_API_PATH)
       .set(roleAuthc.apiKeyHeader)
@@ -279,8 +279,8 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           expect(response.body.items[0].tags).to.eql(['production', 'critical']);
         });
 
-        it('should filter by multiple comma-separated tags', async () => {
-          const response = await listPolicies(roleAuthc, { tags: 'production,staging' });
+        it('should filter by multiple tags', async () => {
+          const response = await listPolicies(roleAuthc, { tags: ['production', 'staging'] });
 
           expect(response.status).to.be(200);
           expect(response.body.total).to.be(2);
@@ -304,11 +304,12 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           expect(response.body.total).to.be(3);
         });
 
-        it('should handle tags with whitespace in comma-separated list', async () => {
-          const response = await listPolicies(roleAuthc, { tags: ' production , staging ' });
+        it('should accept a single tag as array', async () => {
+          const response = await listPolicies(roleAuthc, { tags: ['staging'] });
 
           expect(response.status).to.be(200);
-          expect(response.body.total).to.be(2);
+          expect(response.body.total).to.be(1);
+          expect(response.body.items[0].name).to.be('Beta Policy');
         });
       });
 

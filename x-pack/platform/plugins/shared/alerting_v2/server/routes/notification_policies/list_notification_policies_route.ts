@@ -29,13 +29,9 @@ const listNotificationPoliciesQuerySchema = z.object({
   perPage: z.coerce.number().min(1).max(100).optional(),
   search: z.string().optional(),
   tags: z
-    .string()
-    .transform((v) =>
-      v
-        .split(',')
-        .map((t) => t.trim())
-        .filter(Boolean)
-    )
+    .union([z.string(), z.array(z.string())])
+    .transform((v) => (Array.isArray(v) ? v : [v]).map((t) => t.trim()).filter(Boolean))
+    .pipe(z.array(z.string()).max(10))
     .optional(),
   destinationType: z.string().optional(),
   createdBy: z.string().optional(),
