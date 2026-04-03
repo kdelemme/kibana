@@ -38,7 +38,10 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       });
   }
 
-  async function listPolicies(roleAuthc: RoleCredentials, query?: Record<string, string | number | string[]>) {
+  async function listPolicies(
+    roleAuthc: RoleCredentials,
+    query?: Record<string, string | number | string[]>
+  ) {
     const req = supertestWithoutAuth
       .get(NOTIFICATION_POLICY_API_PATH)
       .set(roleAuthc.apiKeyHeader)
