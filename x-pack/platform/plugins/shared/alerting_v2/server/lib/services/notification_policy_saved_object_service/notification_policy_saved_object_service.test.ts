@@ -443,9 +443,7 @@ describe('NotificationPolicySavedObjectService', () => {
     });
 
     it('passes include prefix pattern when search is provided', async () => {
-      mockSoClient.find.mockResolvedValue(
-        makeTagsAggResponse([{ key: 'production' }])
-      );
+      mockSoClient.find.mockResolvedValue(makeTagsAggResponse([{ key: 'production' }]));
 
       const result = await service.getDistinctTags({ search: 'prod' });
 

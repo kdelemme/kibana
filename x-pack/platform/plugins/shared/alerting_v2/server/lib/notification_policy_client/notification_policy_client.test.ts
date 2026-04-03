@@ -2020,11 +2020,7 @@ describe('NotificationPolicyClient', () => {
 
     it('returns tags from aggregation buckets', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(
-        makeFindAggResponse([
-          { key: 'critical' },
-          { key: 'production' },
-          { key: 'staging' },
-        ])
+        makeFindAggResponse([{ key: 'critical' }, { key: 'production' }, { key: 'staging' }])
       );
 
       const result = await client.getAllTags();
