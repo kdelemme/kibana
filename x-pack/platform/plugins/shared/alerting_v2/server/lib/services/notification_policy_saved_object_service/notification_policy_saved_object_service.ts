@@ -258,12 +258,17 @@ export class NotificationPolicySavedObjectService
           terms: {
             field: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
             size: 100,
+            order: { _key: 'asc' },
             ...(search ? { include: `${escapeRegex(search)}.*` } : {}),
           },
         },
       },
     });
 
-    return result.aggregations?.tags.buckets.map((bucket) => bucket.key) ?? [];
+    return (
+      result.aggregations?.tags.buckets
+        .map((bucket) => bucket.key)
+        .filter((key) => key.length > 0) ?? []
+    );
   }
 }

@@ -410,18 +410,19 @@ describe('NotificationPolicySavedObjectService', () => {
   });
 
   describe('getDistinctTags', () => {
+    const makeTagsAggResponse = (
+      buckets: Array<{ key: string }>,
+      opts?: { omitAggregations?: boolean }
+    ) => {
+      const base = { saved_objects: [], total: 0, per_page: 0, page: 1 };
+      if (opts?.omitAggregations) return base;
+      return { ...base, aggregations: { tags: { buckets } } };
+    };
+
     it('returns tags from aggregation buckets', async () => {
-      mockSoClient.find.mockResolvedValue({
-        saved_objects: [],
-        total: 0,
-        per_page: 0,
-        page: 1,
-        aggregations: {
-          tags: {
-            buckets: [{ key: 'production' }, { key: 'critical' }, { key: 'staging' }],
-          },
-        },
-      } as any);
+      mockSoClient.find.mockResolvedValue(
+        makeTagsAggResponse([{ key: 'production' }, { key: 'critical' }, { key: 'staging' }])
+      );
 
       const result = await service.getDistinctTags();
 
@@ -434,6 +435,7 @@ describe('NotificationPolicySavedObjectService', () => {
             terms: {
               field: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
               size: 100,
+              order: { _key: 'asc' },
             },
           },
         },
@@ -441,17 +443,9 @@ describe('NotificationPolicySavedObjectService', () => {
     });
 
     it('passes include prefix pattern when search is provided', async () => {
-      mockSoClient.find.mockResolvedValue({
-        saved_objects: [],
-        total: 0,
-        per_page: 0,
-        page: 1,
-        aggregations: {
-          tags: {
-            buckets: [{ key: 'production' }],
-          },
-        },
-      } as any);
+      mockSoClient.find.mockResolvedValue(
+        makeTagsAggResponse([{ key: 'production' }])
+      );
 
       const result = await service.getDistinctTags({ search: 'prod' });
 
@@ -464,6 +458,7 @@ describe('NotificationPolicySavedObjectService', () => {
             terms: {
               field: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
               size: 100,
+              order: { _key: 'asc' },
               include: 'prod.*',
             },
           },
@@ -472,13 +467,7 @@ describe('NotificationPolicySavedObjectService', () => {
     });
 
     it('escapes special regex characters in search', async () => {
-      mockSoClient.find.mockResolvedValue({
-        saved_objects: [],
-        total: 0,
-        per_page: 0,
-        page: 1,
-        aggregations: { tags: { buckets: [] } },
-      } as any);
+      mockSoClient.find.mockResolvedValue(makeTagsAggResponse([]));
 
       await service.getDistinctTags({ search: 'test[foo' });
 
@@ -496,16 +485,21 @@ describe('NotificationPolicySavedObjectService', () => {
     });
 
     it('returns empty array when aggregations are missing', async () => {
-      mockSoClient.find.mockResolvedValue({
-        saved_objects: [],
-        total: 0,
-        per_page: 0,
-        page: 1,
-      } as any);
+      mockSoClient.find.mockResolvedValue(makeTagsAggResponse([], { omitAggregations: true }));
 
       const result = await service.getDistinctTags();
 
       expect(result).toEqual([]);
+    });
+
+    it('filters out empty bucket keys', async () => {
+      mockSoClient.find.mockResolvedValue(
+        makeTagsAggResponse([{ key: 'production' }, { key: '' }, { key: 'staging' }])
+      );
+
+      const result = await service.getDistinctTags();
+
+      expect(result).toEqual(['production', 'staging']);
     });
   });
 

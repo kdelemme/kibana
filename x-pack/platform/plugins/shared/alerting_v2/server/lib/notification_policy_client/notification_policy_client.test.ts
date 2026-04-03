@@ -2008,30 +2008,66 @@ describe('NotificationPolicyClient', () => {
   });
 
   describe('getAllTags', () => {
-    it('delegates to getDistinctTags on the SO service', async () => {
-      const spy = jest
-        .spyOn(notificationPolicySavedObjectService, 'getDistinctTags')
-        .mockResolvedValue(['critical', 'production', 'staging']);
+    const makeFindAggResponse = (buckets: Array<{ key: string }>) => ({
+      saved_objects: [],
+      total: 0,
+      per_page: 0,
+      page: 1,
+      aggregations: {
+        tags: { buckets },
+      },
+    });
+
+    it('returns tags from aggregation buckets', async () => {
+      mockSavedObjectsClient.find.mockResolvedValueOnce(
+        makeFindAggResponse([
+          { key: 'critical' },
+          { key: 'production' },
+          { key: 'staging' },
+        ])
+      );
 
       const result = await client.getAllTags();
 
       expect(result).toEqual(['critical', 'production', 'staging']);
-      expect(spy).toHaveBeenCalledWith({ search: undefined });
+      expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+          perPage: 0,
+          aggs: expect.objectContaining({
+            tags: expect.objectContaining({
+              terms: expect.objectContaining({
+                field: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
+              }),
+            }),
+          }),
+        })
+      );
     });
 
-    it('passes search parameter to getDistinctTags', async () => {
-      const spy = jest
-        .spyOn(notificationPolicySavedObjectService, 'getDistinctTags')
-        .mockResolvedValue(['production']);
+    it('passes search parameter as include prefix pattern', async () => {
+      mockSavedObjectsClient.find.mockResolvedValueOnce(
+        makeFindAggResponse([{ key: 'production' }])
+      );
 
       const result = await client.getAllTags({ search: 'prod' });
 
       expect(result).toEqual(['production']);
-      expect(spy).toHaveBeenCalledWith({ search: 'prod' });
+      expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          aggs: expect.objectContaining({
+            tags: expect.objectContaining({
+              terms: expect.objectContaining({
+                include: 'prod.*',
+              }),
+            }),
+          }),
+        })
+      );
     });
 
     it('returns empty array when no tags exist', async () => {
-      jest.spyOn(notificationPolicySavedObjectService, 'getDistinctTags').mockResolvedValue([]);
+      mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindAggResponse([]));
 
       const result = await client.getAllTags();
 
