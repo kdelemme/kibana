@@ -159,6 +159,7 @@ const createPolicy = (
   groupingMode: null,
   throttle: { strategy: undefined, interval: undefined },
   snoozedUntil: null,
+  followMaintenanceWindows: true,
   auth: {
     owner: 'elastic',
     createdByUser: false,

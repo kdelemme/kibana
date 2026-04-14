@@ -66,6 +66,8 @@ import {
   EncryptedSavedObjectsClientToken,
   WorkflowsManagementApiToken,
 } from '../lib/dispatcher/steps/dispatch_step_tokens';
+import { MaintenanceWindowService } from '../lib/services/maintenance_window_service/maintenance_window_service';
+import { MaintenanceWindowServiceToken } from '../lib/services/maintenance_window_service/tokens';
 import { MatcherSuggestionsService } from '../lib/services/matcher_suggestions_service/matcher_suggestions_service';
 import type { AlertingServerSetupDependencies, AlertingServerStartDependencies } from '../types';
 
@@ -226,6 +228,22 @@ export function bindServices({ bind }: ContainerModuleLoadOptions) {
     .inSingletonScope();
 
   bind(MatcherSuggestionsService).toSelf().inRequestScope();
+
+  bind(MaintenanceWindowServiceToken)
+    .toDynamicValue(({ get }) => {
+      const http = get(CoreStart('http'));
+      const loggerService = get(LoggerServiceToken);
+      let maintenanceWindows;
+      try {
+        maintenanceWindows = get(
+          PluginStart<AlertingServerStartDependencies['maintenanceWindows']>('maintenanceWindows')
+        );
+      } catch {
+        // maintenanceWindows is an optional dependency
+      }
+      return new MaintenanceWindowService(maintenanceWindows, http.basePath, loggerService);
+    })
+    .inSingletonScope();
 
   bind(DispatcherService).toSelf().inSingletonScope();
   bind(DispatcherServiceInternalToken).toService(DispatcherService);

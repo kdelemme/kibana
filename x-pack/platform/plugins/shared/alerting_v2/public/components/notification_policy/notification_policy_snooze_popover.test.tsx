@@ -26,6 +26,7 @@ const createPolicy = (
     groupingMode: null,
     throttle: null,
     snoozedUntil: null,
+    followMaintenanceWindows: true,
     destinations: [],
     auth: { owner: 'elastic', createdByUser: true },
     createdBy: 'elastic',

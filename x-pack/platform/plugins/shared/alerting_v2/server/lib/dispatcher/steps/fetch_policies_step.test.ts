@@ -56,6 +56,7 @@ describe('FetchPoliciesStep', () => {
     expect(policy?.tags).toEqual([]);
     expect(policy?.throttle).toBeUndefined();
     expect(policy?.snoozedUntil).toBeNull();
+    expect(policy?.followMaintenanceWindows).toBe(true);
 
     expect(mockFindAllDecrypted).toHaveBeenCalledWith({ filter: { enabled: true } });
   });

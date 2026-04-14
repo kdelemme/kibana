@@ -14,6 +14,7 @@ import {
   ApplySuppressionStep,
   FetchRulesStep,
   FetchPoliciesStep,
+  ApplyMaintenanceWindowsStep,
   EvaluateMatchersStep,
   BuildGroupsStep,
   ApplyThrottlingStep,
@@ -31,6 +32,7 @@ export const bindDispatcherExecutionServices = ({ bind }: ContainerModuleLoadOpt
   bind(DispatcherExecutionStepsToken).to(ApplySuppressionStep).inSingletonScope();
   bind(DispatcherExecutionStepsToken).to(FetchRulesStep).inSingletonScope();
   bind(DispatcherExecutionStepsToken).to(FetchPoliciesStep).inSingletonScope();
+  bind(DispatcherExecutionStepsToken).to(ApplyMaintenanceWindowsStep).inSingletonScope();
   bind(DispatcherExecutionStepsToken).to(EvaluateMatchersStep).inSingletonScope();
   bind(DispatcherExecutionStepsToken).to(BuildGroupsStep).inSingletonScope();
   bind(DispatcherExecutionStepsToken).to(ApplyThrottlingStep).inSingletonScope();

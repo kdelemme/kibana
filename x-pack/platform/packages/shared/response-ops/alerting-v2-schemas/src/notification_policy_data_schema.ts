@@ -155,6 +155,7 @@ export const createNotificationPolicyDataSchema = z
     tags: z.array(z.string().min(1).max(128)).max(20).optional(),
     groupingMode: groupingModeSchema.optional(),
     throttle: throttleSchema.optional(),
+    followMaintenanceWindows: z.boolean().optional(),
   })
   .check(validateGroupingModeAndStrategy);
 
@@ -173,6 +174,7 @@ export const updateNotificationPolicyDataSchema = z
     tags: z.array(z.string().min(1).max(128)).max(20).optional().nullable(),
     groupingMode: groupingModeSchema.optional().nullable(),
     throttle: throttleSchema.optional().nullable(),
+    followMaintenanceWindows: z.boolean().optional().nullable(),
   })
   .check((payload) => {
     if (payload.value.throttle === null || payload.value.throttle === undefined) return;

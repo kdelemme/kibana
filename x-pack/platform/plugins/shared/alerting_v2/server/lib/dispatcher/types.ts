@@ -78,6 +78,8 @@ export interface NotificationPolicy {
     interval?: string; // e.g. '1h', '30m', '5m'
   };
   snoozedUntil?: string | null;
+  /** Whether this policy should be suppressed when maintenance windows are active */
+  followMaintenanceWindows?: boolean;
   /** Target destinations to dispatch matched episodes to */
   destinations: NotificationPolicyDestination[];
 

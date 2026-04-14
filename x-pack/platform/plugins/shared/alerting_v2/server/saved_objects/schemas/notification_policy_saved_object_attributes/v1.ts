@@ -47,6 +47,7 @@ export const notificationPolicySavedObjectAttributesSchema = schema.object({
     )
   ),
   snoozedUntil: schema.maybe(schema.nullable(schema.string())),
+  followMaintenanceWindows: schema.maybe(schema.nullable(schema.boolean())),
   auth: schema.object({
     apiKey: schema.maybe(schema.string()),
     owner: schema.string(),

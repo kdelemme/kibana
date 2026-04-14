@@ -33,6 +33,7 @@ export const notificationPolicyMappings: SavedObjectsTypeMappingDefinition = {
       },
     },
     snoozedUntil: { type: 'date' },
+    followMaintenanceWindows: { type: 'boolean' },
     auth: {
       type: 'object',
       properties: {

@@ -18,6 +18,7 @@ import type {
   EncryptedSavedObjectsPluginSetup,
   EncryptedSavedObjectsPluginStart,
 } from '@kbn/encrypted-saved-objects-plugin/server';
+import type { MaintenanceWindowsServerStart } from '@kbn/maintenance-windows-plugin/server';
 import type { WorkflowsServerPluginSetup } from '@kbn/workflows-management-plugin/server';
 import type { UsageCollectionSetup } from '@kbn/usage-collection-plugin/server';
 
@@ -40,4 +41,5 @@ export interface AlertingServerStartDependencies {
   data: DataPluginStart;
   security: SecurityPluginStart;
   encryptedSavedObjects: EncryptedSavedObjectsPluginStart;
+  maintenanceWindows?: MaintenanceWindowsServerStart;
 }

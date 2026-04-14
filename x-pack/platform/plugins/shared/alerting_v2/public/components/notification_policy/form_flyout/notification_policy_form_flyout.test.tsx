@@ -162,6 +162,7 @@ describe('NotificationPolicyFormFlyout', () => {
       groupingMode: 'per_field',
       throttle: { strategy: 'time_interval', interval: '5m' },
       snoozedUntil: null,
+      followMaintenanceWindows: true,
       destinations: [{ type: 'workflow', id: 'workflow-2' }],
       createdBy: 'elastic',
       createdByUsername: 'elastic',

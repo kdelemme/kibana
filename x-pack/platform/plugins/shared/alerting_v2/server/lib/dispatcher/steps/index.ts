@@ -10,6 +10,7 @@ export { FetchSuppressionsStep } from './fetch_suppressions_step';
 export { ApplySuppressionStep } from './apply_suppression_step';
 export { FetchRulesStep } from './fetch_rules_step';
 export { FetchPoliciesStep } from './fetch_policies_step';
+export { ApplyMaintenanceWindowsStep } from './apply_maintenance_windows_step';
 export { EvaluateMatchersStep } from './evaluate_matchers_step';
 export { BuildGroupsStep } from './build_groups_step';
 export { ApplyThrottlingStep } from './apply_throttling_step';

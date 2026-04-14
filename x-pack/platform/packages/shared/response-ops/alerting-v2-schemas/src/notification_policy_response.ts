@@ -24,6 +24,7 @@ export interface NotificationPolicyResponse {
   groupingMode: GroupingMode | null;
   throttle: { strategy?: ThrottleStrategy; interval?: string } | null;
   snoozedUntil: string | null;
+  followMaintenanceWindows: boolean;
   auth: {
     owner: string;
     createdByUser: boolean;
