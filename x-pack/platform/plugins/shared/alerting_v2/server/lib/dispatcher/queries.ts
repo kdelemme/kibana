@@ -89,10 +89,8 @@ export const getAlertEpisodeSuppressionsQuery = (alertEpisodes: AlertEpisode[]):
       | KEEP rule_id, group_hash, episode_id, should_suppress, last_ack_action, last_deactivate_action, last_snooze_action`.toRequest();
 };
 
-export const getLastNotifiedTimestampsQuery = (
-  notificationGroupIds: ActionGroupId[]
-): EsqlRequest => {
-  const values = notificationGroupIds.map((id) => esql.str(id));
+export const getLastNotifiedTimestampsQuery = (actionGroupIds: ActionGroupId[]): EsqlRequest => {
+  const values = actionGroupIds.map((id) => esql.str(id));
   const whereClause = esql.exp`action_type == "notified" AND action_group_id IN (${values})`;
 
   return esql`FROM ${ALERT_ACTIONS_DATA_STREAM}

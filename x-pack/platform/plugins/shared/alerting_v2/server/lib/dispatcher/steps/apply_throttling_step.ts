@@ -15,14 +15,14 @@ import type { QueryServiceContract } from '../../services/query_service/query_se
 import { QueryServiceInternalToken } from '../../services/query_service/tokens';
 import { getLastNotifiedTimestampsQuery } from '../queries';
 import type {
+  ActionGroup,
+  ActionGroupId,
+  ActionPolicy,
   DispatcherPipelineState,
   DispatcherStep,
   DispatcherStepOutput,
   LastNotifiedInfo,
   LastNotifiedRecord,
-  ActionGroup,
-  ActionGroupId,
-  ActionPolicy,
 } from '../types';
 
 @injectable()
@@ -59,10 +59,10 @@ export class ApplyThrottlingStep implements DispatcherStep {
   }
 
   private async fetchLastNotifiedTimestamps(
-    notificationGroupIds: ActionGroupId[]
+    actionGroupIds: ActionGroupId[]
   ): Promise<Map<ActionGroupId, LastNotifiedInfo>> {
     const records = await this.queryService.executeQueryRows<LastNotifiedRecord>({
-      query: getLastNotifiedTimestampsQuery(notificationGroupIds).query,
+      query: getLastNotifiedTimestampsQuery(actionGroupIds).query,
     });
 
     return new Map<ActionGroupId, LastNotifiedInfo>(

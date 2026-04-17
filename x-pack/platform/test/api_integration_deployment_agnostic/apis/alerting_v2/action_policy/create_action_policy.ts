@@ -63,7 +63,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
     });
 
     it('should create a action policy with a custom id', async () => {
-      const customId = 'custom-notification-policy-id';
+      const customId = 'custom-action-policy-id';
 
       const response = await supertestWithoutAuth
         .post(`${ACTION_POLICY_API_PATH}/${customId}`)

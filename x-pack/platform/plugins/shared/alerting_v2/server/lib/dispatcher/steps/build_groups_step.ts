@@ -9,11 +9,11 @@ import { injectable } from 'inversify';
 import { get } from 'lodash';
 import objectHash from 'object-hash';
 import type {
+  ActionGroup,
   DispatcherPipelineState,
   DispatcherStep,
   DispatcherStepOutput,
   MatchedPair,
-  ActionGroup,
 } from '../types';
 
 @injectable()
@@ -51,14 +51,14 @@ export function buildActionGroups(matched: readonly MatchedPair[]): ActionGroup[
         break;
     }
 
-    const notificationGroupId = objectHash({
+    const actionGroupId = objectHash({
       policyId: policy.id,
       groupKey,
     });
 
-    if (!groupMap.has(notificationGroupId)) {
-      groupMap.set(notificationGroupId, {
-        id: notificationGroupId,
+    if (!groupMap.has(actionGroupId)) {
+      groupMap.set(actionGroupId, {
+        id: actionGroupId,
         spaceId: policy.spaceId,
         policyId: policy.id,
         destinations: policy.destinations,
@@ -67,7 +67,7 @@ export function buildActionGroups(matched: readonly MatchedPair[]): ActionGroup[
       });
     }
 
-    groupMap.get(notificationGroupId)!.episodes.push(episode);
+    groupMap.get(actionGroupId)!.episodes.push(episode);
   }
 
   return [...groupMap.values()];

@@ -205,7 +205,7 @@ describe('getAlertEpisodeSuppressionsQuery', () => {
 });
 
 describe('getLastNotifiedTimestampsQuery', () => {
-  it('builds a query for a single notification group', () => {
+  it('builds a query for a single action group', () => {
     const req = getLastNotifiedTimestampsQuery(['group-1']);
 
     expect(req.query).toContain('action_group_id IN ("group-1")');
@@ -213,7 +213,7 @@ describe('getLastNotifiedTimestampsQuery', () => {
     expect(req.query).toContain('last_notified = MAX(@timestamp)');
   });
 
-  it('builds a query for multiple notification groups', () => {
+  it('builds a query for multiple action groups', () => {
     const req = getLastNotifiedTimestampsQuery(['group-1', 'group-2']);
 
     expect(req.query).toContain('action_group_id IN ("group-1", "group-2")');

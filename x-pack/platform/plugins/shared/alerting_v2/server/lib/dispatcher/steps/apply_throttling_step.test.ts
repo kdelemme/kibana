@@ -24,7 +24,7 @@ describe('applyThrottling', () => {
       throttle: { strategy: 'on_status_change' },
     });
 
-    it('dispatches when no previous notification exists', () => {
+    it('dispatches when no previous action exists', () => {
       const group = createActionGroup({ id: 'g1', policyId: 'p1' });
 
       const { dispatch, throttled } = applyThrottling(
@@ -86,7 +86,7 @@ describe('applyThrottling', () => {
       throttle: { strategy: 'per_status_interval', interval: '1h' },
     });
 
-    it('dispatches when no previous notification exists', () => {
+    it('dispatches when no previous action exists', () => {
       const group = createActionGroup({ id: 'g1', policyId: 'p1' });
 
       const { dispatch, throttled } = applyThrottling(
@@ -168,7 +168,7 @@ describe('applyThrottling', () => {
       throttle: { strategy: 'every_time' },
     });
 
-    it('dispatches when no previous notification exists', () => {
+    it('dispatches when no previous action exists', () => {
       const group = createActionGroup({ id: 'g1', policyId: 'p1' });
 
       const { dispatch, throttled } = applyThrottling(
@@ -182,7 +182,7 @@ describe('applyThrottling', () => {
       expect(throttled).toHaveLength(0);
     });
 
-    it('dispatches even with recent notification', () => {
+    it('dispatches even with recent action', () => {
       const group = createActionGroup({
         id: 'g1',
         policyId: 'p1',
@@ -211,7 +211,7 @@ describe('applyThrottling', () => {
       throttle: { strategy: 'time_interval', interval: '5m' },
     });
 
-    it('dispatches when no previous notification exists', () => {
+    it('dispatches when no previous action exists', () => {
       const group = createActionGroup({ id: 'g1', policyId: 'p1' });
 
       const { dispatch, throttled } = applyThrottling(
@@ -282,7 +282,7 @@ describe('applyThrottling', () => {
       throttle: { strategy: 'every_time' },
     });
 
-    it('dispatches when no previous notification exists', () => {
+    it('dispatches when no previous action exists', () => {
       const group = createActionGroup({ id: 'g1', policyId: 'p1' });
 
       const { dispatch, throttled } = applyThrottling(
@@ -296,7 +296,7 @@ describe('applyThrottling', () => {
       expect(throttled).toHaveLength(0);
     });
 
-    it('dispatches even with recent notification', () => {
+    it('dispatches even with recent action', () => {
       const group = createActionGroup({ id: 'g1', policyId: 'p1' });
 
       const { dispatch, throttled } = applyThrottling(
@@ -318,7 +318,7 @@ describe('applyThrottling', () => {
       throttle: { strategy: 'time_interval', interval: '5m' },
     });
 
-    it('dispatches when no previous notification exists', () => {
+    it('dispatches when no previous action exists', () => {
       const group = createActionGroup({ id: 'g1', policyId: 'p1' });
 
       const { dispatch, throttled } = applyThrottling(
@@ -387,7 +387,7 @@ describe('applyThrottling', () => {
       throttle: { strategy: 'every_time' },
     });
 
-    it('dispatches when no previous notification exists', () => {
+    it('dispatches when no previous action exists', () => {
       const group = createActionGroup({ id: 'g1', policyId: 'p1' });
 
       const { dispatch, throttled } = applyThrottling(
@@ -401,7 +401,7 @@ describe('applyThrottling', () => {
       expect(throttled).toHaveLength(0);
     });
 
-    it('dispatches even with recent notification', () => {
+    it('dispatches even with recent action', () => {
       const group = createActionGroup({ id: 'g1', policyId: 'p1' });
 
       const { dispatch, throttled } = applyThrottling(

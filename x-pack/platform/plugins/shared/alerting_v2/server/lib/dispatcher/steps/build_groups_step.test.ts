@@ -16,7 +16,7 @@ import {
 describe('BuildGroupsStep', () => {
   const step = new BuildGroupsStep();
 
-  it('returns notification groups from matched pairs', async () => {
+  it('returns action groups from matched pairs', async () => {
     const state = createDispatcherPipelineState({
       matched: [
         createMatchedPair({

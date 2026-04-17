@@ -66,13 +66,13 @@ export interface ActionPolicy {
   /** KQL expression evaluated against the alert episode context.
    *  An empty matcher matches all episodes (catch-all). */
   matcher?: string; // e.g. 'data.severity == "critical" AND data.env != "dev"'
-  /** data.* fields used to group episodes into a single notification */
+  /** data.* fields used to group episodes into a single action group */
   groupBy: string[];
   /** User-defined tags for organizing and filtering policies */
   tags: string[];
-  /** How episodes are grouped into notification payloads */
+  /** How episodes are grouped into action group payloads */
   groupingMode?: 'per_episode' | 'all' | 'per_field';
-  /** Throttle configuration controlling notification frequency */
+  /** Throttle configuration controlling action frequency */
   throttle?: {
     strategy?: 'on_status_change' | 'per_status_interval' | 'time_interval' | 'every_time';
     interval?: string; // e.g. '1h', '30m', '5m'

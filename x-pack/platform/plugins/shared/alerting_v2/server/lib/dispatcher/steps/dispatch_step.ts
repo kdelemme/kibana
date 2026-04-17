@@ -154,7 +154,7 @@ export class DispatchStep implements DispatcherStep {
 
     this.logger.debug({
       message: () =>
-        `Dispatching notification group ${group.id} to workflow ${workflowId} for policy ${group.policyId}`,
+        `Dispatching action group ${group.id} to workflow ${workflowId} for policy ${group.policyId}`,
     });
 
     const executionId = await this.workflowsManagement.scheduleWorkflow(

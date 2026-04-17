@@ -406,7 +406,7 @@ const MATCHER_ALERT_EVENTS: AlertEvent[] = [
 
 /**
  * GroupBy test: 4 episodes for rule-groupby across 4 series, grouped into 2 hosts.
- * A policy with groupBy: ['host.name'] should produce 2 notification groups.
+ * A policy with groupBy: ['host.name'] should produce 2 action groups.
  */
 const GROUPBY_ALERT_EVENTS: AlertEvent[] = [
   {
@@ -541,9 +541,9 @@ describe('DispatcherService integration tests', () => {
     dispatcherService = new DispatcherService(pipeline);
 
     await setActionPolicyThrottle(npSoService, null);
-    await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, true);
-    await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_MATCHER_ID, false);
-    await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, false);
+    await setActionPolicyEnabled(npSoService, ACTION_POLICY_ID, true);
+    await setActionPolicyEnabled(npSoService, ACTION_POLICY_MATCHER_ID, false);
+    await setActionPolicyEnabled(npSoService, ACTION_POLICY_GROUPBY_ID, false);
   });
 
   describe('when there are no alert events', () => {
@@ -612,7 +612,7 @@ describe('DispatcherService integration tests', () => {
   });
 
   describe('when the action policy has a throttle interval', () => {
-    it('should persist notified actions for dispatched notification groups', async () => {
+    it('should persist notified actions for dispatched action groups', async () => {
       await setActionPolicyThrottle(npSoService, {
         strategy: 'per_status_interval',
         interval: '1h',
@@ -829,8 +829,8 @@ describe('DispatcherService integration tests', () => {
 
   describe('when the action policy has a matcher', () => {
     beforeEach(async () => {
-      await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
-      await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_MATCHER_ID, true);
+      await setActionPolicyEnabled(npSoService, ACTION_POLICY_ID, false);
+      await setActionPolicyEnabled(npSoService, ACTION_POLICY_MATCHER_ID, true);
     });
 
     it('should only dispatch episodes matching the KQL expression', async () => {
@@ -881,16 +881,16 @@ describe('DispatcherService integration tests', () => {
 
   describe('when the action policy has groupBy fields', () => {
     beforeEach(async () => {
-      await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
-      await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, true);
-      await setActionPolicyThrottle(npSoService, null, NOTIFICATION_POLICY_GROUPBY_ID);
+      await setActionPolicyEnabled(npSoService, ACTION_POLICY_ID, false);
+      await setActionPolicyEnabled(npSoService, ACTION_POLICY_GROUPBY_ID, true);
+      await setActionPolicyThrottle(npSoService, null, ACTION_POLICY_GROUPBY_ID);
     });
 
     it('should group episodes by the specified data fields', async () => {
       await setActionPolicyThrottle(
         npSoService,
         { strategy: 'time_interval', interval: '1h' },
-        NOTIFICATION_POLICY_GROUPBY_ID
+        ACTION_POLICY_GROUPBY_ID
       );
       await seedAlertEvents(esClient, GROUPBY_ALERT_EVENTS);
 
@@ -1074,7 +1074,7 @@ describe('DispatcherService integration tests', () => {
     });
 
     it('all + time_interval: digest mode groups all episodes and throttles on second dispatch', async () => {
-      await updateActionPolicy(npSoService, NOTIFICATION_POLICY_ID, {
+      await updateActionPolicy(npSoService, ACTION_POLICY_ID, {
         groupingMode: 'all',
         throttle: { strategy: 'time_interval', interval: '1h' },
       });
@@ -1122,12 +1122,12 @@ describe('DispatcherService integration tests', () => {
     });
 
     it('per_field + time_interval: throttles groups on second dispatch within interval', async () => {
-      await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
-      await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, true);
+      await setActionPolicyEnabled(npSoService, ACTION_POLICY_ID, false);
+      await setActionPolicyEnabled(npSoService, ACTION_POLICY_GROUPBY_ID, true);
       await setActionPolicyThrottle(
         npSoService,
         { strategy: 'time_interval', interval: '1h' },
-        NOTIFICATION_POLICY_GROUPBY_ID
+        ACTION_POLICY_GROUPBY_ID
       );
       await seedAlertEvents(esClient, GROUPBY_ALERT_EVENTS);
 
@@ -1199,9 +1199,9 @@ async function seedAlertEvents(esClient: ElasticsearchClient, events: AlertEvent
   });
 }
 
-const NOTIFICATION_POLICY_ID = 'np-1';
-const NOTIFICATION_POLICY_MATCHER_ID = 'np-matcher';
-const NOTIFICATION_POLICY_GROUPBY_ID = 'np-groupby';
+const ACTION_POLICY_ID = 'np-1';
+const ACTION_POLICY_MATCHER_ID = 'np-matcher';
+const ACTION_POLICY_GROUPBY_ID = 'np-groupby';
 
 const TEST_RULE_IDS = [
   'rule-1',
@@ -1235,7 +1235,7 @@ async function seedRulesAndPolicies(
     createdAt: '2026-01-20T00:00:00.000Z',
     updatedAt: '2026-01-20T00:00:00.000Z',
   };
-  await npSoService.create({ attrs: policyAttrs, id: NOTIFICATION_POLICY_ID });
+  await npSoService.create({ attrs: policyAttrs, id: ACTION_POLICY_ID });
 
   const matcherPolicyAttrs: ActionPolicySavedObjectAttributes = {
     ...policyAttrs,
@@ -1244,7 +1244,7 @@ async function seedRulesAndPolicies(
     enabled: false,
     matcher: 'data.severity: "critical"',
   };
-  await npSoService.create({ attrs: matcherPolicyAttrs, id: NOTIFICATION_POLICY_MATCHER_ID });
+  await npSoService.create({ attrs: matcherPolicyAttrs, id: ACTION_POLICY_MATCHER_ID });
 
   const groupByPolicyAttrs: ActionPolicySavedObjectAttributes = {
     ...policyAttrs,
@@ -1254,7 +1254,7 @@ async function seedRulesAndPolicies(
     groupBy: ['data.host.name'],
     groupingMode: 'per_field',
   };
-  await npSoService.create({ attrs: groupByPolicyAttrs, id: NOTIFICATION_POLICY_GROUPBY_ID });
+  await npSoService.create({ attrs: groupByPolicyAttrs, id: ACTION_POLICY_GROUPBY_ID });
 
   const ruleAttrs: RuleSavedObjectAttributes = {
     kind: 'alert',
@@ -1277,7 +1277,7 @@ async function seedRulesAndPolicies(
 async function setActionPolicyThrottle(
   npSoService: ActionPolicySavedObjectServiceContract,
   throttle: ActionPolicySavedObjectAttributes['throttle'],
-  policyId: string = NOTIFICATION_POLICY_ID
+  policyId: string = ACTION_POLICY_ID
 ): Promise<void> {
   const policy = await npSoService.get(policyId);
 
