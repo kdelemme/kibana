@@ -10,7 +10,7 @@ import { Route, Routes } from '@kbn/shared-ux-router';
 import { ListActionPoliciesPage } from '../pages/list_action_policies_page/list_action_policies_page';
 import { ActionPolicyFormPage } from '../pages/action_policy_form_page/action_policy_form_page';
 
-export const NotificationPoliciesApp = () => {
+export const ActionPoliciesApp = () => {
   return (
     <Routes>
       <Route exact path="/create">

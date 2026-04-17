@@ -97,12 +97,14 @@ export const module = new ContainerModule(({ bind }) => {
 
     alertingV2Section.registerApp({
       id: ALERTING_V2_ACTION_POLICIES_APP_ID,
-      title: 'Action Policies',
+      title: i18n.translate('xpack.alertingV2.management.actionPoliciesNavTitle', {
+        defaultMessage: 'Action Policies',
+      }),
       order: 3,
       async mount(params) {
         const [coreStart] = await getStartServices();
-        const { mountNotificationPoliciesApp } = await import('./application/mount');
-        return mountNotificationPoliciesApp({
+        const { mountActionPoliciesApp } = await import('./application/mount');
+        return mountActionPoliciesApp({
           params,
           container: coreStart.injection.getContainer(),
           coreStart,
