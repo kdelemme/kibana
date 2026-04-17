@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { findNotificationPoliciesResponseSchema } from '@kbn/alerting-v2-schemas';
+import { findActionPoliciesResponseSchema } from '@kbn/alerting-v2-schemas';
 import { Request } from '@kbn/core-di-server';
 import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
 import { buildRouteValidationWithZod } from '@kbn/zod-helpers/v4';
@@ -15,24 +15,21 @@ import { NotificationPolicyClient } from '../../lib/notification_policy_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
-import { ALERTING_V2_NOTIFICATION_POLICY_API_PATH } from '../constants';
+import { ALERTING_V2_ACTION_POLICY_API_PATH } from '../constants';
 
 const sortFieldSchema = z
   .enum(['name', 'createdAt', 'updatedAt', 'createdByUsername', 'updatedByUsername'])
-  .describe('The available fields to sort notification policies by.');
+  .describe('The available fields to sort action policies by.');
 
-const listNotificationPoliciesQuerySchema = z.object({
+const listActionPoliciesQuerySchema = z.object({
   page: z.coerce.number().min(1).optional().describe('The page number to return.'),
   perPage: z.coerce
     .number()
     .min(1)
     .max(100)
     .optional()
-    .describe('The number of notification policies to return per page.'),
-  search: z
-    .string()
-    .optional()
-    .describe('A text string to search across notification policy fields.'),
+    .describe('The number of action policies to return per page.'),
+  search: z.string().optional().describe('A text string to search across action policy fields.'),
   tags: z
     .union([z.string(), z.array(z.string())])
     .transform((v) => (Array.isArray(v) ? v : [v]).map((t) => t.trim()).filter(Boolean))
@@ -40,40 +37,36 @@ const listNotificationPoliciesQuerySchema = z.object({
     .optional()
     .describe('Filter by tags. Accepts a single string or an array.'),
   destinationType: z.string().optional().describe('Filter by destination connector type.'),
-  createdBy: z
-    .string()
-    .optional()
-    .describe('Filter by the user ID who created the notification policy.'),
+  createdBy: z.string().optional().describe('Filter by the user ID who created the action policy.'),
   enabled: z
     .enum(['true', 'false'])
     .transform((v) => v === 'true')
     .optional()
     .describe('Filter by enabled status. Accepts the strings true or false.'),
-  sortField: sortFieldSchema.optional().describe('The field to sort notification policies by.'),
+  sortField: sortFieldSchema.optional().describe('The field to sort action policies by.'),
   sortOrder: z.enum(['asc', 'desc']).optional().describe('The sort direction.'),
 });
 
 @injectable()
-export class ListNotificationPoliciesRoute extends BaseAlertingRoute {
+export class ListActionPoliciesRoute extends BaseAlertingRoute {
   static method = 'get' as const;
-  static path = `${ALERTING_V2_NOTIFICATION_POLICY_API_PATH}`;
+  static path = `${ALERTING_V2_ACTION_POLICY_API_PATH}`;
   static security: RouteSecurity = {
     authz: {
       requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.read],
     },
   };
   static routeOptions = {
-    summary: 'List notification policies',
-    description:
-      'Get a paginated list of notification policies with optional filtering and sorting.',
+    summary: 'List action policies',
+    description: 'Get a paginated list of action policies with optional filtering and sorting.',
   } as const;
   static validate = {
     request: {
-      query: buildRouteValidationWithZod(listNotificationPoliciesQuerySchema),
+      query: buildRouteValidationWithZod(listActionPoliciesQuerySchema),
     },
     response: {
       200: {
-        body: () => findNotificationPoliciesResponseSchema,
+        body: () => findActionPoliciesResponseSchema,
         description: 'Indicates a successful call.',
       },
       400: {
@@ -82,14 +75,14 @@ export class ListNotificationPoliciesRoute extends BaseAlertingRoute {
     },
   };
 
-  protected readonly routeName = 'list notification policies';
+  protected readonly routeName = 'list action policies';
 
   constructor(
     @inject(AlertingRouteContext) ctx: AlertingRouteContext,
     @inject(Request)
     private readonly request: KibanaRequest<
       unknown,
-      z.infer<typeof listNotificationPoliciesQuerySchema>,
+      z.infer<typeof listActionPoliciesQuerySchema>,
       unknown
     >,
     @inject(NotificationPolicyClient)

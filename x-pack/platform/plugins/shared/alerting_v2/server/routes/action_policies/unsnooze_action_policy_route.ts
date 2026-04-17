@@ -5,6 +5,7 @@
  * 2.0.
  */
 
+import { actionPolicyResponseSchema } from '@kbn/alerting-v2-schemas';
 import { Request } from '@kbn/core-di-server';
 import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
 import { z } from '@kbn/zod/v4';
@@ -13,47 +14,48 @@ import { NotificationPolicyClient } from '../../lib/notification_policy_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
-import { ALERTING_V2_NOTIFICATION_POLICY_API_PATH } from '../constants';
+import { ALERTING_V2_ACTION_POLICY_API_PATH } from '../constants';
 import { buildRouteValidationWithZod } from '../route_validation';
 
-const updateNotificationPolicyApiKeyParamsSchema = z.object({
-  id: z.string().describe('The notification policy identifier.'),
+const unsnoozeActionPolicyParamsSchema = z.object({
+  id: z.string().describe('The action policy identifier.'),
 });
 
 @injectable()
-export class UpdateNotificationPolicyApiKeyRoute extends BaseAlertingRoute {
+export class UnsnoozeActionPolicyRoute extends BaseAlertingRoute {
   static method = 'post' as const;
-  static path = `${ALERTING_V2_NOTIFICATION_POLICY_API_PATH}/{id}/_update_api_key`;
+  static path = `${ALERTING_V2_ACTION_POLICY_API_PATH}/{id}/_unsnooze`;
   static security: RouteSecurity = {
     authz: {
       requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.write],
     },
   };
   static routeOptions = {
-    summary: 'Update a notification policy API key',
-    description: 'Rotate the API key for a notification policy.',
+    summary: 'Unsnooze an action policy',
+    description: 'Remove the snooze from an action policy.',
   } as const;
   static validate = {
     request: {
-      params: buildRouteValidationWithZod(updateNotificationPolicyApiKeyParamsSchema),
+      params: buildRouteValidationWithZod(unsnoozeActionPolicyParamsSchema),
     },
     response: {
-      204: {
+      200: {
+        body: () => actionPolicyResponseSchema,
         description: 'Indicates a successful call.',
       },
       404: {
-        description: 'Indicates a notification policy with the given ID does not exist.',
+        description: 'Indicates an action policy with the given ID does not exist.',
       },
     },
   };
 
-  protected readonly routeName = 'update notification policy api key';
+  protected readonly routeName = 'unsnooze action policy';
 
   constructor(
     @inject(AlertingRouteContext) ctx: AlertingRouteContext,
     @inject(Request)
     private readonly request: KibanaRequest<
-      z.infer<typeof updateNotificationPolicyApiKeyParamsSchema>,
+      z.infer<typeof unsnoozeActionPolicyParamsSchema>,
       unknown,
       unknown
     >,
@@ -64,10 +66,10 @@ export class UpdateNotificationPolicyApiKeyRoute extends BaseAlertingRoute {
   }
 
   protected async execute() {
-    await this.notificationPolicyClient.updateNotificationPolicyApiKey({
+    const result = await this.notificationPolicyClient.unsnoozeNotificationPolicy({
       id: this.request.params.id,
     });
 
-    return this.ctx.response.noContent();
+    return this.ctx.response.ok({ body: result });
   }
 }

@@ -5,55 +5,60 @@
  * 2.0.
  */
 
-import {
-  bulkActionNotificationPoliciesBodySchema,
-  bulkActionNotificationPoliciesResponseSchema,
-  type BulkActionNotificationPoliciesBody,
-} from '@kbn/alerting-v2-schemas';
+import { actionPolicyResponseSchema } from '@kbn/alerting-v2-schemas';
 import { Request } from '@kbn/core-di-server';
 import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
+import { z } from '@kbn/zod/v4';
 import { inject, injectable } from 'inversify';
 import { NotificationPolicyClient } from '../../lib/notification_policy_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
-import { ALERTING_V2_NOTIFICATION_POLICY_API_PATH } from '../constants';
+import { ALERTING_V2_ACTION_POLICY_API_PATH } from '../constants';
 import { buildRouteValidationWithZod } from '../route_validation';
 
+const getActionPolicyParamsSchema = z.object({
+  id: z.string().describe('The action policy identifier.'),
+});
+
 @injectable()
-export class BulkActionNotificationPoliciesRoute extends BaseAlertingRoute {
-  static method = 'post' as const;
-  static path = `${ALERTING_V2_NOTIFICATION_POLICY_API_PATH}/_bulk`;
+export class GetActionPolicyRoute extends BaseAlertingRoute {
+  static method = 'get' as const;
+  static path = `${ALERTING_V2_ACTION_POLICY_API_PATH}/{id}`;
   static security: RouteSecurity = {
     authz: {
-      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.write],
+      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.read],
     },
   };
   static routeOptions = {
-    summary: 'Bulk action notification policies',
-    description: 'Perform bulk actions on notification policies.',
+    summary: 'Get an action policy',
+    description: 'Get an action policy by identifier.',
   } as const;
   static validate = {
     request: {
-      body: buildRouteValidationWithZod(bulkActionNotificationPoliciesBodySchema),
+      params: buildRouteValidationWithZod(getActionPolicyParamsSchema),
     },
     response: {
       200: {
-        body: () => bulkActionNotificationPoliciesResponseSchema,
+        body: () => actionPolicyResponseSchema,
         description: 'Indicates a successful call.',
       },
-      400: {
-        description: 'Indicates invalid request body.',
+      404: {
+        description: 'Indicates an action policy with the given ID does not exist.',
       },
     },
   };
 
-  protected readonly routeName = 'bulk action notification policies';
+  protected readonly routeName = 'get action policy';
 
   constructor(
     @inject(AlertingRouteContext) ctx: AlertingRouteContext,
     @inject(Request)
-    private readonly request: KibanaRequest<unknown, unknown, BulkActionNotificationPoliciesBody>,
+    private readonly request: KibanaRequest<
+      z.infer<typeof getActionPolicyParamsSchema>,
+      unknown,
+      unknown
+    >,
     @inject(NotificationPolicyClient)
     private readonly notificationPolicyClient: NotificationPolicyClient
   ) {
@@ -61,10 +66,9 @@ export class BulkActionNotificationPoliciesRoute extends BaseAlertingRoute {
   }
 
   protected async execute() {
-    const result = await this.notificationPolicyClient.bulkActionNotificationPolicies({
-      actions: this.request.body.actions,
+    const notificationPolicy = await this.notificationPolicyClient.getNotificationPolicy({
+      id: this.request.params.id,
     });
-
-    return this.ctx.response.ok({ body: result });
+    return this.ctx.response.ok({ body: notificationPolicy });
   }
 }

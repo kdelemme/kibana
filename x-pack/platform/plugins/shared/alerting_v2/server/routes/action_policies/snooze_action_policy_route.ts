@@ -5,7 +5,11 @@
  * 2.0.
  */
 
-import { notificationPolicyResponseSchema } from '@kbn/alerting-v2-schemas';
+import {
+  actionPolicyResponseSchema,
+  snoozeActionPolicyBodySchema,
+  type SnoozeActionPolicyBody,
+} from '@kbn/alerting-v2-schemas';
 import { Request } from '@kbn/core-di-server';
 import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
 import { z } from '@kbn/zod/v4';
@@ -14,50 +18,54 @@ import { NotificationPolicyClient } from '../../lib/notification_policy_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
-import { ALERTING_V2_NOTIFICATION_POLICY_API_PATH } from '../constants';
+import { ALERTING_V2_ACTION_POLICY_API_PATH } from '../constants';
 import { buildRouteValidationWithZod } from '../route_validation';
 
-const getNotificationPolicyParamsSchema = z.object({
-  id: z.string().describe('The notification policy identifier.'),
+const snoozeActionPolicyParamsSchema = z.object({
+  id: z.string().describe('The action policy identifier.'),
 });
 
 @injectable()
-export class GetNotificationPolicyRoute extends BaseAlertingRoute {
-  static method = 'get' as const;
-  static path = `${ALERTING_V2_NOTIFICATION_POLICY_API_PATH}/{id}`;
+export class SnoozeActionPolicyRoute extends BaseAlertingRoute {
+  static method = 'post' as const;
+  static path = `${ALERTING_V2_ACTION_POLICY_API_PATH}/{id}/_snooze`;
   static security: RouteSecurity = {
     authz: {
-      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.read],
+      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.write],
     },
   };
   static routeOptions = {
-    summary: 'Get a notification policy',
-    description: 'Get a notification policy by identifier.',
+    summary: 'Snooze an action policy',
+    description: 'Snooze an action policy until a specified time.',
   } as const;
   static validate = {
     request: {
-      params: buildRouteValidationWithZod(getNotificationPolicyParamsSchema),
+      params: buildRouteValidationWithZod(snoozeActionPolicyParamsSchema),
+      body: buildRouteValidationWithZod(snoozeActionPolicyBodySchema),
     },
     response: {
       200: {
-        body: () => notificationPolicyResponseSchema,
+        body: () => actionPolicyResponseSchema,
         description: 'Indicates a successful call.',
       },
+      400: {
+        description: 'Indicates invalid request parameters or body.',
+      },
       404: {
-        description: 'Indicates a notification policy with the given ID does not exist.',
+        description: 'Indicates an action policy with the given ID does not exist.',
       },
     },
   };
 
-  protected readonly routeName = 'get notification policy';
+  protected readonly routeName = 'snooze action policy';
 
   constructor(
     @inject(AlertingRouteContext) ctx: AlertingRouteContext,
     @inject(Request)
     private readonly request: KibanaRequest<
-      z.infer<typeof getNotificationPolicyParamsSchema>,
+      z.infer<typeof snoozeActionPolicyParamsSchema>,
       unknown,
-      unknown
+      SnoozeActionPolicyBody
     >,
     @inject(NotificationPolicyClient)
     private readonly notificationPolicyClient: NotificationPolicyClient
@@ -66,9 +74,11 @@ export class GetNotificationPolicyRoute extends BaseAlertingRoute {
   }
 
   protected async execute() {
-    const notificationPolicy = await this.notificationPolicyClient.getNotificationPolicy({
+    const result = await this.notificationPolicyClient.snoozeNotificationPolicy({
       id: this.request.params.id,
+      snoozedUntil: this.request.body.snoozedUntil,
     });
-    return this.ctx.response.ok({ body: notificationPolicy });
+
+    return this.ctx.response.ok({ body: result });
   }
 }

@@ -5,6 +5,11 @@
  * 2.0.
  */
 
+import {
+  createActionPolicyDataSchema,
+  actionPolicyResponseSchema,
+  type CreateActionPolicyData,
+} from '@kbn/alerting-v2-schemas';
 import { Request } from '@kbn/core-di-server';
 import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
 import { z } from '@kbn/zod/v4';
@@ -13,50 +18,54 @@ import { NotificationPolicyClient } from '../../lib/notification_policy_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
-import { ALERTING_V2_NOTIFICATION_POLICY_API_PATH } from '../constants';
+import { ALERTING_V2_ACTION_POLICY_API_PATH } from '../constants';
 import { buildRouteValidationWithZod } from '../route_validation';
 
-const deleteNotificationPolicyParamsSchema = z.object({
-  id: z.string().describe('The notification policy identifier.'),
+const createActionPolicyParamsSchema = z.object({
+  id: z
+    .string()
+    .optional()
+    .describe('An optional custom identifier. If omitted, an ID is generated automatically.'),
 });
 
 @injectable()
-export class DeleteNotificationPolicyRoute extends BaseAlertingRoute {
-  static method = 'delete' as const;
-  static path = `${ALERTING_V2_NOTIFICATION_POLICY_API_PATH}/{id}`;
+export class CreateActionPolicyRoute extends BaseAlertingRoute {
+  static method = 'post' as const;
+  static path = `${ALERTING_V2_ACTION_POLICY_API_PATH}/{id?}`;
   static security: RouteSecurity = {
     authz: {
       requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.write],
     },
   };
   static routeOptions = {
-    summary: 'Delete a notification policy',
-    description: 'Delete a notification policy by identifier.',
+    summary: 'Create an action policy',
+    description: 'Create a new action policy with an optional custom identifier.',
   } as const;
   static validate = {
     request: {
-      params: buildRouteValidationWithZod(deleteNotificationPolicyParamsSchema),
+      body: buildRouteValidationWithZod(createActionPolicyDataSchema),
+      params: buildRouteValidationWithZod(createActionPolicyParamsSchema),
     },
     response: {
-      204: {
+      200: {
+        body: () => actionPolicyResponseSchema,
         description: 'Indicates a successful call.',
       },
-      404: {
-        description: 'Indicates a notification policy with the given ID does not exist.',
+      400: {
+        description: 'Indicates invalid request parameters or body.',
       },
     },
   };
 
-  protected readonly routeName = 'delete notification policy';
+  protected readonly routeName = 'create action policy';
 
   constructor(
     @inject(AlertingRouteContext) ctx: AlertingRouteContext,
     @inject(Request)
     private readonly request: KibanaRequest<
-      z.infer<typeof deleteNotificationPolicyParamsSchema>,
+      z.infer<typeof createActionPolicyParamsSchema>,
       unknown,
-      unknown,
-      'delete'
+      CreateActionPolicyData
     >,
     @inject(NotificationPolicyClient)
     private readonly notificationPolicyClient: NotificationPolicyClient
@@ -65,9 +74,11 @@ export class DeleteNotificationPolicyRoute extends BaseAlertingRoute {
   }
 
   protected async execute() {
-    await this.notificationPolicyClient.deleteNotificationPolicy({
-      id: this.request.params.id,
+    const created = await this.notificationPolicyClient.createNotificationPolicy({
+      data: this.request.body,
+      options: { id: this.request.params.id },
     });
-    return this.ctx.response.noContent();
+
+    return this.ctx.response.ok({ body: created });
   }
 }

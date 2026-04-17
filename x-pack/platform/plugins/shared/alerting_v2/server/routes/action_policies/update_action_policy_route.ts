@@ -6,9 +6,9 @@
  */
 
 import {
-  notificationPolicyResponseSchema,
-  updateNotificationPolicyBodySchema,
-  type UpdateNotificationPolicyBody,
+  actionPolicyResponseSchema,
+  updateActionPolicyBodySchema,
+  type UpdateActionPolicyBody,
 } from '@kbn/alerting-v2-schemas';
 import { Request } from '@kbn/core-di-server';
 import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
@@ -18,54 +18,54 @@ import { NotificationPolicyClient } from '../../lib/notification_policy_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
-import { ALERTING_V2_NOTIFICATION_POLICY_API_PATH } from '../constants';
+import { ALERTING_V2_ACTION_POLICY_API_PATH } from '../constants';
 import { buildRouteValidationWithZod } from '../route_validation';
 
-const updateNotificationPolicyParamsSchema = z.object({
-  id: z.string().describe('The notification policy identifier.'),
+const updateActionPolicyParamsSchema = z.object({
+  id: z.string().describe('The action policy identifier.'),
 });
 
 @injectable()
-export class UpdateNotificationPolicyRoute extends BaseAlertingRoute {
+export class UpdateActionPolicyRoute extends BaseAlertingRoute {
   static method = 'put' as const;
-  static path = `${ALERTING_V2_NOTIFICATION_POLICY_API_PATH}/{id}`;
+  static path = `${ALERTING_V2_ACTION_POLICY_API_PATH}/{id}`;
   static security: RouteSecurity = {
     authz: {
       requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.write],
     },
   };
   static routeOptions = {
-    summary: 'Update a notification policy',
-    description: 'Update an existing notification policy by identifier.',
+    summary: 'Update an action policy',
+    description: 'Update an existing action policy by identifier.',
   } as const;
   static validate = {
     request: {
-      body: buildRouteValidationWithZod(updateNotificationPolicyBodySchema),
-      params: buildRouteValidationWithZod(updateNotificationPolicyParamsSchema),
+      body: buildRouteValidationWithZod(updateActionPolicyBodySchema),
+      params: buildRouteValidationWithZod(updateActionPolicyParamsSchema),
     },
     response: {
       200: {
-        body: () => notificationPolicyResponseSchema,
+        body: () => actionPolicyResponseSchema,
         description: 'Indicates a successful call.',
       },
       400: {
         description: 'Indicates invalid request parameters or body.',
       },
       404: {
-        description: 'Indicates a notification policy with the given ID does not exist.',
+        description: 'Indicates an action policy with the given ID does not exist.',
       },
     },
   };
 
-  protected readonly routeName = 'update notification policy';
+  protected readonly routeName = 'update action policy';
 
   constructor(
     @inject(AlertingRouteContext) ctx: AlertingRouteContext,
     @inject(Request)
     private readonly request: KibanaRequest<
-      z.infer<typeof updateNotificationPolicyParamsSchema>,
+      z.infer<typeof updateActionPolicyParamsSchema>,
       unknown,
-      UpdateNotificationPolicyBody
+      UpdateActionPolicyBody
     >,
     @inject(NotificationPolicyClient)
     private readonly notificationPolicyClient: NotificationPolicyClient

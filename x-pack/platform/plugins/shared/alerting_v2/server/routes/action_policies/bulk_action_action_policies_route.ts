@@ -5,60 +5,55 @@
  * 2.0.
  */
 
-import { notificationPolicyResponseSchema } from '@kbn/alerting-v2-schemas';
+import {
+  bulkActionActionPoliciesBodySchema,
+  bulkActionActionPoliciesResponseSchema,
+  type BulkActionActionPoliciesBody,
+} from '@kbn/alerting-v2-schemas';
 import { Request } from '@kbn/core-di-server';
 import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
-import { z } from '@kbn/zod/v4';
 import { inject, injectable } from 'inversify';
 import { NotificationPolicyClient } from '../../lib/notification_policy_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
-import { ALERTING_V2_NOTIFICATION_POLICY_API_PATH } from '../constants';
+import { ALERTING_V2_ACTION_POLICY_API_PATH } from '../constants';
 import { buildRouteValidationWithZod } from '../route_validation';
 
-const unsnoozeNotificationPolicyParamsSchema = z.object({
-  id: z.string().describe('The notification policy identifier.'),
-});
-
 @injectable()
-export class UnsnoozeNotificationPolicyRoute extends BaseAlertingRoute {
+export class BulkActionActionPoliciesRoute extends BaseAlertingRoute {
   static method = 'post' as const;
-  static path = `${ALERTING_V2_NOTIFICATION_POLICY_API_PATH}/{id}/_unsnooze`;
+  static path = `${ALERTING_V2_ACTION_POLICY_API_PATH}/_bulk`;
   static security: RouteSecurity = {
     authz: {
       requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.write],
     },
   };
   static routeOptions = {
-    summary: 'Unsnooze a notification policy',
-    description: 'Remove the snooze from a notification policy.',
+    summary: 'Bulk action action policies',
+    description: 'Perform bulk actions on action policies.',
   } as const;
   static validate = {
     request: {
-      params: buildRouteValidationWithZod(unsnoozeNotificationPolicyParamsSchema),
+      body: buildRouteValidationWithZod(bulkActionActionPoliciesBodySchema),
     },
     response: {
       200: {
-        body: () => notificationPolicyResponseSchema,
+        body: () => bulkActionActionPoliciesResponseSchema,
         description: 'Indicates a successful call.',
       },
-      404: {
-        description: 'Indicates a notification policy with the given ID does not exist.',
+      400: {
+        description: 'Indicates invalid request body.',
       },
     },
   };
 
-  protected readonly routeName = 'unsnooze notification policy';
+  protected readonly routeName = 'bulk action action policies';
 
   constructor(
     @inject(AlertingRouteContext) ctx: AlertingRouteContext,
     @inject(Request)
-    private readonly request: KibanaRequest<
-      z.infer<typeof unsnoozeNotificationPolicyParamsSchema>,
-      unknown,
-      unknown
-    >,
+    private readonly request: KibanaRequest<unknown, unknown, BulkActionActionPoliciesBody>,
     @inject(NotificationPolicyClient)
     private readonly notificationPolicyClient: NotificationPolicyClient
   ) {
@@ -66,8 +61,8 @@ export class UnsnoozeNotificationPolicyRoute extends BaseAlertingRoute {
   }
 
   protected async execute() {
-    const result = await this.notificationPolicyClient.unsnoozeNotificationPolicy({
-      id: this.request.params.id,
+    const result = await this.notificationPolicyClient.bulkActionNotificationPolicies({
+      actions: this.request.body.actions,
     });
 
     return this.ctx.response.ok({ body: result });
