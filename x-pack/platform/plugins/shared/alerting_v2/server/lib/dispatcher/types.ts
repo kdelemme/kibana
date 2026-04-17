@@ -6,11 +6,11 @@
  */
 
 export type RuleId = string;
-export type NotificationPolicyId = string;
-export type NotificationGroupId = string;
+export type ActionPolicyId = string;
+export type ActionGroupId = string;
 export type AlertEpisodeData = Record<string, unknown>;
 
-export interface NotificationPolicyDestination {
+export interface ActionPolicyDestination {
   type: 'workflow';
   id: string;
 }
@@ -58,8 +58,8 @@ export interface Rule {
   updatedAt: string;
 }
 
-export interface NotificationPolicy {
-  id: NotificationPolicyId;
+export interface ActionPolicy {
+  id: ActionPolicyId;
   spaceId: string;
   name: string;
   enabled: boolean;
@@ -79,7 +79,7 @@ export interface NotificationPolicy {
   };
   snoozedUntil?: string | null;
   /** Target destinations to dispatch matched episodes to */
-  destinations: NotificationPolicyDestination[];
+  destinations: ActionPolicyDestination[];
 
   /** Decrypted base64-encoded API key (id:key) for authenticated workflow dispatch */
   apiKey?: string;
@@ -87,27 +87,27 @@ export interface NotificationPolicy {
 
 export interface MatchedPair {
   episode: AlertEpisode;
-  policy: NotificationPolicy;
+  policy: ActionPolicy;
 }
 
-export interface NotificationGroup {
-  id: NotificationGroupId;
+export interface ActionGroup {
+  id: ActionGroupId;
   spaceId: string;
-  policyId: NotificationPolicyId;
-  destinations: NotificationPolicyDestination[];
+  policyId: ActionPolicyId;
+  destinations: ActionPolicyDestination[];
   groupKey: Record<string, unknown>;
   episodes: AlertEpisode[];
 }
 
-export interface NotificationPolicyWorkflowPayload {
-  id: NotificationGroupId;
-  policyId: NotificationPolicyId;
+export interface ActionPolicyWorkflowPayload {
+  id: ActionGroupId;
+  policyId: ActionPolicyId;
   groupKey: Record<string, unknown>;
   episodes: AlertEpisode[];
 }
 
 export interface LastNotifiedRecord {
-  notification_group_id: NotificationGroupId;
+  action_group_id: ActionGroupId;
   last_notified: string;
   episode_status?: string;
 }
@@ -129,11 +129,11 @@ export interface DispatcherPipelineState {
   readonly dispatchable?: AlertEpisode[];
   readonly suppressed?: Array<AlertEpisode & { reason: string }>;
   readonly rules?: Map<RuleId, Rule>;
-  readonly policies?: Map<NotificationPolicyId, NotificationPolicy>;
+  readonly policies?: Map<ActionPolicyId, ActionPolicy>;
   readonly matched?: MatchedPair[];
-  readonly groups?: NotificationGroup[];
-  readonly dispatch?: NotificationGroup[];
-  readonly throttled?: NotificationGroup[];
+  readonly groups?: ActionGroup[];
+  readonly dispatch?: ActionGroup[];
+  readonly throttled?: ActionGroup[];
 }
 
 export type DispatcherHaltReason = 'no_episodes' | 'no_actions';

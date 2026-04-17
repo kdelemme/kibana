@@ -13,7 +13,7 @@ import type {
   DispatcherStep,
   DispatcherStepOutput,
   MatchedPair,
-  NotificationGroup,
+  ActionGroup,
   ActionPolicy,
   Rule,
 } from '../types';
@@ -95,9 +95,7 @@ export function createMatchedPair(overrides: Partial<MatchedPair> = {}): Matched
   };
 }
 
-export function createNotificationGroup(
-  overrides: Partial<NotificationGroup> = {}
-): NotificationGroup {
+export function createActionGroup(overrides: Partial<ActionGroup> = {}): ActionGroup {
   return {
     id: 'group-1',
     spaceId: 'default',

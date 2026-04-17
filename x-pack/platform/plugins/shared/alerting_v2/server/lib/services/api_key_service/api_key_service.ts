@@ -148,7 +148,7 @@ export class ApiKeyService implements ApiKeyServiceContract {
     const esResult = await this.securityService.authc.apiKeys.grantAsInternalUser(this.request, {
       name,
       role_descriptors: {},
-      metadata: { managed: true, kibana: { type: 'notification_policy' } },
+      metadata: { managed: true, kibana: { type: 'action_policy' } },
     });
 
     if (!esResult) {

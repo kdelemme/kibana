@@ -648,7 +648,7 @@ describe.skip('DispatcherService integration tests', () => {
           source: 'internal',
           reason: 'notified by policy np-1',
         });
-        expect(action.notification_group_id).toEqual(expect.any(String));
+        expect(action.action_group_id).toEqual(expect.any(String));
         expect(action.group_hash).not.toBe('irrelevant');
       });
     });
@@ -934,7 +934,7 @@ describe.skip('DispatcherService integration tests', () => {
       );
 
       expect(notifiedActions).toHaveLength(2);
-      const groupIds = notifiedActions.map((a) => a.notification_group_id);
+      const groupIds = notifiedActions.map((a) => a.action_group_id);
       expect(new Set(groupIds).size).toBe(2);
       notifiedActions.forEach((action) => {
         expect(action).toMatchObject({
@@ -1008,7 +1008,7 @@ describe.skip('DispatcherService integration tests', () => {
         (hit) => hit._source as Record<string, unknown>
       );
       notifiedSources.forEach((action) => {
-        expect(action.notification_group_id).toEqual(expect.any(String));
+        expect(action.action_group_id).toEqual(expect.any(String));
         expect(action.episode_status).toEqual(expect.any(String));
       });
 

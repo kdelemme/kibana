@@ -13,7 +13,7 @@ import type {
   DispatcherStep,
   DispatcherStepOutput,
   MatchedPair,
-  NotificationGroup,
+  ActionGroup,
 } from '../types';
 
 @injectable()
@@ -23,14 +23,14 @@ export class BuildGroupsStep implements DispatcherStep {
   public async execute(state: Readonly<DispatcherPipelineState>): Promise<DispatcherStepOutput> {
     const { matched = [] } = state;
 
-    const groups = buildNotificationGroups(matched);
+    const groups = buildActionGroups(matched);
 
     return { type: 'continue', data: { groups } };
   }
 }
 
-export function buildNotificationGroups(matched: readonly MatchedPair[]): NotificationGroup[] {
-  const groupMap = new Map<string, NotificationGroup>();
+export function buildActionGroups(matched: readonly MatchedPair[]): ActionGroup[] {
+  const groupMap = new Map<string, ActionGroup>();
 
   for (const { episode, policy } of matched) {
     let groupKey: Record<string, unknown>;

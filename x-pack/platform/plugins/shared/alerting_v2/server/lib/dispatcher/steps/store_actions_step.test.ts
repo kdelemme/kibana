@@ -14,7 +14,7 @@ import {
 import {
   createDispatcherPipelineState,
   createAlertEpisode,
-  createNotificationGroup,
+  createActionGroup,
   createActionPolicy,
   createRule,
 } from '../fixtures/test_utils';
@@ -132,7 +132,7 @@ describe('StoreActionsStep', () => {
       last_event_timestamp: '2026-01-22T07:00:00.000Z',
     });
 
-    const group = createNotificationGroup({
+    const group = createActionGroup({
       id: 'group-1',
       policyId: 'policy-1',
       episodes: [episode],
@@ -177,7 +177,7 @@ describe('StoreActionsStep', () => {
       last_event_timestamp: '2026-01-22T07:00:00.000Z',
     });
 
-    const group = createNotificationGroup({
+    const group = createActionGroup({
       id: 'group-1',
       policyId: 'policy-1',
       episodes: [episode],
@@ -214,7 +214,7 @@ describe('StoreActionsStep', () => {
       rule_id: 'rule-1',
       group_hash: 'hash-1',
       last_series_event_timestamp: mockDate.toISOString(),
-      notification_group_id: 'group-1',
+      action_group_id: 'group-1',
       source: 'internal',
       reason: 'notified by policy policy-1',
       episode_status: 'active',
@@ -233,7 +233,7 @@ describe('StoreActionsStep', () => {
       last_event_timestamp: '2026-01-22T07:00:00.000Z',
     });
 
-    const group = createNotificationGroup({
+    const group = createActionGroup({
       id: 'group-1',
       policyId: 'policy-1',
       episodes: [episode],
@@ -259,7 +259,7 @@ describe('StoreActionsStep', () => {
       expect.objectContaining({
         action_type: 'notified',
         group_hash: 'hash-1',
-        notification_group_id: 'group-1',
+        action_group_id: 'group-1',
         episode_status: 'recovering',
         reason: 'notified by policy policy-1',
         space_id: 'default',
@@ -277,7 +277,7 @@ describe('StoreActionsStep', () => {
       last_event_timestamp: '2026-01-22T07:00:00.000Z',
     });
 
-    const group = createNotificationGroup({
+    const group = createActionGroup({
       id: 'group-1',
       policyId: 'policy-1',
       episodes: [episode],
@@ -334,13 +334,13 @@ describe('StoreActionsStep', () => {
       last_event_timestamp: '2026-01-22T07:20:00.000Z',
     });
 
-    const throttledGroup = createNotificationGroup({
+    const throttledGroup = createActionGroup({
       id: 'throttled-group',
       policyId: 'throttle-policy',
       episodes: [throttledEpisode],
     });
 
-    const dispatchGroup = createNotificationGroup({
+    const dispatchGroup = createActionGroup({
       id: 'dispatch-group',
       policyId: 'dispatch-policy',
       episodes: [dispatchEpisode],
@@ -409,7 +409,7 @@ describe('StoreActionsStep', () => {
         action_type: 'notified',
         rule_id: 'rule-dispatch',
         group_hash: 'hash-dispatch',
-        notification_group_id: 'dispatch-group',
+        action_group_id: 'dispatch-group',
         episode_status: 'active',
         reason: 'notified by policy dispatch-policy',
         space_id: 'default',
@@ -518,13 +518,13 @@ describe('StoreActionsStep', () => {
       last_event_timestamp: '2026-01-22T07:10:00.000Z',
     });
 
-    const dispatchGroup = createNotificationGroup({
+    const dispatchGroup = createActionGroup({
       id: 'dispatch-group',
       policyId: 'dispatch-policy',
       episodes: [dispatchedEpisode],
     });
 
-    const throttledGroup = createNotificationGroup({
+    const throttledGroup = createActionGroup({
       id: 'throttled-group',
       policyId: 'throttle-policy',
       episodes: [throttledEpisode],
@@ -586,7 +586,7 @@ describe('StoreActionsStep', () => {
       last_event_timestamp: '2026-01-22T07:05:00.000Z',
     });
 
-    const group = createNotificationGroup({
+    const group = createActionGroup({
       id: 'group-1',
       policyId: 'policy-1',
       episodes: [episode1, episode2],

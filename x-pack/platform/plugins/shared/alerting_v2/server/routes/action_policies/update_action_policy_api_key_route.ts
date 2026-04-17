@@ -26,7 +26,7 @@ export class UpdateActionPolicyApiKeyRoute extends BaseAlertingRoute {
   static path = `${ALERTING_V2_ACTION_POLICY_API_PATH}/{id}/_update_api_key`;
   static security: RouteSecurity = {
     authz: {
-      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.write],
+      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.actionPolicies.write],
     },
   };
   static routeOptions = {

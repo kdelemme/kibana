@@ -84,7 +84,7 @@ describe('ApiKeyService', () => {
       expect(security.authc.apiKeys.grantAsInternalUser).toHaveBeenCalledWith(request, {
         name: 'My Policy',
         role_descriptors: {},
-        metadata: { managed: true, kibana: { type: 'notification_policy' } },
+        metadata: { managed: true, kibana: { type: 'action_policy' } },
       });
 
       expect(result.apiKey).toBe(Buffer.from('es-key-id:es-key-secret').toString('base64'));

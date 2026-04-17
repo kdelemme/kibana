@@ -6,7 +6,7 @@
  */
 
 import { elasticsearchServiceMock } from '@kbn/core/server/mocks';
-import { getNotificationPolicyStats } from './get_notification_policy_stats';
+import { getActionPolicyStats } from './get_action_policy_stats';
 
 const elasticsearch = elasticsearchServiceMock.createStart();
 const esClient = elasticsearch.client.asInternalUser;
@@ -48,19 +48,19 @@ function mockSearchResponse({
   } as any);
 }
 
-describe('getNotificationPolicyStats', () => {
+describe('getActionPolicyStats', () => {
   it('returns stats from aggregations', async () => {
     mockSearchResponse({});
 
-    const result = await getNotificationPolicyStats(esClient);
+    const result = await getActionPolicyStats(esClient);
 
     expect(result).toEqual({
-      notification_policies_count: 5,
-      notification_policies_unique_workflow_count: 3,
-      notification_policies_count_with_matcher: 2,
-      notification_policies_count_with_group_by: 1,
-      notification_policies_avg_group_by_fields_count: 2.5,
-      notification_policies_count_by_throttle_interval: [
+      action_policies_count: 5,
+      action_policies_unique_workflow_count: 3,
+      action_policies_count_with_matcher: 2,
+      action_policies_count_with_group_by: 1,
+      action_policies_avg_group_by_fields_count: 2.5,
+      action_policies_count_by_throttle_interval: [
         {
           name: '5m',
           value: 3,
@@ -81,10 +81,10 @@ describe('getNotificationPolicyStats', () => {
       throttleIntervalBuckets: [],
     });
 
-    const result = await getNotificationPolicyStats(esClient);
+    const result = await getActionPolicyStats(esClient);
 
-    expect(result.notification_policies_avg_group_by_fields_count).toBeNull();
-    expect(result.notification_policies_count_by_throttle_interval).toEqual([]);
+    expect(result.action_policies_avg_group_by_fields_count).toBeNull();
+    expect(result.action_policies_count_by_throttle_interval).toEqual([]);
   });
 
   it('returns empty results when no notification policies exist', async () => {
@@ -97,15 +97,15 @@ describe('getNotificationPolicyStats', () => {
       throttleIntervalBuckets: [],
     });
 
-    const result = await getNotificationPolicyStats(esClient);
+    const result = await getActionPolicyStats(esClient);
 
     expect(result).toEqual({
-      notification_policies_count: 0,
-      notification_policies_unique_workflow_count: 0,
-      notification_policies_count_with_matcher: 0,
-      notification_policies_count_with_group_by: 0,
-      notification_policies_avg_group_by_fields_count: null,
-      notification_policies_count_by_throttle_interval: [],
+      action_policies_count: 0,
+      action_policies_unique_workflow_count: 0,
+      action_policies_count_with_matcher: 0,
+      action_policies_count_with_group_by: 0,
+      action_policies_avg_group_by_fields_count: null,
+      action_policies_count_by_throttle_interval: [],
     });
   });
 
@@ -117,15 +117,15 @@ describe('getNotificationPolicyStats', () => {
       hits: { total: { value: 0, relation: 'eq' }, max_score: null, hits: [] },
     } as any);
 
-    const result = await getNotificationPolicyStats(esClient);
+    const result = await getActionPolicyStats(esClient);
 
     expect(result).toEqual({
-      notification_policies_count: 0,
-      notification_policies_unique_workflow_count: 0,
-      notification_policies_count_with_matcher: 0,
-      notification_policies_count_with_group_by: 0,
-      notification_policies_avg_group_by_fields_count: null,
-      notification_policies_count_by_throttle_interval: [],
+      action_policies_count: 0,
+      action_policies_unique_workflow_count: 0,
+      action_policies_count_with_matcher: 0,
+      action_policies_count_with_group_by: 0,
+      action_policies_avg_group_by_fields_count: null,
+      action_policies_count_by_throttle_interval: [],
     });
   });
 
@@ -144,8 +144,8 @@ describe('getNotificationPolicyStats', () => {
       },
     } as any);
 
-    const result = await getNotificationPolicyStats(esClient);
+    const result = await getActionPolicyStats(esClient);
 
-    expect(result.notification_policies_count).toBe(7);
+    expect(result.action_policies_count).toBe(7);
   });
 });

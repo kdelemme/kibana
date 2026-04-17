@@ -5,7 +5,7 @@
  * 2.0.
  */
 
-import { BuildGroupsStep, buildNotificationGroups } from './build_groups_step';
+import { BuildGroupsStep, buildActionGroups } from './build_groups_step';
 import {
   createAlertEpisode,
   createDispatcherPipelineState,
@@ -49,7 +49,7 @@ describe('BuildGroupsStep', () => {
   });
 });
 
-describe('buildNotificationGroups', () => {
+describe('buildActionGroups', () => {
   it('creates separate groups for different episodes with no groupBy', () => {
     const policy = createActionPolicy({
       id: 'p1',
@@ -66,7 +66,7 @@ describe('buildNotificationGroups', () => {
       }),
     ];
 
-    const groups = buildNotificationGroups(matched);
+    const groups = buildActionGroups(matched);
 
     expect(groups).toHaveLength(2);
   });
@@ -82,7 +82,7 @@ describe('buildNotificationGroups', () => {
       createMatchedPair({ episode, policy }),
     ];
 
-    const groups = buildNotificationGroups(matched);
+    const groups = buildActionGroups(matched);
 
     expect(groups).toHaveLength(1);
     expect(groups[0].episodes).toHaveLength(2);
@@ -95,8 +95,8 @@ describe('buildNotificationGroups', () => {
     });
     const episode = createAlertEpisode({ rule_id: 'r1', group_hash: 'h1', episode_id: 'e1' });
 
-    const groups1 = buildNotificationGroups([createMatchedPair({ episode, policy })]);
-    const groups2 = buildNotificationGroups([createMatchedPair({ episode, policy })]);
+    const groups1 = buildActionGroups([createMatchedPair({ episode, policy })]);
+    const groups2 = buildActionGroups([createMatchedPair({ episode, policy })]);
 
     expect(groups1[0].id).toBe(groups2[0].id);
   });
@@ -127,7 +127,7 @@ describe('buildNotificationGroups', () => {
       }),
     ];
 
-    const groups = buildNotificationGroups(matched);
+    const groups = buildActionGroups(matched);
 
     expect(groups).toHaveLength(1);
     expect(groups[0].episodes).toHaveLength(2);
@@ -160,7 +160,7 @@ describe('buildNotificationGroups', () => {
       }),
     ];
 
-    const groups = buildNotificationGroups(matched);
+    const groups = buildActionGroups(matched);
 
     expect(groups).toHaveLength(2);
     expect(groups[0].groupKey).toEqual({ 'data.host.name': 'server-1' });
@@ -201,7 +201,7 @@ describe('buildNotificationGroups', () => {
       }),
     ];
 
-    const groups = buildNotificationGroups(matched);
+    const groups = buildActionGroups(matched);
 
     expect(groups).toHaveLength(2);
     const prodGroup = groups.find((g) => g.groupKey['data.env'] === 'prod')!;
@@ -236,7 +236,7 @@ describe('buildNotificationGroups', () => {
       }),
     ];
 
-    const groups = buildNotificationGroups(matched);
+    const groups = buildActionGroups(matched);
 
     const groupWithHost = groups.find((g) => g.groupKey['data.host.name'] === 'server-1')!;
     expect(groupWithHost.groupKey).toEqual({ 'data.host.name': 'server-1', 'data.env': null });
@@ -262,7 +262,7 @@ describe('buildNotificationGroups', () => {
       }),
     ];
 
-    const groups = buildNotificationGroups(matched);
+    const groups = buildActionGroups(matched);
 
     expect(groups).toHaveLength(1);
     expect(groups[0].episodes).toHaveLength(2);
@@ -286,7 +286,7 @@ describe('buildNotificationGroups', () => {
       }),
     ];
 
-    const groups = buildNotificationGroups(matched);
+    const groups = buildActionGroups(matched);
 
     expect(groups).toHaveLength(1);
     expect(groups[0].episodes).toHaveLength(2);
@@ -311,7 +311,7 @@ describe('buildNotificationGroups', () => {
       }),
     ];
 
-    const groups = buildNotificationGroups(matched);
+    const groups = buildActionGroups(matched);
 
     expect(groups).toHaveLength(2);
   });

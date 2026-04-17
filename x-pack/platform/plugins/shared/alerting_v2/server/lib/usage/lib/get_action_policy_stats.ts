@@ -9,11 +9,11 @@ import type { ElasticsearchClient } from '@kbn/core/server';
 import { ALERTING_CASES_SAVED_OBJECT_INDEX } from '@kbn/core-saved-objects-server';
 import { ACTION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
 import { TERMS_SIZE, bucketsToArray } from './constants';
-import type { NotificationPolicyStatsAggregations, NotificationPolicyStatsResults } from './types';
+import type { ActionPolicyStatsAggregations, ActionPolicyStatsResults } from './types';
 
-export async function getNotificationPolicyStats(
+export async function getActionPolicyStats(
   esClient: ElasticsearchClient
-): Promise<NotificationPolicyStatsResults> {
+): Promise<ActionPolicyStatsResults> {
   const response = await esClient.search({
     index: ALERTING_CASES_SAVED_OBJECT_INDEX,
     size: 0,
@@ -23,28 +23,28 @@ export async function getNotificationPolicyStats(
         filter: [{ term: { type: ACTION_POLICY_SAVED_OBJECT_TYPE } }],
       },
     },
-    // Runtime mappings for fields not indexed in the notification policy mappings
+    // Runtime mappings for fields not indexed in the action policy mappings
     runtime_mappings: {
-      np_has_matcher: {
+      ap_has_matcher: {
         type: 'boolean',
         script: {
           source: `
-            def np = params._source['${ACTION_POLICY_SAVED_OBJECT_TYPE}'];
-            if (np != null) {
-              emit(np['matcher'] != null);
+            def ap = params._source['${ACTION_POLICY_SAVED_OBJECT_TYPE}'];
+            if (ap != null) {
+              emit(ap['matcher'] != null);
             } else {
               emit(false);
             }
           `,
         },
       },
-      np_throttle_interval: {
+      ap_throttle_interval: {
         type: 'keyword',
         script: {
           source: `
-            def np = params._source['${ACTION_POLICY_SAVED_OBJECT_TYPE}'];
-            if (np != null) {
-              def throttle = np['throttle'];
+            def ap = params._source['${ACTION_POLICY_SAVED_OBJECT_TYPE}'];
+            if (ap != null) {
+              def throttle = ap['throttle'];
               if (throttle != null) {
                 def interval = throttle['interval'];
                 if (interval != null) emit(interval);
@@ -53,13 +53,13 @@ export async function getNotificationPolicyStats(
           `,
         },
       },
-      np_group_by_count: {
+      ap_group_by_count: {
         type: 'long',
         script: {
           source: `
-            def np = params._source['${ACTION_POLICY_SAVED_OBJECT_TYPE}'];
-            if (np != null) {
-              def groupBy = np['groupBy'];
+            def ap = params._source['${ACTION_POLICY_SAVED_OBJECT_TYPE}'];
+            if (ap != null) {
+              def groupBy = ap['groupBy'];
               if (groupBy != null) emit((long) groupBy.size());
             }
           `,
@@ -71,16 +71,16 @@ export async function getNotificationPolicyStats(
         cardinality: { field: `${ACTION_POLICY_SAVED_OBJECT_TYPE}.destinations.id` },
       },
       count_with_matcher: {
-        filter: { term: { np_has_matcher: true } },
+        filter: { term: { ap_has_matcher: true } },
       },
       count_by_throttle_interval: {
-        terms: { field: 'np_throttle_interval', size: TERMS_SIZE },
+        terms: { field: 'ap_throttle_interval', size: TERMS_SIZE },
       },
       count_with_group_by: {
         filter: { exists: { field: `${ACTION_POLICY_SAVED_OBJECT_TYPE}.groupBy` } },
       },
       avg_group_by_fields_count: {
-        avg: { field: 'np_group_by_count' },
+        avg: { field: 'ap_group_by_count' },
       },
     },
   });
@@ -88,15 +88,15 @@ export async function getNotificationPolicyStats(
   const total =
     typeof response.hits.total === 'number' ? response.hits.total : response.hits.total?.value ?? 0;
 
-  const aggs = response.aggregations as unknown as NotificationPolicyStatsAggregations | undefined;
+  const aggs = response.aggregations as unknown as ActionPolicyStatsAggregations | undefined;
 
   return {
-    notification_policies_count: total,
-    notification_policies_unique_workflow_count: aggs?.unique_workflow_count.value ?? 0,
-    notification_policies_count_with_matcher: aggs?.count_with_matcher.doc_count ?? 0,
-    notification_policies_count_with_group_by: aggs?.count_with_group_by.doc_count ?? 0,
-    notification_policies_avg_group_by_fields_count: aggs?.avg_group_by_fields_count.value ?? null,
-    notification_policies_count_by_throttle_interval: bucketsToArray(
+    action_policies_count: total,
+    action_policies_unique_workflow_count: aggs?.unique_workflow_count.value ?? 0,
+    action_policies_count_with_matcher: aggs?.count_with_matcher.doc_count ?? 0,
+    action_policies_count_with_group_by: aggs?.count_with_group_by.doc_count ?? 0,
+    action_policies_avg_group_by_fields_count: aggs?.avg_group_by_fields_count.value ?? null,
+    action_policies_count_by_throttle_interval: bucketsToArray(
       aggs?.count_by_throttle_interval.buckets
     ),
   };

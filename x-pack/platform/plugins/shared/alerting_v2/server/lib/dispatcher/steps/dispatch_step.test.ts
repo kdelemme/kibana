@@ -10,7 +10,7 @@ import type { WorkflowsServerPluginSetup } from '@kbn/workflows-management-plugi
 import { createLoggerService } from '../../services/logger_service/logger_service.mock';
 import {
   createDispatcherPipelineState,
-  createNotificationGroup,
+  createActionGroup,
   createActionPolicy,
 } from '../fixtures/test_utils';
 import { DispatchStep } from './dispatch_step';
@@ -54,7 +54,7 @@ describe('DispatchStep', () => {
     mockWfm.getWorkflow.mockResolvedValue(createWorkflowDetailDto());
     mockWfm.scheduleWorkflow.mockResolvedValue('exec-1');
 
-    const group = createNotificationGroup({
+    const group = createActionGroup({
       id: 'g1',
       policyId: 'p1',
       destinations: [{ type: 'workflow', id: 'workflow-1' }],
@@ -87,7 +87,7 @@ describe('DispatchStep', () => {
           authorization: 'ApiKey dGVzdC1pZDp0ZXN0LWtleQ==',
         }),
       }),
-      'notification_policy'
+      'action_policy'
     );
   });
 
@@ -95,7 +95,7 @@ describe('DispatchStep', () => {
     const { loggerService, mockLogger } = createLoggerService();
     const step = new DispatchStep(loggerService, mockWfm);
 
-    const group = createNotificationGroup({ id: 'g1', policyId: 'p1' });
+    const group = createActionGroup({ id: 'g1', policyId: 'p1' });
     const policy = createActionPolicy({ id: 'p1' });
 
     const state = createDispatcherPipelineState({
@@ -117,7 +117,7 @@ describe('DispatchStep', () => {
 
     mockWfm.getWorkflow.mockResolvedValue(null);
 
-    const group = createNotificationGroup({
+    const group = createActionGroup({
       id: 'g1',
       policyId: 'p1',
       destinations: [{ type: 'workflow', id: 'missing-workflow' }],
@@ -146,7 +146,7 @@ describe('DispatchStep', () => {
     mockWfm.getWorkflow.mockResolvedValue(createWorkflowDetailDto());
     mockWfm.scheduleWorkflow.mockResolvedValue('exec-1');
 
-    const group = createNotificationGroup({
+    const group = createActionGroup({
       id: 'g1',
       policyId: 'p1',
       destinations: [
@@ -208,7 +208,7 @@ describe('DispatchStep', () => {
     });
 
     const groups = Array.from({ length: 3 }, (_, i) =>
-      createNotificationGroup({
+      createActionGroup({
         id: `g${i}`,
         policyId: 'p1',
         destinations: [{ type: 'workflow', id: 'workflow-1' }],
@@ -236,7 +236,7 @@ describe('DispatchStep', () => {
     mockWfm.getWorkflow.mockResolvedValue(createWorkflowDetailDto());
     mockWfm.scheduleWorkflow.mockRejectedValue(new Error('service unavailable'));
 
-    const group = createNotificationGroup({
+    const group = createActionGroup({
       id: 'g1',
       policyId: 'p1',
       destinations: [{ type: 'workflow', id: 'workflow-1' }],
@@ -272,7 +272,7 @@ describe('DispatchStep', () => {
       .mockRejectedValueOnce(new Error('workflow-1 failed'))
       .mockResolvedValueOnce('exec-2');
 
-    const group = createNotificationGroup({
+    const group = createActionGroup({
       id: 'g1',
       policyId: 'p1',
       destinations: [
@@ -324,7 +324,7 @@ describe('DispatchStep', () => {
     });
 
     const groups = Array.from({ length: 5 }, (_, i) =>
-      createNotificationGroup({
+      createActionGroup({
         id: `g${i}`,
         policyId: 'p1',
         destinations: [{ type: 'workflow', id: 'workflow-1' }],

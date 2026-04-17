@@ -13,8 +13,8 @@ import type {
   DispatcherPipelineState,
   DispatcherStep,
   DispatcherStepOutput,
-  NotificationPolicy,
-  NotificationPolicyId,
+  ActionPolicy,
+  ActionPolicyId,
 } from '../types';
 
 @injectable()
@@ -31,7 +31,7 @@ export class FetchPoliciesStep implements DispatcherStep {
       filter: { enabled: true },
     });
 
-    const policies = new Map<NotificationPolicyId, NotificationPolicy>();
+    const policies = new Map<ActionPolicyId, ActionPolicy>();
 
     for (const doc of result) {
       if ('error' in doc) {
