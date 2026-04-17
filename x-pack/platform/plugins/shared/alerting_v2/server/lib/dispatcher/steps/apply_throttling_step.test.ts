@@ -9,7 +9,7 @@ import { applyThrottling } from './apply_throttling_step';
 import {
   createAlertEpisode,
   createNotificationGroup,
-  createNotificationPolicy,
+  createActionPolicy,
 } from '../fixtures/test_utils';
 import type { NotificationGroupId, LastNotifiedInfo } from '../types';
 
@@ -22,7 +22,7 @@ const info = (lastNotified: string, episodeStatus?: string): LastNotifiedInfo =>
 
 describe('applyThrottling', () => {
   describe('per_episode + on_status_change', () => {
-    const basePolicy = createNotificationPolicy({
+    const basePolicy = createActionPolicy({
       id: 'p1',
       groupingMode: 'per_episode',
       throttle: { strategy: 'on_status_change' },
@@ -84,7 +84,7 @@ describe('applyThrottling', () => {
   });
 
   describe('per_episode + per_status_interval', () => {
-    const basePolicy = createNotificationPolicy({
+    const basePolicy = createActionPolicy({
       id: 'p1',
       groupingMode: 'per_episode',
       throttle: { strategy: 'per_status_interval', interval: '1h' },
@@ -166,7 +166,7 @@ describe('applyThrottling', () => {
   });
 
   describe('per_episode + every_time', () => {
-    const basePolicy = createNotificationPolicy({
+    const basePolicy = createActionPolicy({
       id: 'p1',
       groupingMode: 'per_episode',
       throttle: { strategy: 'every_time' },
@@ -208,7 +208,7 @@ describe('applyThrottling', () => {
   });
 
   describe('per_field + time_interval', () => {
-    const basePolicy = createNotificationPolicy({
+    const basePolicy = createActionPolicy({
       id: 'p1',
       groupingMode: 'per_field',
       groupBy: ['host.name'],
@@ -258,7 +258,7 @@ describe('applyThrottling', () => {
     });
 
     it('dispatches when no interval configured', () => {
-      const policy = createNotificationPolicy({
+      const policy = createActionPolicy({
         id: 'p1',
         groupingMode: 'per_field',
         groupBy: ['host.name'],
@@ -279,7 +279,7 @@ describe('applyThrottling', () => {
   });
 
   describe('per_field + every_time', () => {
-    const basePolicy = createNotificationPolicy({
+    const basePolicy = createActionPolicy({
       id: 'p1',
       groupingMode: 'per_field',
       groupBy: ['host.name'],
@@ -316,7 +316,7 @@ describe('applyThrottling', () => {
   });
 
   describe('all + time_interval', () => {
-    const basePolicy = createNotificationPolicy({
+    const basePolicy = createActionPolicy({
       id: 'p1',
       groupingMode: 'all',
       throttle: { strategy: 'time_interval', interval: '5m' },
@@ -365,7 +365,7 @@ describe('applyThrottling', () => {
     });
 
     it('dispatches when no interval configured', () => {
-      const policy = createNotificationPolicy({
+      const policy = createActionPolicy({
         id: 'p1',
         groupingMode: 'all',
         throttle: { strategy: 'time_interval' },
@@ -385,7 +385,7 @@ describe('applyThrottling', () => {
   });
 
   describe('all + every_time', () => {
-    const basePolicy = createNotificationPolicy({
+    const basePolicy = createActionPolicy({
       id: 'p1',
       groupingMode: 'all',
       throttle: { strategy: 'every_time' },
@@ -432,7 +432,7 @@ describe('applyThrottling', () => {
         policyId: 'p1',
         episodes: [createAlertEpisode({ episode_status: 'recovering' })],
       });
-      const policy = createNotificationPolicy({
+      const policy = createActionPolicy({
         id: 'p1',
         throttle: { strategy: 'on_status_change' },
       });

@@ -6,48 +6,48 @@
  */
 
 import type {
-  CreateNotificationPolicyData,
-  NotificationPolicyBulkAction,
-  NotificationPolicyResponse,
-  UpdateNotificationPolicyData,
+  ActionPolicyBulkAction,
+  ActionPolicyResponse,
+  CreateActionPolicyData,
+  UpdateActionPolicyData,
 } from '@kbn/alerting-v2-schemas';
 
-export interface UpdateNotificationPolicyParams {
-  data: UpdateNotificationPolicyData;
+export interface UpdateActionPolicyParams {
+  data: UpdateActionPolicyData;
   options: { id: string; version: string };
 }
 
-export interface CreateNotificationPolicyParams {
-  data: CreateNotificationPolicyData;
+export interface CreateActionPolicyParams {
+  data: CreateActionPolicyData;
   options?: { id?: string };
 }
 
-export interface SnoozeNotificationPolicyParams {
+export interface SnoozeActionPolicyParams {
   id: string;
   snoozedUntil: string;
 }
 
-export interface UpdateNotificationPolicyApiKeyParams {
+export interface UpdateActionPolicyApiKeyParams {
   id: string;
 }
 
-export interface BulkActionNotificationPoliciesParams {
-  actions: NotificationPolicyBulkAction[];
+export interface BulkActionActionPoliciesParams {
+  actions: ActionPolicyBulkAction[];
 }
 
-export interface BulkActionNotificationPoliciesResponse {
+export interface BulkActionActionPoliciesResponse {
   processed: number;
   total: number;
   errors: Array<{ id: string; message: string }>;
 }
-export type FindNotificationPoliciesSortField =
+export type FindActionPoliciesSortField =
   | 'name'
   | 'createdAt'
   | 'updatedAt'
   | 'createdByUsername'
   | 'updatedByUsername';
 
-export interface FindNotificationPoliciesParams {
+export interface FindActionPoliciesParams {
   page?: number;
   perPage?: number;
   search?: string;
@@ -55,12 +55,12 @@ export interface FindNotificationPoliciesParams {
   createdBy?: string;
   enabled?: boolean;
   tags?: string[];
-  sortField?: FindNotificationPoliciesSortField;
+  sortField?: FindActionPoliciesSortField;
   sortOrder?: 'asc' | 'desc';
 }
 
-export interface FindNotificationPoliciesResponse {
-  items: NotificationPolicyResponse[];
+export interface FindActionPoliciesResponse {
+  items: ActionPolicyResponse[];
   total: number;
   page: number;
   perPage: number;

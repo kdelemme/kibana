@@ -7,9 +7,9 @@
 
 import Boom from '@hapi/boom';
 import type {
-  CreateNotificationPolicyData,
-  NotificationPolicyResponse,
-  UpdateNotificationPolicyData,
+  ActionPolicyResponse,
+  CreateActionPolicyData,
+  UpdateActionPolicyData,
 } from '@kbn/alerting-v2-schemas';
 import { z } from '@kbn/zod/v4';
 import type { ActionPolicySavedObjectAttributes } from '../../saved_objects';
@@ -38,14 +38,14 @@ const resolveNextNullableField = <T>(
 
 const toAuthResponse = (
   auth: ActionPolicySavedObjectAttributes['auth']
-): NotificationPolicyResponse['auth'] => {
+): ActionPolicyResponse['auth'] => {
   return {
     owner: auth.owner,
     createdByUser: auth.createdByUser,
   };
 };
 
-export const buildCreateNotificationPolicyAttributes = ({
+export const buildCreateActionPolicyAttributes = ({
   data,
   auth,
   createdBy,
@@ -55,7 +55,7 @@ export const buildCreateNotificationPolicyAttributes = ({
   updatedByUsername,
   updatedAt,
 }: {
-  data: CreateNotificationPolicyData;
+  data: CreateActionPolicyData;
   auth: ActionPolicySavedObjectAttributes['auth'];
   createdBy: string | null;
   createdByUsername: string | null;
@@ -85,7 +85,7 @@ export const buildCreateNotificationPolicyAttributes = ({
   };
 };
 
-export const buildUpdateNotificationPolicyAttributes = ({
+export const buildUpdateActionPolicyAttributes = ({
   existing,
   update,
   auth,
@@ -94,7 +94,7 @@ export const buildUpdateNotificationPolicyAttributes = ({
   updatedAt,
 }: {
   existing: ActionPolicySavedObjectAttributes;
-  update: UpdateNotificationPolicyData;
+  update: UpdateActionPolicyData;
   auth: ActionPolicySavedObjectAttributes['auth'];
   updatedBy: string | null;
   updatedByUsername: string | null;
@@ -121,7 +121,7 @@ export const buildUpdateNotificationPolicyAttributes = ({
   };
 };
 
-export const transformNotificationPolicySoAttributesToApiResponse = ({
+export const transformActionPolicySoAttributesToApiResponse = ({
   id,
   version,
   attributes,
@@ -129,7 +129,7 @@ export const transformNotificationPolicySoAttributesToApiResponse = ({
   id: string;
   version?: string;
   attributes: ActionPolicySavedObjectAttributes;
-}): NotificationPolicyResponse => {
+}): ActionPolicyResponse => {
   return {
     id,
     version,

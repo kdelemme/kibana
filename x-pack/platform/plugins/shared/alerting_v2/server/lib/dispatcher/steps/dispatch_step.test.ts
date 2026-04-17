@@ -11,7 +11,7 @@ import { createLoggerService } from '../../services/logger_service/logger_servic
 import {
   createDispatcherPipelineState,
   createNotificationGroup,
-  createNotificationPolicy,
+  createActionPolicy,
 } from '../fixtures/test_utils';
 import { DispatchStep } from './dispatch_step';
 
@@ -59,7 +59,7 @@ describe('DispatchStep', () => {
       policyId: 'p1',
       destinations: [{ type: 'workflow', id: 'workflow-1' }],
     });
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       apiKey: 'dGVzdC1pZDp0ZXN0LWtleQ==',
     });
@@ -96,7 +96,7 @@ describe('DispatchStep', () => {
     const step = new DispatchStep(loggerService, mockWfm);
 
     const group = createNotificationGroup({ id: 'g1', policyId: 'p1' });
-    const policy = createNotificationPolicy({ id: 'p1' });
+    const policy = createActionPolicy({ id: 'p1' });
 
     const state = createDispatcherPipelineState({
       dispatch: [group],
@@ -122,7 +122,7 @@ describe('DispatchStep', () => {
       policyId: 'p1',
       destinations: [{ type: 'workflow', id: 'missing-workflow' }],
     });
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       apiKey: 'dGVzdC1pZDp0ZXN0LWtleQ==',
     });
@@ -154,7 +154,7 @@ describe('DispatchStep', () => {
         { type: 'workflow', id: 'workflow-2' },
       ],
     });
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       apiKey: 'dGVzdC1pZDp0ZXN0LWtleQ==',
     });
@@ -202,7 +202,7 @@ describe('DispatchStep', () => {
       .mockRejectedValueOnce(new Error('network timeout'))
       .mockResolvedValueOnce('exec-3');
 
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       apiKey: 'dGVzdC1pZDp0ZXN0LWtleQ==',
     });
@@ -241,7 +241,7 @@ describe('DispatchStep', () => {
       policyId: 'p1',
       destinations: [{ type: 'workflow', id: 'workflow-1' }],
     });
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       apiKey: 'dGVzdC1pZDp0ZXN0LWtleQ==',
     });
@@ -280,7 +280,7 @@ describe('DispatchStep', () => {
         { type: 'workflow', id: 'workflow-2' },
       ],
     });
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       apiKey: 'dGVzdC1pZDp0ZXN0LWtleQ==',
     });
@@ -318,7 +318,7 @@ describe('DispatchStep', () => {
         })
     );
 
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       apiKey: 'dGVzdC1pZDp0ZXN0LWtleQ==',
     });

@@ -10,11 +10,11 @@ import { savedObjectsClientMock } from '@kbn/core-saved-objects-api-server-mocks
 import type { EncryptedSavedObjectsClient } from '@kbn/encrypted-saved-objects-plugin/server';
 import { spacesMock } from '@kbn/spaces-plugin/server/mocks';
 import { ACTION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
-import { NotificationPolicySavedObjectService } from './notification_policy_saved_object_service';
+import { ActionPolicySavedObjectService } from './action_policy_saved_object_service';
 
 /**
  * Creates a mock Encrypted Saved Objects plugin (getClient) for use in tests that need
- * getDecryptedAsInternalUser (e.g. NotificationPolicyClient.getDecryptedAuth).
+ * getDecryptedAsInternalUser (e.g. ActionPolicyClient.getDecryptedAuth).
  */
 export function createMockEncryptedSavedObjects(
   getDecryptedAttrs?: (id: string) => { apiKey: string; createdByUser: boolean } | null
@@ -48,8 +48,8 @@ const createMockEncryptedSavedObjectsClient = (): jest.Mocked<EncryptedSavedObje
     createPointInTimeFinderDecryptedAsInternalUser: jest.fn(),
   } as unknown as jest.Mocked<EncryptedSavedObjectsClient>);
 
-export function createNotificationPolicySavedObjectService(): {
-  notificationPolicySavedObjectService: NotificationPolicySavedObjectService;
+export function createActionPolicySavedObjectService(): {
+  actionPolicySavedObjectService: ActionPolicySavedObjectService;
   mockSavedObjectsClient: jest.Mocked<SavedObjectsClientContract>;
   mockEncryptedSavedObjectsClient: jest.Mocked<EncryptedSavedObjectsClient>;
   mockFindAllDecrypted: jest.SpyInstance;
@@ -58,18 +58,18 @@ export function createNotificationPolicySavedObjectService(): {
   const mockSpaces = spacesMock.createStart();
   const mockEncryptedSavedObjectsClient = createMockEncryptedSavedObjectsClient();
 
-  const notificationPolicySavedObjectService = new NotificationPolicySavedObjectService(
+  const actionPolicySavedObjectService = new ActionPolicySavedObjectService(
     mockSavedObjectsClient,
     mockSpaces,
     mockEncryptedSavedObjectsClient
   );
 
   const mockFindAllDecrypted = jest
-    .spyOn(notificationPolicySavedObjectService, 'findAllDecrypted')
+    .spyOn(actionPolicySavedObjectService, 'findAllDecrypted')
     .mockResolvedValue([]);
 
   return {
-    notificationPolicySavedObjectService,
+    actionPolicySavedObjectService,
     mockSavedObjectsClient,
     mockEncryptedSavedObjectsClient,
     mockFindAllDecrypted,

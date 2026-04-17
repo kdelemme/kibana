@@ -14,7 +14,7 @@ import type {
   DispatcherStepOutput,
   MatchedPair,
   NotificationGroup,
-  NotificationPolicy,
+  ActionPolicy,
   Rule,
 } from '../types';
 
@@ -74,9 +74,7 @@ export function createRule(overrides: Partial<Rule> = {}): Rule {
   };
 }
 
-export function createNotificationPolicy(
-  overrides: Partial<NotificationPolicy> = {}
-): NotificationPolicy {
+export function createActionPolicy(overrides: Partial<ActionPolicy> = {}): ActionPolicy {
   return {
     id: 'policy-1',
     spaceId: 'default',
@@ -92,7 +90,7 @@ export function createNotificationPolicy(
 export function createMatchedPair(overrides: Partial<MatchedPair> = {}): MatchedPair {
   return {
     episode: createAlertEpisode(),
-    policy: createNotificationPolicy(),
+    policy: createActionPolicy(),
     ...overrides,
   };
 }

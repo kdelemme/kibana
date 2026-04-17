@@ -9,8 +9,8 @@ import type { ServiceIdentifier } from 'inversify';
 
 /**
  * Request-scoped Saved Objects namespace for the current request (from Spaces).
- * Used by NotificationPolicyClient for getDecryptedAuth.
+ * Used by ActionPolicyClient for getDecryptedAuth.
  */
-export const NotificationPolicyNamespaceToken = Symbol.for(
-  'alerting_v2.NotificationPolicyNamespace'
+export const ActionPolicyNamespaceToken = Symbol.for(
+  'alerting_v2.ActionPolicyNamespace'
 ) as ServiceIdentifier<string | undefined>;

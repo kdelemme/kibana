@@ -15,7 +15,7 @@ import {
   createDispatcherPipelineState,
   createAlertEpisode,
   createNotificationGroup,
-  createNotificationPolicy,
+  createActionPolicy,
   createRule,
 } from '../fixtures/test_utils';
 
@@ -242,7 +242,7 @@ describe('StoreActionsStep', () => {
     const state = createDispatcherPipelineState({
       dispatch: [group],
       policies: new Map([
-        ['policy-1', createNotificationPolicy({ id: 'policy-1', throttle: { interval: '1h' } })],
+        ['policy-1', createActionPolicy({ id: 'policy-1', throttle: { interval: '1h' } })],
       ]),
       rules: createRules('rule-1'),
     });
@@ -288,7 +288,7 @@ describe('StoreActionsStep', () => {
       policies: new Map([
         [
           'policy-1',
-          createNotificationPolicy({
+          createActionPolicy({
             id: 'policy-1',
             groupingMode: 'all',
             throttle: { strategy: 'time_interval', interval: '5m' },
@@ -353,7 +353,7 @@ describe('StoreActionsStep', () => {
       policies: new Map([
         [
           'dispatch-policy',
-          createNotificationPolicy({ id: 'dispatch-policy', throttle: { interval: '1h' } }),
+          createActionPolicy({ id: 'dispatch-policy', throttle: { interval: '1h' } }),
         ],
       ]),
       rules: createRules('rule-suppressed', 'rule-throttled', 'rule-dispatch'),

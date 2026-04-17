@@ -17,29 +17,27 @@ import { ACTION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
 import type { AlertingServerStartDependencies } from '../../../types';
 import { EncryptedSavedObjectsClientToken } from '../../dispatcher/steps/dispatch_step_tokens';
 import { spaceIdToNamespace } from '../../space_id_to_namespace';
-import { NotificationPolicySavedObjectsClientToken } from './tokens';
+import { ActionPolicySavedObjectsClientToken } from './tokens';
 import type {
-  NotificationPolicySavedObjectBulkDeleteItem,
-  NotificationPolicySavedObjectBulkGetItem,
-  NotificationPolicySavedObjectBulkUpdateItem,
-  NotificationPolicySavedObjectServiceContract,
+  ActionPolicySavedObjectBulkDeleteItem,
+  ActionPolicySavedObjectBulkGetItem,
+  ActionPolicySavedObjectBulkUpdateItem,
+  ActionPolicySavedObjectServiceContract,
 } from './types';
 
 export type {
-  NotificationPolicySavedObjectBulkDeleteItem,
-  NotificationPolicySavedObjectBulkGetItem,
-  NotificationPolicySavedObjectBulkUpdateItem,
-  NotificationPolicySavedObjectServiceContract,
+  ActionPolicySavedObjectBulkDeleteItem,
+  ActionPolicySavedObjectBulkGetItem,
+  ActionPolicySavedObjectBulkUpdateItem,
+  ActionPolicySavedObjectServiceContract,
 };
 
 const escapeRegex = (str: string): string => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 @injectable()
-export class NotificationPolicySavedObjectService
-  implements NotificationPolicySavedObjectServiceContract
-{
+export class ActionPolicySavedObjectService implements ActionPolicySavedObjectServiceContract {
   constructor(
-    @inject(NotificationPolicySavedObjectsClientToken)
+    @inject(ActionPolicySavedObjectsClientToken)
     private readonly client: SavedObjectsClientContract,
     @inject(PluginStart<AlertingServerStartDependencies['spaces']>('spaces'))
     private readonly spaces: SpacesPluginStart,
@@ -54,12 +52,12 @@ export class NotificationPolicySavedObjectService
     attrs: ActionPolicySavedObjectAttributes;
     id?: string;
   }): Promise<{ id: string; version?: string }> {
-    const notificationPolicyId = id ?? SavedObjectsUtils.generateId();
+    const actionPolicyId = id ?? SavedObjectsUtils.generateId();
     const result = await this.client.create<ActionPolicySavedObjectAttributes>(
       ACTION_POLICY_SAVED_OBJECT_TYPE,
       attrs,
       {
-        id: notificationPolicyId,
+        id: actionPolicyId,
         overwrite: false,
       }
     );
@@ -110,7 +108,7 @@ export class NotificationPolicySavedObjectService
       id: string;
       attrs: Partial<ActionPolicySavedObjectAttributes>;
     }>;
-  }): Promise<NotificationPolicySavedObjectBulkUpdateItem[]> {
+  }): Promise<ActionPolicySavedObjectBulkUpdateItem[]> {
     if (objects.length === 0) {
       return [];
     }
@@ -134,7 +132,7 @@ export class NotificationPolicySavedObjectService
   public async bulkGetByIds(
     ids: string[],
     spaceId?: string
-  ): Promise<NotificationPolicySavedObjectBulkGetItem[]> {
+  ): Promise<ActionPolicySavedObjectBulkGetItem[]> {
     if (ids.length === 0) {
       return [];
     }
@@ -160,7 +158,7 @@ export class NotificationPolicySavedObjectService
 
   public async findAllDecrypted(params?: {
     filter?: { enabled: boolean };
-  }): Promise<NotificationPolicySavedObjectBulkGetItem[]> {
+  }): Promise<ActionPolicySavedObjectBulkGetItem[]> {
     const kqlFilter =
       params?.filter?.enabled !== undefined
         ? `${ACTION_POLICY_SAVED_OBJECT_TYPE}.attributes.enabled: ${params.filter.enabled}`
@@ -176,7 +174,7 @@ export class NotificationPolicySavedObjectService
         }
       );
 
-    const results: NotificationPolicySavedObjectBulkGetItem[] = [];
+    const results: ActionPolicySavedObjectBulkGetItem[] = [];
 
     for await (const response of finder.find()) {
       for (const doc of response.saved_objects) {
@@ -201,7 +199,7 @@ export class NotificationPolicySavedObjectService
     ids,
   }: {
     ids: string[];
-  }): Promise<NotificationPolicySavedObjectBulkDeleteItem[]> {
+  }): Promise<ActionPolicySavedObjectBulkDeleteItem[]> {
     if (ids.length === 0) {
       return [];
     }

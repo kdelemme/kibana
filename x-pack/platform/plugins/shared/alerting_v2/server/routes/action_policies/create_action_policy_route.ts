@@ -14,7 +14,7 @@ import { Request } from '@kbn/core-di-server';
 import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
 import { z } from '@kbn/zod/v4';
 import { inject, injectable } from 'inversify';
-import { NotificationPolicyClient } from '../../lib/notification_policy_client';
+import { ActionPolicyClient } from '../../lib/action_policy_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
@@ -34,7 +34,7 @@ export class CreateActionPolicyRoute extends BaseAlertingRoute {
   static path = `${ALERTING_V2_ACTION_POLICY_API_PATH}/{id?}`;
   static security: RouteSecurity = {
     authz: {
-      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.write],
+      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.actionPolicies.write],
     },
   };
   static routeOptions = {
@@ -67,14 +67,14 @@ export class CreateActionPolicyRoute extends BaseAlertingRoute {
       unknown,
       CreateActionPolicyData
     >,
-    @inject(NotificationPolicyClient)
-    private readonly notificationPolicyClient: NotificationPolicyClient
+    @inject(ActionPolicyClient)
+    private readonly actionPolicyClient: ActionPolicyClient
   ) {
     super(ctx);
   }
 
   protected async execute() {
-    const created = await this.notificationPolicyClient.createNotificationPolicy({
+    const created = await this.actionPolicyClient.createActionPolicy({
       data: this.request.body,
       options: { id: this.request.params.id },
     });

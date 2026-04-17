@@ -11,7 +11,7 @@ import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
 import { buildRouteValidationWithZod } from '@kbn/zod-helpers/v4';
 import { z } from '@kbn/zod/v4';
 import { inject, injectable } from 'inversify';
-import { NotificationPolicyClient } from '../../lib/notification_policy_client';
+import { ActionPolicyClient } from '../../lib/action_policy_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
@@ -53,7 +53,7 @@ export class ListActionPoliciesRoute extends BaseAlertingRoute {
   static path = `${ALERTING_V2_ACTION_POLICY_API_PATH}`;
   static security: RouteSecurity = {
     authz: {
-      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.read],
+      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.actionPolicies.read],
     },
   };
   static routeOptions = {
@@ -85,8 +85,8 @@ export class ListActionPoliciesRoute extends BaseAlertingRoute {
       z.infer<typeof listActionPoliciesQuerySchema>,
       unknown
     >,
-    @inject(NotificationPolicyClient)
-    private readonly notificationPolicyClient: NotificationPolicyClient
+    @inject(ActionPolicyClient)
+    private readonly actionPolicyClient: ActionPolicyClient
   ) {
     super(ctx);
   }
@@ -103,7 +103,7 @@ export class ListActionPoliciesRoute extends BaseAlertingRoute {
       sortField,
       sortOrder,
     } = this.request.query ?? {};
-    const result = await this.notificationPolicyClient.findNotificationPolicies({
+    const result = await this.actionPolicyClient.findActionPolicies({
       page,
       perPage,
       search,

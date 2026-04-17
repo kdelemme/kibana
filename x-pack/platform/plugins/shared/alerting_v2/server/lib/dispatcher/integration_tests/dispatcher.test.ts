@@ -24,8 +24,8 @@ import type {
 import { RULE_SAVED_OBJECT_TYPE, ACTION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
 import type { LoggerServiceContract } from '../../services/logger_service/logger_service';
 import { createLoggerService } from '../../services/logger_service/logger_service.mock';
-import { NotificationPolicySavedObjectService } from '../../services/notification_policy_saved_object_service/notification_policy_saved_object_service';
-import type { NotificationPolicySavedObjectServiceContract } from '../../services/notification_policy_saved_object_service/notification_policy_saved_object_service';
+import { ActionPolicySavedObjectService } from '../../services/action_policy_saved_object_service/action_policy_saved_object_service';
+import type { ActionPolicySavedObjectServiceContract } from '../../services/action_policy_saved_object_service/action_policy_saved_object_service';
 import {
   QueryService,
   type QueryServiceContract,
@@ -471,7 +471,7 @@ describe.skip('DispatcherService integration tests', () => {
   let storageService: StorageServiceContract;
   let mockLoggerService: LoggerServiceContract;
   let rulesSoService: RulesSavedObjectServiceContract;
-  let npSoService: NotificationPolicySavedObjectServiceContract;
+  let npSoService: ActionPolicySavedObjectServiceContract;
   let mockWfm: WorkflowsServerPluginSetup['management'];
 
   beforeAll(async () => {
@@ -486,7 +486,7 @@ describe.skip('DispatcherService integration tests', () => {
       }),
       undefined as unknown as SpacesPluginStart
     );
-    npSoService = new NotificationPolicySavedObjectService(
+    npSoService = new ActionPolicySavedObjectService(
       kibanaServer.coreStart.savedObjects.getUnsafeInternalClient({
         includedHiddenTypes: [ACTION_POLICY_SAVED_OBJECT_TYPE],
       }),
@@ -541,10 +541,10 @@ describe.skip('DispatcherService integration tests', () => {
     ]);
     dispatcherService = new DispatcherService(pipeline);
 
-    await setNotificationPolicyThrottle(npSoService, null);
-    await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, true);
-    await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_MATCHER_ID, false);
-    await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, false);
+    await setActionPolicyThrottle(npSoService, null);
+    await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, true);
+    await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_MATCHER_ID, false);
+    await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, false);
   });
 
   describe('when there are no alert events', () => {
@@ -614,7 +614,7 @@ describe.skip('DispatcherService integration tests', () => {
 
   describe('when the notification policy has a throttle interval', () => {
     it('should persist notified actions for dispatched notification groups', async () => {
-      await setNotificationPolicyThrottle(npSoService, {
+      await setActionPolicyThrottle(npSoService, {
         strategy: 'per_status_interval',
         interval: '1h',
       });
@@ -830,8 +830,8 @@ describe.skip('DispatcherService integration tests', () => {
 
   describe('when the notification policy has a matcher', () => {
     beforeEach(async () => {
-      await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
-      await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_MATCHER_ID, true);
+      await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
+      await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_MATCHER_ID, true);
     });
 
     it('should only dispatch episodes matching the KQL expression', async () => {
@@ -882,13 +882,13 @@ describe.skip('DispatcherService integration tests', () => {
 
   describe('when the notification policy has groupBy fields', () => {
     beforeEach(async () => {
-      await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
-      await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, true);
-      await setNotificationPolicyThrottle(npSoService, null, NOTIFICATION_POLICY_GROUPBY_ID);
+      await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
+      await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, true);
+      await setActionPolicyThrottle(npSoService, null, NOTIFICATION_POLICY_GROUPBY_ID);
     });
 
     it('should group episodes by the specified data fields', async () => {
-      await setNotificationPolicyThrottle(
+      await setActionPolicyThrottle(
         npSoService,
         { strategy: 'time_interval', interval: '1h' },
         NOTIFICATION_POLICY_GROUPBY_ID
@@ -949,7 +949,7 @@ describe.skip('DispatcherService integration tests', () => {
 
   describe('throttle strategies', () => {
     it('per_episode + on_status_change: throttles on second dispatch when status unchanged', async () => {
-      await setNotificationPolicyThrottle(npSoService, { strategy: 'on_status_change' });
+      await setActionPolicyThrottle(npSoService, { strategy: 'on_status_change' });
       await seedAlertEvents(esClient, ALERT_EVENTS_TEST_DATA);
 
       await dispatcherService.run({
@@ -980,7 +980,7 @@ describe.skip('DispatcherService integration tests', () => {
     });
 
     it('per_episode + per_status_interval: throttles within interval when status unchanged', async () => {
-      await setNotificationPolicyThrottle(npSoService, {
+      await setActionPolicyThrottle(npSoService, {
         strategy: 'per_status_interval',
         interval: '1h',
       });
@@ -1027,7 +1027,7 @@ describe.skip('DispatcherService integration tests', () => {
     });
 
     it('per_episode + every_time: dispatches new event even when status unchanged', async () => {
-      await setNotificationPolicyThrottle(npSoService, { strategy: 'every_time' });
+      await setActionPolicyThrottle(npSoService, { strategy: 'every_time' });
       await seedAlertEvents(esClient, ALERT_EVENTS_TEST_DATA);
 
       await dispatcherService.run({
@@ -1075,7 +1075,7 @@ describe.skip('DispatcherService integration tests', () => {
     });
 
     it('all + time_interval: digest mode groups all episodes and throttles on second dispatch', async () => {
-      await updateNotificationPolicy(npSoService, NOTIFICATION_POLICY_ID, {
+      await updateActionPolicy(npSoService, NOTIFICATION_POLICY_ID, {
         groupingMode: 'all',
         throttle: { strategy: 'time_interval', interval: '1h' },
       });
@@ -1123,9 +1123,9 @@ describe.skip('DispatcherService integration tests', () => {
     });
 
     it('per_field + time_interval: throttles groups on second dispatch within interval', async () => {
-      await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
-      await setNotificationPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, true);
-      await setNotificationPolicyThrottle(
+      await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
+      await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, true);
+      await setActionPolicyThrottle(
         npSoService,
         { strategy: 'time_interval', interval: '1h' },
         NOTIFICATION_POLICY_GROUPBY_ID
@@ -1217,7 +1217,7 @@ const TEST_RULE_IDS = [
 
 async function seedRulesAndPolicies(
   rulesSoService: RulesSavedObjectServiceContract,
-  npSoService: NotificationPolicySavedObjectServiceContract
+  npSoService: ActionPolicySavedObjectServiceContract
 ): Promise<void> {
   const policyAttrs: ActionPolicySavedObjectAttributes = {
     name: 'Test Policy',
@@ -1275,8 +1275,8 @@ async function seedRulesAndPolicies(
   );
 }
 
-async function setNotificationPolicyThrottle(
-  npSoService: NotificationPolicySavedObjectServiceContract,
+async function setActionPolicyThrottle(
+  npSoService: ActionPolicySavedObjectServiceContract,
   throttle: ActionPolicySavedObjectAttributes['throttle'],
   policyId: string = NOTIFICATION_POLICY_ID
 ): Promise<void> {
@@ -1289,8 +1289,8 @@ async function setNotificationPolicyThrottle(
   });
 }
 
-async function setNotificationPolicyEnabled(
-  npSoService: NotificationPolicySavedObjectServiceContract,
+async function setActionPolicyEnabled(
+  npSoService: ActionPolicySavedObjectServiceContract,
   policyId: string,
   enabled: boolean
 ): Promise<void> {
@@ -1303,8 +1303,8 @@ async function setNotificationPolicyEnabled(
   });
 }
 
-async function updateNotificationPolicy(
-  npSoService: NotificationPolicySavedObjectServiceContract,
+async function updateActionPolicy(
+  npSoService: ActionPolicySavedObjectServiceContract,
   policyId: string,
   attrs: Partial<ActionPolicySavedObjectAttributes>
 ): Promise<void> {

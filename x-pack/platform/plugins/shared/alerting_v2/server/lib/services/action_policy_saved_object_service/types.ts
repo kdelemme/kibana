@@ -9,7 +9,7 @@ import type { SavedObjectError } from '@kbn/core/types';
 import type { KueryNode } from '@kbn/es-query';
 import type { ActionPolicySavedObjectAttributes } from '../../../saved_objects';
 
-export type NotificationPolicySavedObjectBulkGetItem =
+export type ActionPolicySavedObjectBulkGetItem =
   | {
       id: string;
       attributes: ActionPolicySavedObjectAttributes;
@@ -21,15 +21,15 @@ export type NotificationPolicySavedObjectBulkGetItem =
       error: SavedObjectError;
     };
 
-export type NotificationPolicySavedObjectBulkUpdateItem =
+export type ActionPolicySavedObjectBulkUpdateItem =
   | { id: string; version?: string }
   | { id: string; error: SavedObjectError };
 
-export type NotificationPolicySavedObjectBulkDeleteItem =
+export type ActionPolicySavedObjectBulkDeleteItem =
   | { id: string }
   | { id: string; error: SavedObjectError };
 
-export interface NotificationPolicySavedObjectServiceContract {
+export interface ActionPolicySavedObjectServiceContract {
   create(params: {
     attrs: ActionPolicySavedObjectAttributes;
     id?: string;
@@ -38,10 +38,7 @@ export interface NotificationPolicySavedObjectServiceContract {
     id: string,
     spaceId?: string
   ): Promise<{ id: string; attributes: ActionPolicySavedObjectAttributes; version?: string }>;
-  bulkGetByIds(
-    ids: string[],
-    spaceId?: string
-  ): Promise<NotificationPolicySavedObjectBulkGetItem[]>;
+  bulkGetByIds(ids: string[], spaceId?: string): Promise<ActionPolicySavedObjectBulkGetItem[]>;
   update(params: {
     id: string;
     attrs: Partial<ActionPolicySavedObjectAttributes>;
@@ -52,12 +49,12 @@ export interface NotificationPolicySavedObjectServiceContract {
       id: string;
       attrs: Partial<ActionPolicySavedObjectAttributes>;
     }>;
-  }): Promise<NotificationPolicySavedObjectBulkUpdateItem[]>;
+  }): Promise<ActionPolicySavedObjectBulkUpdateItem[]>;
   findAllDecrypted(params?: {
     filter?: { enabled: boolean };
-  }): Promise<NotificationPolicySavedObjectBulkGetItem[]>;
+  }): Promise<ActionPolicySavedObjectBulkGetItem[]>;
   delete(params: { id: string }): Promise<void>;
-  bulkDelete(params: { ids: string[] }): Promise<NotificationPolicySavedObjectBulkDeleteItem[]>;
+  bulkDelete(params: { ids: string[] }): Promise<ActionPolicySavedObjectBulkDeleteItem[]>;
   find(params: {
     page: number;
     perPage: number;

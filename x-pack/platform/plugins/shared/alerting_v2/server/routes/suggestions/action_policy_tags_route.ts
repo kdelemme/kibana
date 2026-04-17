@@ -10,7 +10,7 @@ import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
 import { buildRouteValidationWithZod } from '@kbn/zod-helpers/v4';
 import { z } from '@kbn/zod/v4';
 import { inject, injectable } from 'inversify';
-import { NotificationPolicyClient } from '../../lib/notification_policy_client';
+import { ActionPolicyClient } from '../../lib/action_policy_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { ALERTING_V2_ACTION_POLICY_API_PATH } from '../constants';
 import { BaseAlertingRoute } from '../base_alerting_route';
@@ -49,15 +49,15 @@ export class ActionPolicyTagsRoute extends BaseAlertingRoute {
       z.infer<typeof actionPolicyTagsQuerySchema>,
       unknown
     >,
-    @inject(NotificationPolicyClient)
-    private readonly notificationPolicyClient: NotificationPolicyClient
+    @inject(ActionPolicyClient)
+    private readonly actionPolicyClient: ActionPolicyClient
   ) {
     super(ctx);
   }
 
   protected async execute() {
     const { search } = this.request.query ?? {};
-    const tags = await this.notificationPolicyClient.getAllTags({ search });
+    const tags = await this.actionPolicyClient.getAllTags({ search });
     return this.ctx.response.ok({ body: tags });
   }
 }

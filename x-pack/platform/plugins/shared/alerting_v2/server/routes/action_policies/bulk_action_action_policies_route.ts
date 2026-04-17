@@ -13,7 +13,7 @@ import {
 import { Request } from '@kbn/core-di-server';
 import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
 import { inject, injectable } from 'inversify';
-import { NotificationPolicyClient } from '../../lib/notification_policy_client';
+import { ActionPolicyClient } from '../../lib/action_policy_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
@@ -26,7 +26,7 @@ export class BulkActionActionPoliciesRoute extends BaseAlertingRoute {
   static path = `${ALERTING_V2_ACTION_POLICY_API_PATH}/_bulk`;
   static security: RouteSecurity = {
     authz: {
-      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.notificationPolicies.write],
+      requiredPrivileges: [ALERTING_V2_API_PRIVILEGES.actionPolicies.write],
     },
   };
   static routeOptions = {
@@ -54,14 +54,14 @@ export class BulkActionActionPoliciesRoute extends BaseAlertingRoute {
     @inject(AlertingRouteContext) ctx: AlertingRouteContext,
     @inject(Request)
     private readonly request: KibanaRequest<unknown, unknown, BulkActionActionPoliciesBody>,
-    @inject(NotificationPolicyClient)
-    private readonly notificationPolicyClient: NotificationPolicyClient
+    @inject(ActionPolicyClient)
+    private readonly actionPolicyClient: ActionPolicyClient
   ) {
     super(ctx);
   }
 
   protected async execute() {
-    const result = await this.notificationPolicyClient.bulkActionNotificationPolicies({
+    const result = await this.actionPolicyClient.bulkActionActionPolicies({
       actions: this.request.body.actions,
     });
 

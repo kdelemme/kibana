@@ -14,18 +14,18 @@ import {
 } from '../../saved_objects';
 import type { ApiKeyServiceContract } from '../services/api_key_service/api_key_service';
 import { createMockApiKeyService } from '../services/api_key_service/api_key_service.mock';
-import type { NotificationPolicySavedObjectService } from '../services/notification_policy_saved_object_service/notification_policy_saved_object_service';
+import type { ActionPolicySavedObjectService } from '../services/action_policy_saved_object_service/action_policy_saved_object_service';
 import {
   createMockEncryptedSavedObjects,
-  createNotificationPolicySavedObjectService,
-} from '../services/notification_policy_saved_object_service/notification_policy_saved_object_service.mock';
+  createActionPolicySavedObjectService,
+} from '../services/action_policy_saved_object_service/action_policy_saved_object_service.mock';
 import type { UserService } from '../services/user_service/user_service';
 import { createUserProfile, createUserService } from '../services/user_service/user_service.mock';
-import { NotificationPolicyClient } from './notification_policy_client';
+import { ActionPolicyClient } from './action_policy_client';
 
-describe('NotificationPolicyClient', () => {
-  let client: NotificationPolicyClient;
-  let notificationPolicySavedObjectService: NotificationPolicySavedObjectService;
+describe('ActionPolicyClient', () => {
+  let client: ActionPolicyClient;
+  let actionPolicySavedObjectService: ActionPolicySavedObjectService;
   let mockSavedObjectsClient: jest.Mocked<SavedObjectsClientContract>;
   let userService: UserService;
   let userProfileService: jest.Mocked<UserProfileServiceStart>;
@@ -40,8 +40,8 @@ describe('NotificationPolicyClient', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    ({ notificationPolicySavedObjectService, mockSavedObjectsClient } =
-      createNotificationPolicySavedObjectService());
+    ({ actionPolicySavedObjectService, mockSavedObjectsClient } =
+      createActionPolicySavedObjectService());
     ({ userService, userProfileService } = createUserService());
     apiKeyService = createMockApiKeyService();
     mockEncryptedSavedObjects = createMockEncryptedSavedObjects((id) => {
@@ -54,8 +54,8 @@ describe('NotificationPolicyClient', () => {
     });
     mockEsoClient = mockEncryptedSavedObjects.getClient();
 
-    client = new NotificationPolicyClient(
-      notificationPolicySavedObjectService,
+    client = new ActionPolicyClient(
+      actionPolicySavedObjectService,
       userService,
       apiKeyService,
       mockEsoClient as any,
@@ -85,8 +85,8 @@ describe('NotificationPolicyClient', () => {
     jest.useRealTimers();
   });
 
-  describe('createNotificationPolicy', () => {
-    it('creates a notification policy with correct attributes including API key', async () => {
+  describe('createActionPolicy', () => {
+    it('creates a action policy with correct attributes including API key', async () => {
       mockSavedObjectsClient.create.mockResolvedValueOnce({
         id: 'policy-id-1',
         type: ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -95,7 +95,7 @@ describe('NotificationPolicyClient', () => {
         version: 'WzEsMV0=',
       });
 
-      const res = await client.createNotificationPolicy({
+      const res = await client.createActionPolicy({
         data: {
           name: 'my-policy',
           description: 'my-policy description',
@@ -104,7 +104,7 @@ describe('NotificationPolicyClient', () => {
         options: { id: 'policy-id-1' },
       });
 
-      expect(apiKeyService.create).toHaveBeenCalledWith('Notification Policy: my-policy');
+      expect(apiKeyService.create).toHaveBeenCalledWith('Action Policy: my-policy');
 
       expect(mockSavedObjectsClient.create).toHaveBeenCalledWith(
         ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -157,7 +157,7 @@ describe('NotificationPolicyClient', () => {
       expect(res.auth).not.toHaveProperty('apiKey');
     });
 
-    it('creates a notification policy without custom id', async () => {
+    it('creates a action policy without custom id', async () => {
       mockSavedObjectsClient.create.mockImplementationOnce(async (_type, _attrs, options) => {
         return {
           id: (options?.id ?? 'auto-generated-id') as string,
@@ -168,7 +168,7 @@ describe('NotificationPolicyClient', () => {
         };
       });
 
-      const res = await client.createNotificationPolicy({
+      const res = await client.createActionPolicy({
         data: {
           name: 'my-policy',
           description: 'my-policy description',
@@ -208,7 +208,7 @@ describe('NotificationPolicyClient', () => {
       expect(res.auth).not.toHaveProperty('apiKey');
     });
 
-    it('creates a notification policy with tags', async () => {
+    it('creates a action policy with tags', async () => {
       mockSavedObjectsClient.create.mockResolvedValueOnce({
         id: 'policy-with-tags',
         type: ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -217,7 +217,7 @@ describe('NotificationPolicyClient', () => {
         version: 'WzEsMV0=',
       });
 
-      await client.createNotificationPolicy({
+      await client.createActionPolicy({
         data: {
           name: 'tagged-policy',
           description: 'policy with tags',
@@ -245,7 +245,7 @@ describe('NotificationPolicyClient', () => {
         version: 'WzEsMV0=',
       });
 
-      await client.createNotificationPolicy({
+      await client.createActionPolicy({
         data: {
           name: 'no-tags-policy',
           description: 'policy without tags',
@@ -265,7 +265,7 @@ describe('NotificationPolicyClient', () => {
 
     it('throws 400 when data is invalid', async () => {
       await expect(
-        client.createNotificationPolicy({
+        client.createActionPolicy({
           data: {
             name: 'my-policy',
             description: 'my-policy description',
@@ -288,7 +288,7 @@ describe('NotificationPolicyClient', () => {
       );
 
       await expect(
-        client.createNotificationPolicy({
+        client.createActionPolicy({
           data: {
             name: 'my-policy',
             description: 'my-policy description',
@@ -307,7 +307,7 @@ describe('NotificationPolicyClient', () => {
       mockSavedObjectsClient.create.mockRejectedValueOnce(new Error('storage error'));
 
       await expect(
-        client.createNotificationPolicy({
+        client.createActionPolicy({
           data: {
             name: 'my-policy',
             description: 'my-policy description',
@@ -321,8 +321,8 @@ describe('NotificationPolicyClient', () => {
     });
   });
 
-  describe('getNotificationPolicy', () => {
-    it('returns a notification policy by id with auth.apiKey stripped', async () => {
+  describe('getActionPolicy', () => {
+    it('returns a action policy by id with auth.apiKey stripped', async () => {
       const existingAttributes: ActionPolicySavedObjectAttributes = {
         name: 'test-policy',
         description: 'test-policy description',
@@ -348,7 +348,7 @@ describe('NotificationPolicyClient', () => {
         version: 'WzEsMV0=',
       });
 
-      const res = await client.getNotificationPolicy({ id: 'policy-id-get-1' });
+      const res = await client.getActionPolicy({ id: 'policy-id-get-1' });
 
       expect(mockSavedObjectsClient.get).toHaveBeenCalledWith(
         ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -365,7 +365,7 @@ describe('NotificationPolicyClient', () => {
       expect(res.auth).not.toHaveProperty('apiKey');
     });
 
-    it('throws 404 when notification policy is not found', async () => {
+    it('throws 404 when action policy is not found', async () => {
       mockSavedObjectsClient.get.mockRejectedValueOnce(
         SavedObjectsErrorHelpers.createGenericNotFoundError(
           ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -373,15 +373,13 @@ describe('NotificationPolicyClient', () => {
         )
       );
 
-      await expect(client.getNotificationPolicy({ id: 'policy-id-get-404' })).rejects.toMatchObject(
-        {
-          output: { statusCode: 404 },
-        }
-      );
+      await expect(client.getActionPolicy({ id: 'policy-id-get-404' })).rejects.toMatchObject({
+        output: { statusCode: 404 },
+      });
     });
   });
 
-  describe('getNotificationPolicies', () => {
+  describe('getActionPolicies', () => {
     it('returns notification policies for multiple ids in input order', async () => {
       const firstAttributes: ActionPolicySavedObjectAttributes = {
         name: 'policy-two',
@@ -436,7 +434,7 @@ describe('NotificationPolicyClient', () => {
         ],
       });
 
-      const res = await client.getNotificationPolicies({
+      const res = await client.getActionPolicies({
         ids: ['policy-id-get-2', 'policy-id-get-1'],
       });
 
@@ -452,7 +450,7 @@ describe('NotificationPolicyClient', () => {
     });
 
     it('returns an empty array when ids are empty', async () => {
-      const res = await client.getNotificationPolicies({ ids: [] });
+      const res = await client.getActionPolicies({ ids: [] });
 
       expect(res).toEqual([]);
     });
@@ -509,7 +507,7 @@ describe('NotificationPolicyClient', () => {
             error: {
               statusCode: 404,
               error: 'Not Found',
-              message: 'Saved object [notification_policy/policy-id-get-missing] not found',
+              message: 'Saved object [action_policy/policy-id-get-missing] not found',
             },
           },
           {
@@ -522,7 +520,7 @@ describe('NotificationPolicyClient', () => {
         ],
       });
 
-      const res = await client.getNotificationPolicies({
+      const res = await client.getActionPolicies({
         ids: ['policy-id-get-found-1', 'policy-id-get-missing', 'policy-id-get-found-3'],
       });
 
@@ -578,7 +576,7 @@ describe('NotificationPolicyClient', () => {
         ],
       });
 
-      const res = await client.getNotificationPolicies({
+      const res = await client.getActionPolicies({
         ids: ['policy-id-valid', 'policy-id-error-500'],
       });
 
@@ -591,7 +589,7 @@ describe('NotificationPolicyClient', () => {
     });
   });
 
-  describe('findNotificationPolicies', () => {
+  describe('findActionPolicies', () => {
     const makeFindResponse = (
       items: Array<{
         id: string;
@@ -637,7 +635,7 @@ describe('NotificationPolicyClient', () => {
         makeFindResponse([{ id: 'policy-find-1', attributes: policyAttributes }])
       );
 
-      const res = await client.findNotificationPolicies();
+      const res = await client.findActionPolicies();
 
       expect(res.items).toHaveLength(1);
       expect(res.items[0].matcher).toBeNull();
@@ -653,7 +651,7 @@ describe('NotificationPolicyClient', () => {
     it('uses default pagination when no params provided', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindResponse([]));
 
-      const res = await client.findNotificationPolicies();
+      const res = await client.findActionPolicies();
 
       expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -671,7 +669,7 @@ describe('NotificationPolicyClient', () => {
     it('passes custom pagination params', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindResponse([]));
 
-      await client.findNotificationPolicies({ page: 3, perPage: 5 });
+      await client.findActionPolicies({ page: 3, perPage: 5 });
 
       expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -684,7 +682,7 @@ describe('NotificationPolicyClient', () => {
     it('forwards search parameter with search fields', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindResponse([]));
 
-      await client.findNotificationPolicies({ search: 'my-search' });
+      await client.findActionPolicies({ search: 'my-search' });
 
       expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -697,7 +695,7 @@ describe('NotificationPolicyClient', () => {
     it('builds KQL filter for destinationType', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindResponse([]));
 
-      await client.findNotificationPolicies({ destinationType: 'workflow' });
+      await client.findActionPolicies({ destinationType: 'workflow' });
 
       expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -709,7 +707,7 @@ describe('NotificationPolicyClient', () => {
     it('builds KQL filter for createdBy', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindResponse([]));
 
-      await client.findNotificationPolicies({ createdBy: 'user-123' });
+      await client.findActionPolicies({ createdBy: 'user-123' });
 
       expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -721,7 +719,7 @@ describe('NotificationPolicyClient', () => {
     it('builds KQL filter for enabled=true', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindResponse([]));
 
-      await client.findNotificationPolicies({ enabled: true });
+      await client.findActionPolicies({ enabled: true });
 
       expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -733,7 +731,7 @@ describe('NotificationPolicyClient', () => {
     it('builds KQL filter for tags', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindResponse([]));
 
-      await client.findNotificationPolicies({ tags: ['production', 'critical'] });
+      await client.findActionPolicies({ tags: ['production', 'critical'] });
 
       expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -745,7 +743,7 @@ describe('NotificationPolicyClient', () => {
     it('builds KQL filter for a single tag', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindResponse([]));
 
-      await client.findNotificationPolicies({ tags: ['production'] });
+      await client.findActionPolicies({ tags: ['production'] });
 
       expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -757,7 +755,7 @@ describe('NotificationPolicyClient', () => {
     it('does not build a filter for empty tags array', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindResponse([]));
 
-      await client.findNotificationPolicies({ tags: [] });
+      await client.findActionPolicies({ tags: [] });
 
       expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -769,7 +767,7 @@ describe('NotificationPolicyClient', () => {
     it('builds KQL filter for enabled=false', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindResponse([]));
 
-      await client.findNotificationPolicies({ enabled: false });
+      await client.findActionPolicies({ enabled: false });
 
       expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -781,7 +779,7 @@ describe('NotificationPolicyClient', () => {
     it('maps sort field name to name.keyword', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindResponse([]));
 
-      await client.findNotificationPolicies({ sortField: 'name', sortOrder: 'asc' });
+      await client.findActionPolicies({ sortField: 'name', sortOrder: 'asc' });
 
       expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -794,7 +792,7 @@ describe('NotificationPolicyClient', () => {
     it('maps sort field createdAt without transformation', async () => {
       mockSavedObjectsClient.find.mockResolvedValueOnce(makeFindResponse([]));
 
-      await client.findNotificationPolicies({ sortField: 'createdAt', sortOrder: 'desc' });
+      await client.findActionPolicies({ sortField: 'createdAt', sortOrder: 'desc' });
 
       expect(mockSavedObjectsClient.find).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -825,7 +823,7 @@ describe('NotificationPolicyClient', () => {
         )
       );
 
-      const res = await client.findNotificationPolicies();
+      const res = await client.findActionPolicies();
 
       expect(res.items).toHaveLength(2);
       expect(res.total).toBe(2);
@@ -846,7 +844,7 @@ describe('NotificationPolicyClient', () => {
     });
   });
 
-  describe('updateNotificationPolicy', () => {
+  describe('updateActionPolicy', () => {
     it('clears nullable fields with null values', async () => {
       const existingAttributes: ActionPolicySavedObjectAttributes = {
         name: 'original-policy',
@@ -883,7 +881,7 @@ describe('NotificationPolicyClient', () => {
         version: 'WzIsMV0=',
       });
 
-      const res = await client.updateNotificationPolicy({
+      const res = await client.updateActionPolicy({
         data: {
           matcher: null,
           groupBy: null,
@@ -893,7 +891,7 @@ describe('NotificationPolicyClient', () => {
         options: { id: 'policy-id-update-1', version: 'WzEsMV0=' },
       });
 
-      expect(apiKeyService.create).toHaveBeenCalledWith('Notification Policy: original-policy');
+      expect(apiKeyService.create).toHaveBeenCalledWith('Action Policy: original-policy');
       expect(mockSavedObjectsClient.update).toHaveBeenCalledWith(
         ACTION_POLICY_SAVED_OBJECT_TYPE,
         'policy-id-update-1',
@@ -915,7 +913,7 @@ describe('NotificationPolicyClient', () => {
       expect(res.snoozedUntil).toBeNull();
     });
 
-    it('updates a notification policy and rotates the API key', async () => {
+    it('updates a action policy and rotates the API key', async () => {
       const existingAttributes: ActionPolicySavedObjectAttributes = {
         name: 'original-policy',
         description: 'original-policy description',
@@ -948,7 +946,7 @@ describe('NotificationPolicyClient', () => {
         version: 'WzIsMV0=',
       });
 
-      const res = await client.updateNotificationPolicy({
+      const res = await client.updateActionPolicy({
         data: {
           name: 'updated-policy',
           destinations: [{ type: 'workflow', id: 'updated-workflow' }],
@@ -956,7 +954,7 @@ describe('NotificationPolicyClient', () => {
         options: { id: 'policy-id-update-1', version: 'WzEsMV0=' },
       });
 
-      expect(apiKeyService.create).toHaveBeenCalledWith('Notification Policy: updated-policy');
+      expect(apiKeyService.create).toHaveBeenCalledWith('Action Policy: updated-policy');
 
       expect(mockSavedObjectsClient.update).toHaveBeenCalledWith(
         ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -1036,7 +1034,7 @@ describe('NotificationPolicyClient', () => {
         version: 'WzIsMV0=',
       });
 
-      await client.updateNotificationPolicy({
+      await client.updateActionPolicy({
         data: { name: 'renamed-policy' },
         options: { id: 'policy-id-update-1', version: 'WzEsMV0=' },
       });
@@ -1085,7 +1083,7 @@ describe('NotificationPolicyClient', () => {
         version: 'WzIsMV0=',
       });
 
-      await client.updateNotificationPolicy({
+      await client.updateActionPolicy({
         data: { tags: ['staging', 'low-priority'] },
         options: { id: 'policy-id-update-1', version: 'WzEsMV0=' },
       });
@@ -1142,7 +1140,7 @@ describe('NotificationPolicyClient', () => {
         references: [],
       });
 
-      await client.updateNotificationPolicy({
+      await client.updateActionPolicy({
         data: {
           name: 'updated-policy',
           destinations: [{ type: 'workflow', id: 'updated-workflow' }],
@@ -1190,7 +1188,7 @@ describe('NotificationPolicyClient', () => {
       });
 
       await expect(
-        client.updateNotificationPolicy({
+        client.updateActionPolicy({
           data: {
             name: 'updated-policy',
             destinations: [{ type: 'workflow', id: 'updated-workflow' }],
@@ -1243,7 +1241,7 @@ describe('NotificationPolicyClient', () => {
         references: [],
       });
 
-      await client.updateNotificationPolicy({
+      await client.updateActionPolicy({
         data: {
           name: 'updated-policy',
           destinations: [{ type: 'workflow', id: 'updated-workflow' }],
@@ -1256,7 +1254,7 @@ describe('NotificationPolicyClient', () => {
 
     it('throws 400 when data is invalid', async () => {
       await expect(
-        client.updateNotificationPolicy({
+        client.updateActionPolicy({
           data: { destinations: [] },
           options: { id: 'policy-id-update-invalid', version: 'WzEsMV0=' },
         })
@@ -1268,7 +1266,7 @@ describe('NotificationPolicyClient', () => {
       expect(mockSavedObjectsClient.update).not.toHaveBeenCalled();
     });
 
-    it('throws 404 when notification policy is not found', async () => {
+    it('throws 404 when action policy is not found', async () => {
       mockSavedObjectsClient.get.mockRejectedValueOnce(
         SavedObjectsErrorHelpers.createGenericNotFoundError(
           ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -1277,7 +1275,7 @@ describe('NotificationPolicyClient', () => {
       );
 
       await expect(
-        client.updateNotificationPolicy({
+        client.updateActionPolicy({
           data: { destinations: [{ type: 'workflow', id: 'some-workflow' }] },
           options: { id: 'policy-id-update-404', version: 'WzEsMV0=' },
         })
@@ -1320,7 +1318,7 @@ describe('NotificationPolicyClient', () => {
       );
 
       await expect(
-        client.updateNotificationPolicy({
+        client.updateActionPolicy({
           data: { destinations: [{ type: 'workflow', id: 'new-workflow' }] },
           options: { id: 'policy-id-conflict', version: 'WzEsMV0=' },
         })
@@ -1332,7 +1330,7 @@ describe('NotificationPolicyClient', () => {
     });
   });
 
-  describe('updateNotificationPolicyApiKey', () => {
+  describe('updateActionPolicyApiKey', () => {
     const existingAttributes: ActionPolicySavedObjectAttributes = {
       name: 'existing-policy',
       description: 'existing-policy description',
@@ -1360,9 +1358,9 @@ describe('NotificationPolicyClient', () => {
         attributes: existingAttributes,
       });
 
-      await client.updateNotificationPolicyApiKey({ id: 'policy-id-update-key-1' });
+      await client.updateActionPolicyApiKey({ id: 'policy-id-update-key-1' });
 
-      expect(apiKeyService.create).toHaveBeenCalledWith('Notification Policy: existing-policy');
+      expect(apiKeyService.create).toHaveBeenCalledWith('Action Policy: existing-policy');
 
       expect(mockSavedObjectsClient.update).toHaveBeenCalledWith(
         ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -1406,13 +1404,13 @@ describe('NotificationPolicyClient', () => {
         },
       });
 
-      await client.updateNotificationPolicyApiKey({ id: 'policy-id-update-key-user' });
+      await client.updateActionPolicyApiKey({ id: 'policy-id-update-key-user' });
 
       expect(apiKeyService.create).toHaveBeenCalled();
       expect(apiKeyService.markApiKeysForInvalidation).not.toHaveBeenCalled();
     });
 
-    it('throws 404 when notification policy is not found', async () => {
+    it('throws 404 when action policy is not found', async () => {
       mockSavedObjectsClient.get.mockRejectedValueOnce(
         SavedObjectsErrorHelpers.createGenericNotFoundError(
           ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -1421,7 +1419,7 @@ describe('NotificationPolicyClient', () => {
       );
 
       await expect(
-        client.updateNotificationPolicyApiKey({ id: 'policy-id-not-found' })
+        client.updateActionPolicyApiKey({ id: 'policy-id-not-found' })
       ).rejects.toMatchObject({
         output: { statusCode: 404 },
       });
@@ -1440,7 +1438,7 @@ describe('NotificationPolicyClient', () => {
       mockSavedObjectsClient.update.mockRejectedValueOnce(new Error('storage error'));
 
       await expect(
-        client.updateNotificationPolicyApiKey({ id: 'policy-id-update-key-1' })
+        client.updateActionPolicyApiKey({ id: 'policy-id-update-key-1' })
       ).rejects.toThrow('storage error');
 
       expect(apiKeyService.markApiKeysForInvalidation).toHaveBeenCalledWith(['encoded-es-api-key']);
@@ -1462,7 +1460,7 @@ describe('NotificationPolicyClient', () => {
       );
 
       await expect(
-        client.updateNotificationPolicyApiKey({ id: 'policy-id-update-key-1' })
+        client.updateActionPolicyApiKey({ id: 'policy-id-update-key-1' })
       ).rejects.toMatchObject({
         output: { statusCode: 409 },
       });
@@ -1471,7 +1469,7 @@ describe('NotificationPolicyClient', () => {
     });
   });
 
-  describe('enableNotificationPolicy', () => {
+  describe('enableActionPolicy', () => {
     const updatedAttributes: ActionPolicySavedObjectAttributes = {
       name: 'snoozed-policy',
       description: 'snoozed-policy description',
@@ -1506,7 +1504,7 @@ describe('NotificationPolicyClient', () => {
         version: 'WzIsMV0=',
       });
 
-      const res = await client.enableNotificationPolicy({ id: 'policy-id-enable' });
+      const res = await client.enableActionPolicy({ id: 'policy-id-enable' });
 
       expect(mockSavedObjectsClient.update).toHaveBeenCalledWith(
         ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -1538,11 +1536,11 @@ describe('NotificationPolicyClient', () => {
         )
       );
 
-      await expect(
-        client.enableNotificationPolicy({ id: 'policy-id-enable-404' })
-      ).rejects.toMatchObject({
-        output: { statusCode: 404 },
-      });
+      await expect(client.enableActionPolicy({ id: 'policy-id-enable-404' })).rejects.toMatchObject(
+        {
+          output: { statusCode: 404 },
+        }
+      );
     });
 
     it('throws 404 when update rejects with NotFoundError', async () => {
@@ -1554,7 +1552,7 @@ describe('NotificationPolicyClient', () => {
       );
 
       await expect(
-        client.enableNotificationPolicy({ id: 'policy-id-enable-update-404' })
+        client.enableActionPolicy({ id: 'policy-id-enable-update-404' })
       ).rejects.toMatchObject({
         output: { statusCode: 404 },
       });
@@ -1569,14 +1567,14 @@ describe('NotificationPolicyClient', () => {
       );
 
       await expect(
-        client.enableNotificationPolicy({ id: 'policy-id-enable-conflict' })
+        client.enableActionPolicy({ id: 'policy-id-enable-conflict' })
       ).rejects.toMatchObject({
         output: { statusCode: 409 },
       });
     });
   });
 
-  describe('disableNotificationPolicy', () => {
+  describe('disableActionPolicy', () => {
     it('does a partial update with enabled=false', async () => {
       const updatedAttributes: ActionPolicySavedObjectAttributes = {
         name: 'active-policy',
@@ -1610,7 +1608,7 @@ describe('NotificationPolicyClient', () => {
         version: 'WzIsMV0=',
       });
 
-      const res = await client.disableNotificationPolicy({ id: 'policy-id-disable' });
+      const res = await client.disableActionPolicy({ id: 'policy-id-disable' });
 
       expect(mockSavedObjectsClient.update).toHaveBeenCalledWith(
         ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -1637,14 +1635,14 @@ describe('NotificationPolicyClient', () => {
       );
 
       await expect(
-        client.disableNotificationPolicy({ id: 'policy-id-disable-404' })
+        client.disableActionPolicy({ id: 'policy-id-disable-404' })
       ).rejects.toMatchObject({
         output: { statusCode: 404 },
       });
     });
   });
 
-  describe('snoozeNotificationPolicy', () => {
+  describe('snoozeActionPolicy', () => {
     it('does a partial update with snoozedUntil', async () => {
       const updatedAttributes: ActionPolicySavedObjectAttributes = {
         name: 'active-policy',
@@ -1679,7 +1677,7 @@ describe('NotificationPolicyClient', () => {
         version: 'WzIsMV0=',
       });
 
-      const res = await client.snoozeNotificationPolicy({
+      const res = await client.snoozeActionPolicy({
         id: 'policy-id-snooze',
         snoozedUntil: '2025-06-01T12:00:00.000Z',
       });
@@ -1701,7 +1699,7 @@ describe('NotificationPolicyClient', () => {
 
     it('throws 400 when snoozedUntil is not a valid ISO datetime', async () => {
       await expect(
-        client.snoozeNotificationPolicy({
+        client.snoozeActionPolicy({
           id: 'policy-id-snooze',
           snoozedUntil: 'not-a-date',
         })
@@ -1721,7 +1719,7 @@ describe('NotificationPolicyClient', () => {
       );
 
       await expect(
-        client.snoozeNotificationPolicy({
+        client.snoozeActionPolicy({
           id: 'policy-id-snooze-404',
           snoozedUntil: '2025-06-01T12:00:00.000Z',
         })
@@ -1731,7 +1729,7 @@ describe('NotificationPolicyClient', () => {
     });
   });
 
-  describe('unsnoozeNotificationPolicy', () => {
+  describe('unsnoozeActionPolicy', () => {
     it('throws 404 when update rejects with NotFoundError', async () => {
       mockSavedObjectsClient.update.mockRejectedValueOnce(
         SavedObjectsErrorHelpers.createGenericNotFoundError(
@@ -1741,14 +1739,14 @@ describe('NotificationPolicyClient', () => {
       );
 
       await expect(
-        client.unsnoozeNotificationPolicy({ id: 'policy-id-unsnooze-404' })
+        client.unsnoozeActionPolicy({ id: 'policy-id-unsnooze-404' })
       ).rejects.toMatchObject({
         output: { statusCode: 404 },
       });
     });
   });
 
-  describe('bulkActionNotificationPolicies', () => {
+  describe('bulkActionActionPolicies', () => {
     it('issues a single bulkUpdate with partial attrs for mixed actions', async () => {
       mockSavedObjectsClient.bulkUpdate.mockResolvedValueOnce({
         saved_objects: [
@@ -1783,7 +1781,7 @@ describe('NotificationPolicyClient', () => {
         ],
       });
 
-      const res = await client.bulkActionNotificationPolicies({
+      const res = await client.bulkActionActionPolicies({
         actions: [
           { id: 'policy-1', action: 'enable' },
           { id: 'policy-2', action: 'disable' },
@@ -1853,13 +1851,13 @@ describe('NotificationPolicyClient', () => {
             error: {
               statusCode: 404,
               error: 'Not Found',
-              message: 'Saved object [notification_policy/missing-policy] not found',
+              message: 'Saved object [action_policy/missing-policy] not found',
             },
           },
         ],
       });
 
-      const res = await client.bulkActionNotificationPolicies({
+      const res = await client.bulkActionActionPolicies({
         actions: [{ id: 'missing-policy', action: 'enable' }],
       });
 
@@ -1891,7 +1889,7 @@ describe('NotificationPolicyClient', () => {
         ],
       });
 
-      const res = await client.bulkActionNotificationPolicies({
+      const res = await client.bulkActionActionPolicies({
         actions: [
           { id: 'policy-1', action: 'enable' },
           { id: 'policy-2', action: 'delete' },
@@ -1930,7 +1928,7 @@ describe('NotificationPolicyClient', () => {
         ],
       });
 
-      const res = await client.bulkActionNotificationPolicies({
+      const res = await client.bulkActionActionPolicies({
         actions: [{ id: 'policy-1', action: 'delete' }],
       });
 
@@ -1971,7 +1969,7 @@ describe('NotificationPolicyClient', () => {
         ],
       });
 
-      const res = await client.bulkActionNotificationPolicies({
+      const res = await client.bulkActionActionPolicies({
         actions: [
           { id: 'policy-1', action: 'enable' },
           { id: 'policy-2', action: 'delete' },
@@ -2019,7 +2017,7 @@ describe('NotificationPolicyClient', () => {
         ],
       });
 
-      const res = await client.bulkActionNotificationPolicies({
+      const res = await client.bulkActionActionPolicies({
         actions: [
           { id: 'policy-del-1', action: 'delete' },
           { id: 'policy-del-2', action: 'delete' },
@@ -2057,7 +2055,7 @@ describe('NotificationPolicyClient', () => {
         statuses: [{ id: 'policy-del-user', type: ACTION_POLICY_SAVED_OBJECT_TYPE, success: true }],
       });
 
-      const res = await client.bulkActionNotificationPolicies({
+      const res = await client.bulkActionActionPolicies({
         actions: [{ id: 'policy-del-user', action: 'delete' }],
       });
 
@@ -2074,7 +2072,7 @@ describe('NotificationPolicyClient', () => {
         statuses: [{ id: 'policy-del-err', type: ACTION_POLICY_SAVED_OBJECT_TYPE, success: true }],
       });
 
-      const res = await client.bulkActionNotificationPolicies({
+      const res = await client.bulkActionActionPolicies({
         actions: [{ id: 'policy-del-err', action: 'delete' }],
       });
 
@@ -2147,8 +2145,8 @@ describe('NotificationPolicyClient', () => {
     });
   });
 
-  describe('deleteNotificationPolicy', () => {
-    it('deletes a notification policy successfully', async () => {
+  describe('deleteActionPolicy', () => {
+    it('deletes a action policy successfully', async () => {
       const existingAttributes: ActionPolicySavedObjectAttributes = {
         name: 'policy-to-delete',
         description: 'policy-to-delete description',
@@ -2174,7 +2172,7 @@ describe('NotificationPolicyClient', () => {
         attributes: existingAttributes,
       });
 
-      await client.deleteNotificationPolicy({ id: 'policy-id-del-1' });
+      await client.deleteActionPolicy({ id: 'policy-id-del-1' });
 
       expect(mockSavedObjectsClient.delete).toHaveBeenCalledWith(
         ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -2183,7 +2181,7 @@ describe('NotificationPolicyClient', () => {
       expect(apiKeyService.markApiKeysForInvalidation).toHaveBeenCalledWith(['some-key']);
     });
 
-    it('throws 404 when notification policy is not found', async () => {
+    it('throws 404 when action policy is not found', async () => {
       mockSavedObjectsClient.get.mockRejectedValueOnce(
         SavedObjectsErrorHelpers.createGenericNotFoundError(
           ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -2191,9 +2189,7 @@ describe('NotificationPolicyClient', () => {
         )
       );
 
-      await expect(
-        client.deleteNotificationPolicy({ id: 'policy-id-del-404' })
-      ).rejects.toMatchObject({
+      await expect(client.deleteActionPolicy({ id: 'policy-id-del-404' })).rejects.toMatchObject({
         output: { statusCode: 404 },
       });
 
@@ -2229,7 +2225,7 @@ describe('NotificationPolicyClient', () => {
         },
       });
 
-      await client.deleteNotificationPolicy({ id: 'policy-id-del-user' });
+      await client.deleteActionPolicy({ id: 'policy-id-del-user' });
 
       expect(mockSavedObjectsClient.delete).toHaveBeenCalledWith(
         ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -2267,7 +2263,7 @@ describe('NotificationPolicyClient', () => {
         references: [],
       });
 
-      await client.deleteNotificationPolicy({ id: 'policy-id-del-no-key' });
+      await client.deleteActionPolicy({ id: 'policy-id-del-no-key' });
 
       expect(mockSavedObjectsClient.delete).toHaveBeenCalledWith(
         ACTION_POLICY_SAVED_OBJECT_TYPE,

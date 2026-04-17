@@ -10,7 +10,7 @@ import {
   createAlertEpisode,
   createDispatcherPipelineState,
   createMatchedPair,
-  createNotificationPolicy,
+  createActionPolicy,
 } from '../fixtures/test_utils';
 
 describe('BuildGroupsStep', () => {
@@ -21,7 +21,7 @@ describe('BuildGroupsStep', () => {
       matched: [
         createMatchedPair({
           episode: createAlertEpisode({ rule_id: 'r1', group_hash: 'h1', episode_id: 'e1' }),
-          policy: createNotificationPolicy({
+          policy: createActionPolicy({
             id: 'p1',
             destinations: [{ type: 'workflow', id: 'w1' }],
           }),
@@ -51,7 +51,7 @@ describe('BuildGroupsStep', () => {
 
 describe('buildNotificationGroups', () => {
   it('creates separate groups for different episodes with no groupBy', () => {
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       destinations: [{ type: 'workflow', id: 'w1' }],
     });
@@ -72,7 +72,7 @@ describe('buildNotificationGroups', () => {
   });
 
   it('groups episodes from same rule+policy+groupKey into same group', () => {
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       destinations: [{ type: 'workflow', id: 'w1' }],
     });
@@ -89,7 +89,7 @@ describe('buildNotificationGroups', () => {
   });
 
   it('assigns deterministic group IDs', () => {
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       destinations: [{ type: 'workflow', id: 'w1' }],
     });
@@ -102,7 +102,7 @@ describe('buildNotificationGroups', () => {
   });
 
   it('groups episodes by a single data field', () => {
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       groupBy: ['data.host.name'],
       groupingMode: 'per_field' as const,
@@ -135,7 +135,7 @@ describe('buildNotificationGroups', () => {
   });
 
   it('creates separate groups for different field values', () => {
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       groupBy: ['data.host.name'],
       groupingMode: 'per_field' as const,
@@ -168,7 +168,7 @@ describe('buildNotificationGroups', () => {
   });
 
   it('groups episodes by multiple data fields', () => {
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       groupBy: ['data.host.name', 'data.env'],
       groupingMode: 'per_field' as const,
@@ -211,7 +211,7 @@ describe('buildNotificationGroups', () => {
   });
 
   it('defaults missing data fields to null', () => {
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       groupBy: ['data.host.name', 'data.env'],
       groupingMode: 'per_field' as const,
@@ -246,7 +246,7 @@ describe('buildNotificationGroups', () => {
   });
 
   it('creates one group per rule for all mode', () => {
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       groupingMode: 'all',
       destinations: [{ type: 'workflow', id: 'w1' }],
@@ -270,7 +270,7 @@ describe('buildNotificationGroups', () => {
   });
 
   it('merges episodes from different rules into one group in all mode', () => {
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       groupingMode: 'all',
       destinations: [{ type: 'workflow', id: 'w1' }],
@@ -295,7 +295,7 @@ describe('buildNotificationGroups', () => {
   });
 
   it('creates one group per episode for explicit per_episode mode', () => {
-    const policy = createNotificationPolicy({
+    const policy = createActionPolicy({
       id: 'p1',
       groupingMode: 'per_episode',
       destinations: [{ type: 'workflow', id: 'w1' }],

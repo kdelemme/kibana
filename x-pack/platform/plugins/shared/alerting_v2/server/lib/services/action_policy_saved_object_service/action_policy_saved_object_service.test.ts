@@ -9,12 +9,12 @@ import type { SavedObjectsClientContract } from '@kbn/core/server';
 import type { EncryptedSavedObjectsClient } from '@kbn/encrypted-saved-objects-plugin/server';
 import type { ActionPolicySavedObjectAttributes } from '../../../saved_objects';
 import { ACTION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
-import type { NotificationPolicySavedObjectService } from './notification_policy_saved_object_service';
-import { createNotificationPolicySavedObjectService } from './notification_policy_saved_object_service.mock';
+import type { ActionPolicySavedObjectService } from './action_policy_saved_object_service';
+import { createActionPolicySavedObjectService } from './action_policy_saved_object_service.mock';
 
 const mockAttrs: ActionPolicySavedObjectAttributes = {
   name: 'test-policy',
-  description: 'A test notification policy',
+  description: 'A test action policy',
   enabled: true,
   destinations: [{ type: 'workflow', id: 'workflow-1' }],
   auth: {
@@ -30,14 +30,14 @@ const mockAttrs: ActionPolicySavedObjectAttributes = {
   updatedAt: '2025-01-01T00:00:00Z',
 };
 
-describe('NotificationPolicySavedObjectService', () => {
-  let service: NotificationPolicySavedObjectService;
+describe('ActionPolicySavedObjectService', () => {
+  let service: ActionPolicySavedObjectService;
   let mockSoClient: jest.Mocked<SavedObjectsClientContract>;
   let mockEncryptedSoClient: jest.Mocked<EncryptedSavedObjectsClient>;
 
   beforeEach(() => {
-    const mocks = createNotificationPolicySavedObjectService();
-    service = mocks.notificationPolicySavedObjectService;
+    const mocks = createActionPolicySavedObjectService();
+    service = mocks.actionPolicySavedObjectService;
     mockSoClient = mocks.mockSavedObjectsClient;
     mockEncryptedSoClient = mocks.mockEncryptedSavedObjectsClient;
   });

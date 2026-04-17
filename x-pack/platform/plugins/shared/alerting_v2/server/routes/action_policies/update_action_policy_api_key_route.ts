@@ -9,7 +9,7 @@ import { Request } from '@kbn/core-di-server';
 import type { KibanaRequest, RouteSecurity } from '@kbn/core-http-server';
 import { z } from '@kbn/zod/v4';
 import { inject, injectable } from 'inversify';
-import { NotificationPolicyClient } from '../../lib/notification_policy_client';
+import { ActionPolicyClient } from '../../lib/action_policy_client';
 import { ALERTING_V2_API_PRIVILEGES } from '../../lib/security/privileges';
 import { BaseAlertingRoute } from '../base_alerting_route';
 import { AlertingRouteContext } from '../alerting_route_context';
@@ -57,14 +57,14 @@ export class UpdateActionPolicyApiKeyRoute extends BaseAlertingRoute {
       unknown,
       unknown
     >,
-    @inject(NotificationPolicyClient)
-    private readonly notificationPolicyClient: NotificationPolicyClient
+    @inject(ActionPolicyClient)
+    private readonly actionPolicyClient: ActionPolicyClient
   ) {
     super(ctx);
   }
 
   protected async execute() {
-    await this.notificationPolicyClient.updateNotificationPolicyApiKey({
+    await this.actionPolicyClient.updateActionPolicyApiKey({
       id: this.request.params.id,
     });
 
