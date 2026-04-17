@@ -6,10 +6,10 @@
  */
 
 import {
-  notificationPolicyResponseSchema,
-  findNotificationPoliciesResponseSchema,
-  bulkActionNotificationPoliciesResponseSchema,
-} from './notification_policy_response_schema';
+  actionPolicyResponseSchema,
+  findActionPoliciesResponseSchema,
+  bulkActionActionPoliciesResponseSchema,
+} from './action_policy_response_schema';
 
 const validResponse = {
   id: 'np-1',
@@ -33,14 +33,14 @@ const validResponse = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
-describe('notificationPolicyResponseSchema', () => {
+describe('actionPolicyResponseSchema', () => {
   it('accepts a valid full response', () => {
-    const result = notificationPolicyResponseSchema.parse(validResponse);
+    const result = actionPolicyResponseSchema.parse(validResponse);
     expect(result).toEqual(validResponse);
   });
 
   it('accepts nullable fields as null', () => {
-    const result = notificationPolicyResponseSchema.parse({
+    const result = actionPolicyResponseSchema.parse({
       ...validResponse,
       version: undefined,
       matcher: null,
@@ -62,19 +62,17 @@ describe('notificationPolicyResponseSchema', () => {
   });
 
   it('rejects missing required fields', () => {
-    expect(() => notificationPolicyResponseSchema.parse({})).toThrow();
+    expect(() => actionPolicyResponseSchema.parse({})).toThrow();
   });
 
   it('rejects invalid enabled type', () => {
-    expect(() =>
-      notificationPolicyResponseSchema.parse({ ...validResponse, enabled: 'yes' })
-    ).toThrow();
+    expect(() => actionPolicyResponseSchema.parse({ ...validResponse, enabled: 'yes' })).toThrow();
   });
 });
 
-describe('findNotificationPoliciesResponseSchema', () => {
+describe('findActionPoliciesResponseSchema', () => {
   it('accepts a valid paginated response', () => {
-    const result = findNotificationPoliciesResponseSchema.parse({
+    const result = findActionPoliciesResponseSchema.parse({
       items: [validResponse],
       total: 1,
       page: 1,
@@ -85,7 +83,7 @@ describe('findNotificationPoliciesResponseSchema', () => {
   });
 
   it('accepts an empty items array', () => {
-    const result = findNotificationPoliciesResponseSchema.parse({
+    const result = findActionPoliciesResponseSchema.parse({
       items: [],
       total: 0,
       page: 1,
@@ -96,7 +94,7 @@ describe('findNotificationPoliciesResponseSchema', () => {
 
   it('rejects missing total', () => {
     expect(() =>
-      findNotificationPoliciesResponseSchema.parse({
+      findActionPoliciesResponseSchema.parse({
         items: [],
         page: 1,
         perPage: 10,
@@ -105,9 +103,9 @@ describe('findNotificationPoliciesResponseSchema', () => {
   });
 });
 
-describe('bulkActionNotificationPoliciesResponseSchema', () => {
+describe('bulkActionActionPoliciesResponseSchema', () => {
   it('accepts a valid bulk response', () => {
-    const result = bulkActionNotificationPoliciesResponseSchema.parse({
+    const result = bulkActionActionPoliciesResponseSchema.parse({
       processed: 5,
       total: 6,
       errors: [{ id: 'np-2', message: 'Not found' }],
@@ -117,7 +115,7 @@ describe('bulkActionNotificationPoliciesResponseSchema', () => {
   });
 
   it('accepts empty errors', () => {
-    const result = bulkActionNotificationPoliciesResponseSchema.parse({
+    const result = bulkActionActionPoliciesResponseSchema.parse({
       processed: 3,
       total: 3,
       errors: [],
@@ -127,7 +125,7 @@ describe('bulkActionNotificationPoliciesResponseSchema', () => {
 
   it('rejects missing processed', () => {
     expect(() =>
-      bulkActionNotificationPoliciesResponseSchema.parse({
+      bulkActionActionPoliciesResponseSchema.parse({
         total: 3,
         errors: [],
       })

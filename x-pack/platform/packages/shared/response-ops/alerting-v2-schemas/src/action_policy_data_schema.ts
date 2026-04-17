@@ -8,14 +8,14 @@
 import { z } from '@kbn/zod/v4';
 import { durationSchema } from './common';
 
-const workflowNotificationPolicyDestinationSchema = z.object({
+const workflowActionPolicyDestinationSchema = z.object({
   type: z.literal('workflow').describe('The destination type.'),
   id: z.string().describe('The workflow connector identifier.'),
 });
 
-export const notificationPolicyDestinationSchema = z
-  .discriminatedUnion('type', [workflowNotificationPolicyDestinationSchema])
-  .describe('A notification destination configuration.');
+export const actionPolicyDestinationSchema = z
+  .discriminatedUnion('type', [workflowActionPolicyDestinationSchema])
+  .describe('An action policy destination configuration.');
 
 export const groupingModeSchema = z
   .enum(['per_episode', 'all', 'per_field'])
@@ -86,50 +86,50 @@ const validateGroupingModeAndStrategy = (payload: ValidationPayload) => {
   validateStrategyInterval(payload);
 };
 
-export type NotificationPolicyDestination = z.infer<typeof notificationPolicyDestinationSchema>;
+export type ActionPolicyDestination = z.infer<typeof actionPolicyDestinationSchema>;
 
-export const snoozeNotificationPolicyBodySchema = z.object({
+export const snoozeActionPolicyBodySchema = z.object({
   snoozedUntil: z.iso
     .datetime()
-    .describe('The ISO datetime until which the notification policy should be snoozed.'),
+    .describe('The ISO datetime until which the action policy should be snoozed.'),
 });
 
-export type SnoozeNotificationPolicyBody = z.infer<typeof snoozeNotificationPolicyBodySchema>;
+export type SnoozeActionPolicyBody = z.infer<typeof snoozeActionPolicyBodySchema>;
 
 const bulkEnableActionSchema = z.object({
-  id: z.string().describe('The notification policy identifier.'),
+  id: z.string().describe('The action policy identifier.'),
   action: z.literal('enable').describe('The bulk action type.'),
 });
 
 const bulkDisableActionSchema = z.object({
-  id: z.string().describe('The notification policy identifier.'),
+  id: z.string().describe('The action policy identifier.'),
   action: z.literal('disable').describe('The bulk action type.'),
 });
 
 const bulkSnoozeActionSchema = z.object({
-  id: z.string().describe('The notification policy identifier.'),
+  id: z.string().describe('The action policy identifier.'),
   action: z.literal('snooze').describe('The bulk action type.'),
   snoozedUntil: z.iso
     .datetime()
-    .describe('The ISO datetime until which the notification policy should be snoozed.'),
+    .describe('The ISO datetime until which the action policy should be snoozed.'),
 });
 
 const bulkUnsnoozeActionSchema = z.object({
-  id: z.string().describe('The notification policy identifier.'),
+  id: z.string().describe('The action policy identifier.'),
   action: z.literal('unsnooze').describe('The bulk action type.'),
 });
 
 const bulkDeleteActionSchema = z.object({
-  id: z.string().describe('The notification policy identifier.'),
+  id: z.string().describe('The action policy identifier.'),
   action: z.literal('delete').describe('The bulk action type.'),
 });
 
 const bulkUpdateApiKeyActionSchema = z.object({
-  id: z.string().describe('The notification policy identifier.'),
+  id: z.string().describe('The action policy identifier.'),
   action: z.literal('update_api_key').describe('The bulk action type.'),
 });
 
-export const notificationPolicyBulkActionSchema = z
+export const actionPolicyBulkActionSchema = z
   .discriminatedUnion('action', [
     bulkEnableActionSchema,
     bulkDisableActionSchema,
@@ -138,36 +138,34 @@ export const notificationPolicyBulkActionSchema = z
     bulkDeleteActionSchema,
     bulkUpdateApiKeyActionSchema,
   ])
-  .describe('A bulk action to perform on a notification policy.');
+  .describe('A bulk action to perform on an action policy.');
 
-export type NotificationPolicyBulkAction = z.infer<typeof notificationPolicyBulkActionSchema>;
+export type ActionPolicyBulkAction = z.infer<typeof actionPolicyBulkActionSchema>;
 
-export const bulkActionNotificationPoliciesBodySchema = z.object({
+export const bulkActionActionPoliciesBodySchema = z.object({
   actions: z
-    .array(notificationPolicyBulkActionSchema)
+    .array(actionPolicyBulkActionSchema)
     .min(1, 'At least one action is required')
     .describe('The list of bulk actions to perform.'),
 });
 
-export type BulkActionNotificationPoliciesBody = z.infer<
-  typeof bulkActionNotificationPoliciesBodySchema
->;
+export type BulkActionActionPoliciesBody = z.infer<typeof bulkActionActionPoliciesBodySchema>;
 
-export const createNotificationPolicyDataSchema = z
+export const createActionPolicyDataSchema = z
   .object({
-    name: z.string().describe('The name of the notification policy.'),
-    description: z.string().describe('A description of the notification policy.'),
+    name: z.string().describe('The name of the action policy.'),
+    description: z.string().describe('A description of the action policy.'),
     destinations: z
-      .array(notificationPolicyDestinationSchema)
+      .array(actionPolicyDestinationSchema)
       .min(1, 'At least one destination must be provided')
-      .describe('The list of notification destinations. At least one is required.'),
+      .describe('The list of destinations. At least one is required.'),
     matcher: z.string().optional().describe('A KQL query string to match alerts.'),
     groupBy: z.array(z.string()).optional().describe('The fields used to group alerts.'),
     tags: z
       .array(z.string().min(1).max(128))
       .max(20)
       .optional()
-      .describe('Tags for categorizing the notification policy.'),
+      .describe('Tags for categorizing the action policy.'),
     groupingMode: groupingModeSchema
       .optional()
       .describe('The grouping mode for alert notifications.'),
@@ -175,17 +173,17 @@ export const createNotificationPolicyDataSchema = z
   })
   .check(validateGroupingModeAndStrategy);
 
-export type CreateNotificationPolicyData = z.infer<typeof createNotificationPolicyDataSchema>;
+export type CreateActionPolicyData = z.infer<typeof createActionPolicyDataSchema>;
 
-export const updateNotificationPolicyDataSchema = z
+export const updateActionPolicyDataSchema = z
   .object({
-    name: z.string().optional().describe('The name of the notification policy.'),
-    description: z.string().optional().describe('A description of the notification policy.'),
+    name: z.string().optional().describe('The name of the action policy.'),
+    description: z.string().optional().describe('A description of the action policy.'),
     destinations: z
-      .array(notificationPolicyDestinationSchema)
+      .array(actionPolicyDestinationSchema)
       .min(1, 'At least one destination must be provided')
       .optional()
-      .describe('The list of notification destinations. At least one is required.'),
+      .describe('The list of destinations. At least one is required.'),
     matcher: z.string().optional().nullable().describe('A KQL query string to match alerts.'),
     groupBy: z.array(z.string()).optional().nullable().describe('The fields used to group alerts.'),
     tags: z
@@ -193,7 +191,7 @@ export const updateNotificationPolicyDataSchema = z
       .max(20)
       .optional()
       .nullable()
-      .describe('Tags for categorizing the notification policy.'),
+      .describe('Tags for categorizing the action policy.'),
     groupingMode: groupingModeSchema
       .optional()
       .nullable()
@@ -212,14 +210,12 @@ export const updateNotificationPolicyDataSchema = z
     validateGroupingModeAndStrategy(payload);
   });
 
-export type UpdateNotificationPolicyData = z.infer<typeof updateNotificationPolicyDataSchema>;
+export type UpdateActionPolicyData = z.infer<typeof updateActionPolicyDataSchema>;
 
-export const updateNotificationPolicyBodySchema = updateNotificationPolicyDataSchema.extend({
+export const updateActionPolicyBodySchema = updateActionPolicyDataSchema.extend({
   version: z
     .string()
-    .describe(
-      'The current version of the notification policy, used for optimistic concurrency control.'
-    ),
+    .describe('The current version of the action policy, used for optimistic concurrency control.'),
 });
 
-export type UpdateNotificationPolicyBody = z.infer<typeof updateNotificationPolicyBodySchema>;
+export type UpdateActionPolicyBody = z.infer<typeof updateActionPolicyBodySchema>;

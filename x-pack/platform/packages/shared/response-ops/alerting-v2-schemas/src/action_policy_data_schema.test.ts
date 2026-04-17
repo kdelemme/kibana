@@ -6,26 +6,26 @@
  */
 
 import {
-  bulkActionNotificationPoliciesBodySchema,
-  createNotificationPolicyDataSchema,
-  updateNotificationPolicyDataSchema,
-} from './notification_policy_data_schema';
+  bulkActionActionPoliciesBodySchema,
+  createActionPolicyDataSchema,
+  updateActionPolicyDataSchema,
+} from './action_policy_data_schema';
 
 const DESTINATIONS = [{ type: 'workflow' as const, id: 'wf-1' }];
 
-describe('createNotificationPolicyDataSchema', () => {
+describe('createActionPolicyDataSchema', () => {
   const base = { name: 'Test', description: 'Desc', destinations: DESTINATIONS };
 
   describe('valid payloads', () => {
     it('accepts minimal payload (defaults to per_episode, no throttle)', () => {
-      const result = createNotificationPolicyDataSchema.parse(base);
+      const result = createActionPolicyDataSchema.parse(base);
 
       expect(result.groupingMode).toBeUndefined();
       expect(result.throttle).toBeUndefined();
     });
 
     it('accepts per_episode + on_status_change', () => {
-      const result = createNotificationPolicyDataSchema.parse({
+      const result = createActionPolicyDataSchema.parse({
         ...base,
         groupingMode: 'per_episode',
         throttle: { strategy: 'on_status_change' },
@@ -36,7 +36,7 @@ describe('createNotificationPolicyDataSchema', () => {
     });
 
     it('accepts per_episode + per_status_interval with interval', () => {
-      const result = createNotificationPolicyDataSchema.parse({
+      const result = createActionPolicyDataSchema.parse({
         ...base,
         groupingMode: 'per_episode',
         throttle: { strategy: 'per_status_interval', interval: '5m' },
@@ -46,7 +46,7 @@ describe('createNotificationPolicyDataSchema', () => {
     });
 
     it('accepts per_episode + every_time', () => {
-      const result = createNotificationPolicyDataSchema.parse({
+      const result = createActionPolicyDataSchema.parse({
         ...base,
         groupingMode: 'per_episode',
         throttle: { strategy: 'every_time' },
@@ -56,7 +56,7 @@ describe('createNotificationPolicyDataSchema', () => {
     });
 
     it('accepts per_field + time_interval with interval', () => {
-      const result = createNotificationPolicyDataSchema.parse({
+      const result = createActionPolicyDataSchema.parse({
         ...base,
         groupingMode: 'per_field',
         groupBy: ['host.name'],
@@ -68,7 +68,7 @@ describe('createNotificationPolicyDataSchema', () => {
     });
 
     it('accepts per_field + every_time', () => {
-      const result = createNotificationPolicyDataSchema.parse({
+      const result = createActionPolicyDataSchema.parse({
         ...base,
         groupingMode: 'per_field',
         groupBy: ['host.name'],
@@ -79,7 +79,7 @@ describe('createNotificationPolicyDataSchema', () => {
     });
 
     it('accepts all + time_interval with interval', () => {
-      const result = createNotificationPolicyDataSchema.parse({
+      const result = createActionPolicyDataSchema.parse({
         ...base,
         groupingMode: 'all',
         throttle: { strategy: 'time_interval', interval: '1h' },
@@ -89,7 +89,7 @@ describe('createNotificationPolicyDataSchema', () => {
     });
 
     it('accepts all + every_time', () => {
-      const result = createNotificationPolicyDataSchema.parse({
+      const result = createActionPolicyDataSchema.parse({
         ...base,
         groupingMode: 'all',
         throttle: { strategy: 'every_time' },
@@ -99,7 +99,7 @@ describe('createNotificationPolicyDataSchema', () => {
     });
 
     it('accepts empty throttle object (no strategy)', () => {
-      const result = createNotificationPolicyDataSchema.parse({
+      const result = createActionPolicyDataSchema.parse({
         ...base,
         throttle: {},
       });
@@ -108,7 +108,7 @@ describe('createNotificationPolicyDataSchema', () => {
     });
 
     it('accepts no groupingMode with per_episode-compatible strategy', () => {
-      const result = createNotificationPolicyDataSchema.parse({
+      const result = createActionPolicyDataSchema.parse({
         ...base,
         throttle: { strategy: 'on_status_change' },
       });
@@ -121,7 +121,7 @@ describe('createNotificationPolicyDataSchema', () => {
   describe('invalid payloads', () => {
     it('rejects per_episode + time_interval', () => {
       expect(() =>
-        createNotificationPolicyDataSchema.parse({
+        createActionPolicyDataSchema.parse({
           ...base,
           groupingMode: 'per_episode',
           throttle: { strategy: 'time_interval', interval: '5m' },
@@ -131,7 +131,7 @@ describe('createNotificationPolicyDataSchema', () => {
 
     it('rejects per_field + on_status_change', () => {
       expect(() =>
-        createNotificationPolicyDataSchema.parse({
+        createActionPolicyDataSchema.parse({
           ...base,
           groupingMode: 'per_field',
           throttle: { strategy: 'on_status_change' },
@@ -141,7 +141,7 @@ describe('createNotificationPolicyDataSchema', () => {
 
     it('rejects per_field + per_status_interval', () => {
       expect(() =>
-        createNotificationPolicyDataSchema.parse({
+        createActionPolicyDataSchema.parse({
           ...base,
           groupingMode: 'per_field',
           throttle: { strategy: 'per_status_interval', interval: '5m' },
@@ -151,7 +151,7 @@ describe('createNotificationPolicyDataSchema', () => {
 
     it('rejects all + on_status_change', () => {
       expect(() =>
-        createNotificationPolicyDataSchema.parse({
+        createActionPolicyDataSchema.parse({
           ...base,
           groupingMode: 'all',
           throttle: { strategy: 'on_status_change' },
@@ -161,7 +161,7 @@ describe('createNotificationPolicyDataSchema', () => {
 
     it('rejects all + per_status_interval', () => {
       expect(() =>
-        createNotificationPolicyDataSchema.parse({
+        createActionPolicyDataSchema.parse({
           ...base,
           groupingMode: 'all',
           throttle: { strategy: 'per_status_interval', interval: '5m' },
@@ -171,7 +171,7 @@ describe('createNotificationPolicyDataSchema', () => {
 
     it('rejects per_status_interval without interval', () => {
       expect(() =>
-        createNotificationPolicyDataSchema.parse({
+        createActionPolicyDataSchema.parse({
           ...base,
           groupingMode: 'per_episode',
           throttle: { strategy: 'per_status_interval' },
@@ -181,7 +181,7 @@ describe('createNotificationPolicyDataSchema', () => {
 
     it('rejects time_interval without interval', () => {
       expect(() =>
-        createNotificationPolicyDataSchema.parse({
+        createActionPolicyDataSchema.parse({
           ...base,
           groupingMode: 'all',
           throttle: { strategy: 'time_interval' },
@@ -191,7 +191,7 @@ describe('createNotificationPolicyDataSchema', () => {
 
     it('rejects omitted groupingMode with time_interval (defaults to per_episode)', () => {
       expect(() =>
-        createNotificationPolicyDataSchema.parse({
+        createActionPolicyDataSchema.parse({
           ...base,
           throttle: { strategy: 'time_interval', interval: '5m' },
         })
@@ -200,7 +200,7 @@ describe('createNotificationPolicyDataSchema', () => {
 
     it('rejects empty destinations', () => {
       expect(() =>
-        createNotificationPolicyDataSchema.parse({
+        createActionPolicyDataSchema.parse({
           ...base,
           destinations: [],
         })
@@ -209,7 +209,7 @@ describe('createNotificationPolicyDataSchema', () => {
 
     it('rejects missing name', () => {
       expect(() =>
-        createNotificationPolicyDataSchema.parse({
+        createActionPolicyDataSchema.parse({
           description: 'Desc',
           destinations: DESTINATIONS,
         })
@@ -218,22 +218,22 @@ describe('createNotificationPolicyDataSchema', () => {
   });
 });
 
-describe('updateNotificationPolicyDataSchema', () => {
+describe('updateActionPolicyDataSchema', () => {
   describe('valid payloads', () => {
     it('accepts an empty partial update', () => {
-      const result = updateNotificationPolicyDataSchema.parse({});
+      const result = updateActionPolicyDataSchema.parse({});
 
       expect(result).toEqual({});
     });
 
     it('accepts updating only name', () => {
-      const result = updateNotificationPolicyDataSchema.parse({ name: 'New name' });
+      const result = updateActionPolicyDataSchema.parse({ name: 'New name' });
 
       expect(result.name).toBe('New name');
     });
 
     it('accepts compatible groupingMode and throttle together', () => {
-      const result = updateNotificationPolicyDataSchema.parse({
+      const result = updateActionPolicyDataSchema.parse({
         groupingMode: 'all',
         throttle: { strategy: 'time_interval', interval: '5m' },
       });
@@ -243,7 +243,7 @@ describe('updateNotificationPolicyDataSchema', () => {
     });
 
     it('accepts throttle without groupingMode (skips validation)', () => {
-      const result = updateNotificationPolicyDataSchema.parse({
+      const result = updateActionPolicyDataSchema.parse({
         throttle: { strategy: 'time_interval', interval: '5m' },
       });
 
@@ -251,7 +251,7 @@ describe('updateNotificationPolicyDataSchema', () => {
     });
 
     it('accepts groupingMode without throttle (skips validation)', () => {
-      const result = updateNotificationPolicyDataSchema.parse({
+      const result = updateActionPolicyDataSchema.parse({
         groupingMode: 'per_field',
       });
 
@@ -259,7 +259,7 @@ describe('updateNotificationPolicyDataSchema', () => {
     });
 
     it('accepts setting throttle to null (clear throttle)', () => {
-      const result = updateNotificationPolicyDataSchema.parse({
+      const result = updateActionPolicyDataSchema.parse({
         groupingMode: 'per_episode',
         throttle: null,
       });
@@ -268,7 +268,7 @@ describe('updateNotificationPolicyDataSchema', () => {
     });
 
     it('accepts setting groupingMode to null with throttle absent (skips validation)', () => {
-      const result = updateNotificationPolicyDataSchema.parse({
+      const result = updateActionPolicyDataSchema.parse({
         groupingMode: null,
       });
 
@@ -276,7 +276,7 @@ describe('updateNotificationPolicyDataSchema', () => {
     });
 
     it('accepts setting both groupingMode and throttle to null', () => {
-      const result = updateNotificationPolicyDataSchema.parse({
+      const result = updateActionPolicyDataSchema.parse({
         groupingMode: null,
         throttle: null,
       });
@@ -286,7 +286,7 @@ describe('updateNotificationPolicyDataSchema', () => {
     });
 
     it('accepts setting matcher to null', () => {
-      const result = updateNotificationPolicyDataSchema.parse({
+      const result = updateActionPolicyDataSchema.parse({
         matcher: null,
       });
 
@@ -294,7 +294,7 @@ describe('updateNotificationPolicyDataSchema', () => {
     });
 
     it('accepts setting groupBy to null', () => {
-      const result = updateNotificationPolicyDataSchema.parse({
+      const result = updateActionPolicyDataSchema.parse({
         groupBy: null,
       });
 
@@ -302,7 +302,7 @@ describe('updateNotificationPolicyDataSchema', () => {
     });
 
     it('accepts groupingMode null with per_episode-compatible strategy (defaults to per_episode)', () => {
-      const result = updateNotificationPolicyDataSchema.parse({
+      const result = updateActionPolicyDataSchema.parse({
         groupingMode: null,
         throttle: { strategy: 'on_status_change' },
       });
@@ -315,7 +315,7 @@ describe('updateNotificationPolicyDataSchema', () => {
   describe('invalid payloads', () => {
     it('rejects incompatible groupingMode and throttle strategy', () => {
       expect(() =>
-        updateNotificationPolicyDataSchema.parse({
+        updateActionPolicyDataSchema.parse({
           groupingMode: 'per_episode',
           throttle: { strategy: 'time_interval', interval: '5m' },
         })
@@ -324,7 +324,7 @@ describe('updateNotificationPolicyDataSchema', () => {
 
     it('rejects groupingMode null with aggregate-only strategy (null defaults to per_episode)', () => {
       expect(() =>
-        updateNotificationPolicyDataSchema.parse({
+        updateActionPolicyDataSchema.parse({
           groupingMode: null,
           throttle: { strategy: 'time_interval', interval: '5m' },
         })
@@ -333,7 +333,7 @@ describe('updateNotificationPolicyDataSchema', () => {
 
     it('rejects strategy requiring interval when interval is missing', () => {
       expect(() =>
-        updateNotificationPolicyDataSchema.parse({
+        updateActionPolicyDataSchema.parse({
           groupingMode: 'all',
           throttle: { strategy: 'time_interval' },
         })
@@ -342,7 +342,7 @@ describe('updateNotificationPolicyDataSchema', () => {
 
     it('rejects per_field + on_status_change', () => {
       expect(() =>
-        updateNotificationPolicyDataSchema.parse({
+        updateActionPolicyDataSchema.parse({
           groupingMode: 'per_field',
           throttle: { strategy: 'on_status_change' },
         })
@@ -351,7 +351,7 @@ describe('updateNotificationPolicyDataSchema', () => {
 
     it('rejects per_status_interval without interval even when groupingMode is omitted', () => {
       expect(() =>
-        updateNotificationPolicyDataSchema.parse({
+        updateActionPolicyDataSchema.parse({
           throttle: { strategy: 'per_status_interval' },
         })
       ).toThrow('requires an interval');
@@ -359,7 +359,7 @@ describe('updateNotificationPolicyDataSchema', () => {
 
     it('rejects time_interval without interval even when groupingMode is omitted', () => {
       expect(() =>
-        updateNotificationPolicyDataSchema.parse({
+        updateActionPolicyDataSchema.parse({
           throttle: { strategy: 'time_interval' },
         })
       ).toThrow('requires an interval');
@@ -367,9 +367,9 @@ describe('updateNotificationPolicyDataSchema', () => {
   });
 });
 
-describe('bulkActionNotificationPoliciesBodySchema', () => {
+describe('bulkActionActionPoliciesBodySchema', () => {
   it('accepts a delete action', () => {
-    const result = bulkActionNotificationPoliciesBodySchema.parse({
+    const result = bulkActionActionPoliciesBodySchema.parse({
       actions: [{ id: 'policy-1', action: 'delete' }],
     });
 
@@ -379,7 +379,7 @@ describe('bulkActionNotificationPoliciesBodySchema', () => {
   });
 
   it('accepts mixed actions including delete', () => {
-    const result = bulkActionNotificationPoliciesBodySchema.parse({
+    const result = bulkActionActionPoliciesBodySchema.parse({
       actions: [
         { id: 'policy-1', action: 'enable' },
         { id: 'policy-2', action: 'disable' },
@@ -395,7 +395,7 @@ describe('bulkActionNotificationPoliciesBodySchema', () => {
 
   it('rejects an unknown action', () => {
     expect(() =>
-      bulkActionNotificationPoliciesBodySchema.parse({
+      bulkActionActionPoliciesBodySchema.parse({
         actions: [{ id: 'policy-1', action: 'unknown' }],
       })
     ).toThrow();
@@ -403,7 +403,7 @@ describe('bulkActionNotificationPoliciesBodySchema', () => {
 
   it('rejects an empty actions array', () => {
     expect(() =>
-      bulkActionNotificationPoliciesBodySchema.parse({
+      bulkActionActionPoliciesBodySchema.parse({
         actions: [],
       })
     ).toThrow();
