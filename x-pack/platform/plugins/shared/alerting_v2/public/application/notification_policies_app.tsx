@@ -7,20 +7,20 @@
 
 import React from 'react';
 import { Route, Routes } from '@kbn/shared-ux-router';
-import { ListNotificationPoliciesPage } from '../pages/list_notification_policies_page/list_notification_policies_page';
-import { NotificationPolicyFormPage } from '../pages/notification_policy_form_page/notification_policy_form_page';
+import { ListActionPoliciesPage } from '../pages/list_action_policies_page/list_action_policies_page';
+import { ActionPolicyFormPage } from '../pages/action_policy_form_page/action_policy_form_page';
 
 export const NotificationPoliciesApp = () => {
   return (
     <Routes>
       <Route exact path="/create">
-        <NotificationPolicyFormPage />
+        <ActionPolicyFormPage />
       </Route>
       <Route exact path="/edit/:id">
-        <NotificationPolicyFormPage />
+        <ActionPolicyFormPage />
       </Route>
       <Route exact path="/">
-        <ListNotificationPoliciesPage />
+        <ListActionPoliciesPage />
       </Route>
     </Routes>
   );

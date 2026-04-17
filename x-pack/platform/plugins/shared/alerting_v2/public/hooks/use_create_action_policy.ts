@@ -31,7 +31,7 @@ export const useCreateActionPolicy = () => {
     onError: (error) => {
       toasts.addError(error, {
         title: i18n.translate('xpack.alertingV2.actionPolicy.createError', {
-          defaultMessage: 'Failed to create notification policy',
+          defaultMessage: 'Failed to create action policy',
         }),
       });
     },

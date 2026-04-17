@@ -112,7 +112,7 @@ describe('useBreadcrumbs', () => {
     expect(rulesListBreadcrumb.href).toBeUndefined();
   });
 
-  describe('notification policy pages', () => {
+  describe('action policy pages', () => {
     it('should set breadcrumbs for action_policies_list with root', () => {
       renderHook(() => useBreadcrumbs('action_policies_list'));
 
@@ -148,7 +148,7 @@ describe('useBreadcrumbs', () => {
       expect(breadcrumbs[2]).toMatchObject({ text: 'Edit' });
     });
 
-    it('should set the document title for notification policy pages', () => {
+    it('should set the document title for action policy pages', () => {
       renderHook(() => useBreadcrumbs('action_policy_create'));
 
       expect(mockDocTitleChange).toHaveBeenCalledTimes(1);

@@ -24,7 +24,7 @@ export const useFetchActionPolicy = (id: string | undefined) => {
     onError: (error: Error) => {
       toasts.addError(error, {
         title: i18n.translate('xpack.alertingV2.actionPolicy.fetchError', {
-          defaultMessage: 'Failed to load notification policy',
+          defaultMessage: 'Failed to load action policy',
         }),
       });
     },
