@@ -461,8 +461,7 @@ const createMockWorkflowsManagement = (): WorkflowsServerPluginSetup['management
     runWorkflow: jest.fn().mockResolvedValue('exec-1'),
   } as unknown as WorkflowsServerPluginSetup['management']);
 
-// Failing: See https://github.com/elastic/kibana/issues/261229
-describe.skip('DispatcherService integration tests', () => {
+describe('DispatcherService integration tests', () => {
   let esServer: TestElasticsearchUtils;
   let kibanaServer: TestKibanaUtils;
   let esClient: ElasticsearchClient;
