@@ -9,30 +9,30 @@ import expect from '@kbn/expect';
 import type { DeploymentAgnosticFtrProviderContext } from '../../../ftr_provider_context';
 import type { RoleCredentials } from '../../../services';
 
-const NOTIFICATION_POLICY_API_PATH = '/api/alerting/v2/notification_policies';
-const NOTIFICATION_POLICY_SO_TYPE = 'alerting_notification_policy';
+const ACTION_POLICY_API_PATH = '/api/alerting/v2/action_policies';
+const ACTION_POLICY_SO_TYPE = 'alerting_action_policy';
 
 export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
   const samlAuth = getService('samlAuth');
   const supertestWithoutAuth = getService('supertestWithoutAuth');
   const kibanaServer = getService('kibanaServer');
 
-  describe('Create Notification Policy API', function () {
+  describe('Create Action Policy API', function () {
     let roleAuthc: RoleCredentials;
 
     before(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       roleAuthc = await samlAuth.createM2mApiKeyWithRoleScope('admin');
     });
 
     after(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       await samlAuth.invalidateM2mApiKeyWithRoleScope(roleAuthc);
     });
 
-    it('should create a notification policy with auto-generated id', async () => {
+    it('should create a action policy with auto-generated id', async () => {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -62,11 +62,11 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(response.body.auth.apiKey).to.be(undefined);
     });
 
-    it('should create a notification policy with a custom id', async () => {
+    it('should create a action policy with a custom id', async () => {
       const customId = 'custom-notification-policy-id';
 
       const response = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${customId}`)
+        .post(`${ACTION_POLICY_API_PATH}/${customId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -92,12 +92,12 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(response.body.auth.apiKey).to.be(undefined);
     });
 
-    it('should return 409 when creating a notification policy with an existing id', async () => {
+    it('should return 409 when creating a action policy with an existing id', async () => {
       const existingId = 'existing-policy-id';
 
       // Create the first policy
       const firstResponse = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${existingId}`)
+        .post(`${ACTION_POLICY_API_PATH}/${existingId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -110,7 +110,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
       // Try to create another policy with the same id
       const secondResponse = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${existingId}`)
+        .post(`${ACTION_POLICY_API_PATH}/${existingId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -124,7 +124,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should return 400 when name is missing', async () => {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -137,7 +137,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should return 400 when description is missing', async () => {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -150,7 +150,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should return 400 when destinations are missing', async () => {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ name: 'my-policy', description: 'my-policy description' });
@@ -160,7 +160,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should return 400 when throttle interval is invalid', async () => {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -175,7 +175,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should create with only required fields and return defaults', async () => {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -198,7 +198,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should create a policy with groupingMode and throttle strategy', async () => {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -218,7 +218,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should create a policy with per_episode grouping and on_status_change strategy', async () => {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -236,7 +236,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should create a policy with all grouping mode and every_time strategy', async () => {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -254,7 +254,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should return 400 for invalid groupingMode/strategy combination', async () => {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -270,7 +270,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should return 400 when time_interval strategy is missing interval', async () => {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -286,7 +286,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should return 400 when destinations is an empty array', async () => {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({

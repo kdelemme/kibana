@@ -9,30 +9,30 @@ import expect from '@kbn/expect';
 import type { DeploymentAgnosticFtrProviderContext } from '../../../ftr_provider_context';
 import type { RoleCredentials } from '../../../services';
 
-const NOTIFICATION_POLICY_API_PATH = '/api/alerting/v2/notification_policies';
-const NOTIFICATION_POLICY_SO_TYPE = 'alerting_notification_policy';
+const ACTION_POLICY_API_PATH = '/api/alerting/v2/action_policies';
+const ACTION_POLICY_SO_TYPE = 'alerting_action_policy';
 
 export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
   const samlAuth = getService('samlAuth');
   const supertestWithoutAuth = getService('supertestWithoutAuth');
   const kibanaServer = getService('kibanaServer');
 
-  describe('Get Notification Policy API', function () {
+  describe('Get Action Policy API', function () {
     let roleAuthc: RoleCredentials;
 
     before(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       roleAuthc = await samlAuth.createM2mApiKeyWithRoleScope('admin');
     });
 
     after(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       await samlAuth.invalidateM2mApiKeyWithRoleScope(roleAuthc);
     });
 
-    it('should get a notification policy by id', async () => {
+    it('should get a action policy by id', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -47,7 +47,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const createdPolicyId = createResponse.body.id;
 
       const response = await supertestWithoutAuth
-        .get(`${NOTIFICATION_POLICY_API_PATH}/${createdPolicyId}`)
+        .get(`${ACTION_POLICY_API_PATH}/${createdPolicyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 
@@ -68,9 +68,9 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(response.body.auth.apiKey).to.be(undefined);
     });
 
-    it('should return 404 for non-existent notification policy', async () => {
+    it('should return 404 for non-existent action policy', async () => {
       const response = await supertestWithoutAuth
-        .get(`${NOTIFICATION_POLICY_API_PATH}/non-existent-id`)
+        .get(`${ACTION_POLICY_API_PATH}/non-existent-id`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 

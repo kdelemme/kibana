@@ -9,30 +9,30 @@ import expect from '@kbn/expect';
 import type { DeploymentAgnosticFtrProviderContext } from '../../../ftr_provider_context';
 import type { RoleCredentials } from '../../../services';
 
-const NOTIFICATION_POLICY_API_PATH = '/api/alerting/v2/notification_policies';
-const NOTIFICATION_POLICY_SO_TYPE = 'alerting_notification_policy';
+const ACTION_POLICY_API_PATH = '/api/alerting/v2/action_policies';
+const ACTION_POLICY_SO_TYPE = 'alerting_action_policy';
 
 export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
   const samlAuth = getService('samlAuth');
   const supertestWithoutAuth = getService('supertestWithoutAuth');
   const kibanaServer = getService('kibanaServer');
 
-  describe('Update Notification Policy API', function () {
+  describe('Update Action Policy API', function () {
     let roleAuthc: RoleCredentials;
 
     before(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       roleAuthc = await samlAuth.createM2mApiKeyWithRoleScope('admin');
     });
 
     after(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       await samlAuth.invalidateM2mApiKeyWithRoleScope(roleAuthc);
     });
 
-    it('should update a notification policy', async () => {
+    it('should update a action policy', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -50,7 +50,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const currentVersion = createResponse.body.version as string;
 
       const response = await supertestWithoutAuth
-        .put(`${NOTIFICATION_POLICY_API_PATH}/${createdPolicyId}`)
+        .put(`${ACTION_POLICY_API_PATH}/${createdPolicyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -81,7 +81,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should update only name', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -99,7 +99,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const currentVersion = createResponse.body.version as string;
 
       const response = await supertestWithoutAuth
-        .put(`${NOTIFICATION_POLICY_API_PATH}/${createdPolicyId}`)
+        .put(`${ACTION_POLICY_API_PATH}/${createdPolicyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ name: 'only-name-updated', version: currentVersion });
@@ -116,7 +116,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should update only description', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -134,7 +134,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const currentVersion = createResponse.body.version as string;
 
       const response = await supertestWithoutAuth
-        .put(`${NOTIFICATION_POLICY_API_PATH}/${createdPolicyId}`)
+        .put(`${ACTION_POLICY_API_PATH}/${createdPolicyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ description: 'only-description-updated', version: currentVersion });
@@ -151,7 +151,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should update only matcher, groupBy, and throttle', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -169,7 +169,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const currentVersion = createResponse.body.version as string;
 
       const response = await supertestWithoutAuth
-        .put(`${NOTIFICATION_POLICY_API_PATH}/${createdPolicyId}`)
+        .put(`${ACTION_POLICY_API_PATH}/${createdPolicyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -191,7 +191,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should return 409 when version is stale', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -206,7 +206,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const staleVersion = createResponse.body.version as string;
 
       const firstUpdate = await supertestWithoutAuth
-        .put(`${NOTIFICATION_POLICY_API_PATH}/${createdPolicyId}`)
+        .put(`${ACTION_POLICY_API_PATH}/${createdPolicyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ name: 'first-update', version: staleVersion });
@@ -214,7 +214,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(firstUpdate.status).to.be(200);
 
       const secondUpdate = await supertestWithoutAuth
-        .put(`${NOTIFICATION_POLICY_API_PATH}/${createdPolicyId}`)
+        .put(`${ACTION_POLICY_API_PATH}/${createdPolicyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ name: 'second-update', version: staleVersion });
@@ -224,7 +224,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should update groupingMode and throttle strategy', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -242,7 +242,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const currentVersion = createResponse.body.version as string;
 
       const response = await supertestWithoutAuth
-        .put(`${NOTIFICATION_POLICY_API_PATH}/${createdPolicyId}`)
+        .put(`${ACTION_POLICY_API_PATH}/${createdPolicyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -259,7 +259,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should clear groupingMode when set to null', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -277,7 +277,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const currentVersion = createResponse.body.version as string;
 
       const response = await supertestWithoutAuth
-        .put(`${NOTIFICATION_POLICY_API_PATH}/${createdPolicyId}`)
+        .put(`${ACTION_POLICY_API_PATH}/${createdPolicyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -295,7 +295,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should clear nullable fields when set to null', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -313,7 +313,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const currentVersion = createResponse.body.version as string;
 
       const response = await supertestWithoutAuth
-        .put(`${NOTIFICATION_POLICY_API_PATH}/${createdPolicyId}`)
+        .put(`${ACTION_POLICY_API_PATH}/${createdPolicyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -333,7 +333,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should update only destinations while preserving other fields', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -351,7 +351,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const currentVersion = createResponse.body.version as string;
 
       const response = await supertestWithoutAuth
-        .put(`${NOTIFICATION_POLICY_API_PATH}/${createdPolicyId}`)
+        .put(`${ACTION_POLICY_API_PATH}/${createdPolicyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -372,7 +372,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should return 400 when destinations is an empty array', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -387,7 +387,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const currentVersion = createResponse.body.version as string;
 
       const response = await supertestWithoutAuth
-        .put(`${NOTIFICATION_POLICY_API_PATH}/${createdPolicyId}`)
+        .put(`${ACTION_POLICY_API_PATH}/${createdPolicyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ destinations: [], version: currentVersion });
@@ -395,9 +395,9 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(response.status).to.be(400);
     });
 
-    it('should return 404 when updating a non-existent notification policy', async () => {
+    it('should return 404 when updating a non-existent action policy', async () => {
       const response = await supertestWithoutAuth
-        .put(`${NOTIFICATION_POLICY_API_PATH}/non-existent-id`)
+        .put(`${ACTION_POLICY_API_PATH}/non-existent-id`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({

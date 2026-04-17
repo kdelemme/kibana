@@ -9,30 +9,30 @@ import expect from '@kbn/expect';
 import type { DeploymentAgnosticFtrProviderContext } from '../../../ftr_provider_context';
 import type { RoleCredentials } from '../../../services';
 
-const NOTIFICATION_POLICY_API_PATH = '/api/alerting/v2/notification_policies';
-const NOTIFICATION_POLICY_SO_TYPE = 'alerting_notification_policy';
+const ACTION_POLICY_API_PATH = '/api/alerting/v2/action_policies';
+const ACTION_POLICY_SO_TYPE = 'alerting_action_policy';
 
 export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
   const samlAuth = getService('samlAuth');
   const supertestWithoutAuth = getService('supertestWithoutAuth');
   const kibanaServer = getService('kibanaServer');
 
-  describe('Bulk Action Notification Policies API', function () {
+  describe('Bulk Action Action Policies API', function () {
     let roleAuthc: RoleCredentials;
 
     before(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       roleAuthc = await samlAuth.createM2mApiKeyWithRoleScope('admin');
     });
 
     after(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       await samlAuth.invalidateM2mApiKeyWithRoleScope(roleAuthc);
     });
 
     async function createPolicy(name: string) {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -47,7 +47,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     async function getPolicy(id: string) {
       const response = await supertestWithoutAuth
-        .get(`${NOTIFICATION_POLICY_API_PATH}/${id}`)
+        .get(`${ACTION_POLICY_API_PATH}/${id}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 
@@ -57,7 +57,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     async function disablePolicy(id: string) {
       const response = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${id}/_disable`)
+        .post(`${ACTION_POLICY_API_PATH}/${id}/_disable`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 
@@ -67,7 +67,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     async function snoozePolicy(id: string, snoozedUntil: string) {
       const response = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${id}/_snooze`)
+        .post(`${ACTION_POLICY_API_PATH}/${id}/_snooze`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ snoozedUntil });
@@ -78,7 +78,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     async function bulkAction(actions: Array<Record<string, unknown>>) {
       return supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/_bulk`)
+        .post(`${ACTION_POLICY_API_PATH}/_bulk`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ actions });
@@ -227,11 +227,11 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(response.body.errors).to.have.length(0);
 
       const get1 = await supertestWithoutAuth
-        .get(`${NOTIFICATION_POLICY_API_PATH}/${p1.id}`)
+        .get(`${ACTION_POLICY_API_PATH}/${p1.id}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
       const get2 = await supertestWithoutAuth
-        .get(`${NOTIFICATION_POLICY_API_PATH}/${p2.id}`)
+        .get(`${ACTION_POLICY_API_PATH}/${p2.id}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 
@@ -258,7 +258,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(updatedEnable.enabled).to.be(true);
 
       const getDeleted = await supertestWithoutAuth
-        .get(`${NOTIFICATION_POLICY_API_PATH}/${pDelete.id}`)
+        .get(`${ACTION_POLICY_API_PATH}/${pDelete.id}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
       expect(getDeleted.status).to.be(404);
@@ -279,7 +279,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(response.body.errors[0].id).to.be('non-existent-del-id');
 
       const getDeleted = await supertestWithoutAuth
-        .get(`${NOTIFICATION_POLICY_API_PATH}/${existing.id}`)
+        .get(`${ACTION_POLICY_API_PATH}/${existing.id}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
       expect(getDeleted.status).to.be(404);

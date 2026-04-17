@@ -9,30 +9,30 @@ import expect from '@kbn/expect';
 import type { DeploymentAgnosticFtrProviderContext } from '../../../ftr_provider_context';
 import type { RoleCredentials } from '../../../services';
 
-const NOTIFICATION_POLICY_API_PATH = '/api/alerting/v2/notification_policies';
-const NOTIFICATION_POLICY_SO_TYPE = 'alerting_notification_policy';
+const ACTION_POLICY_API_PATH = '/api/alerting/v2/action_policies';
+const ACTION_POLICY_SO_TYPE = 'alerting_action_policy';
 
 export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
   const samlAuth = getService('samlAuth');
   const supertestWithoutAuth = getService('supertestWithoutAuth');
   const kibanaServer = getService('kibanaServer');
 
-  describe('Snooze Notification Policy API', function () {
+  describe('Snooze Action Policy API', function () {
     let roleAuthc: RoleCredentials;
 
     before(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       roleAuthc = await samlAuth.createM2mApiKeyWithRoleScope('admin');
     });
 
     after(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       await samlAuth.invalidateM2mApiKeyWithRoleScope(roleAuthc);
     });
 
     async function createPolicy(name: string) {
       const response = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -45,12 +45,12 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       return response.body;
     }
 
-    it('should snooze a notification policy with a future date', async () => {
+    it('should snooze a action policy with a future date', async () => {
       const policy = await createPolicy('test-snooze');
       const futureDate = new Date(Date.now() + 86_400_000).toISOString();
 
       const response = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${policy.id}/_snooze`)
+        .post(`${ACTION_POLICY_API_PATH}/${policy.id}/_snooze`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ snoozedUntil: futureDate });
@@ -66,13 +66,13 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
       // Disable the policy first
       await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${policy.id}/_disable`)
+        .post(`${ACTION_POLICY_API_PATH}/${policy.id}/_disable`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 
       // Snooze should not change enabled state
       const response = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${policy.id}/_snooze`)
+        .post(`${ACTION_POLICY_API_PATH}/${policy.id}/_snooze`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ snoozedUntil: futureDate });
@@ -88,13 +88,13 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const secondDate = new Date(Date.now() + 172_800_000).toISOString();
 
       await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${policy.id}/_snooze`)
+        .post(`${ACTION_POLICY_API_PATH}/${policy.id}/_snooze`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ snoozedUntil: firstDate });
 
       const response = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${policy.id}/_snooze`)
+        .post(`${ACTION_POLICY_API_PATH}/${policy.id}/_snooze`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ snoozedUntil: secondDate });
@@ -107,7 +107,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const policy = await createPolicy('test-snooze-invalid-date');
 
       const response = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${policy.id}/_snooze`)
+        .post(`${ACTION_POLICY_API_PATH}/${policy.id}/_snooze`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ snoozedUntil: 'not-a-date' });
@@ -115,11 +115,11 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(response.status).to.be(400);
     });
 
-    it('should return 404 when snoozing a non-existent notification policy', async () => {
+    it('should return 404 when snoozing a non-existent action policy', async () => {
       const futureDate = new Date(Date.now() + 86_400_000).toISOString();
 
       const response = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/non-existent-id/_snooze`)
+        .post(`${ACTION_POLICY_API_PATH}/non-existent-id/_snooze`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({ snoozedUntil: futureDate });

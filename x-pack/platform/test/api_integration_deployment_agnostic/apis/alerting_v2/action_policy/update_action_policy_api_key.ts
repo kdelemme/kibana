@@ -9,30 +9,30 @@ import expect from '@kbn/expect';
 import type { DeploymentAgnosticFtrProviderContext } from '../../../ftr_provider_context';
 import type { RoleCredentials } from '../../../services';
 
-const NOTIFICATION_POLICY_API_PATH = '/api/alerting/v2/notification_policies';
-const NOTIFICATION_POLICY_SO_TYPE = 'alerting_notification_policy';
+const ACTION_POLICY_API_PATH = '/api/alerting/v2/action_policies';
+const ACTION_POLICY_SO_TYPE = 'alerting_action_policy';
 
 export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
   const samlAuth = getService('samlAuth');
   const supertestWithoutAuth = getService('supertestWithoutAuth');
   const kibanaServer = getService('kibanaServer');
 
-  describe('Update Notification Policy API Key API', function () {
+  describe('Update Action Policy API Key API', function () {
     let roleAuthc: RoleCredentials;
 
     before(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       roleAuthc = await samlAuth.createM2mApiKeyWithRoleScope('admin');
     });
 
     after(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       await samlAuth.invalidateM2mApiKeyWithRoleScope(roleAuthc);
     });
 
     it('should update the API key and return 204', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -47,14 +47,14 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const originalUpdatedAt = createResponse.body.updatedAt as string;
 
       const updateApiKeyResponse = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${policyId}/_update_api_key`)
+        .post(`${ACTION_POLICY_API_PATH}/${policyId}/_update_api_key`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 
       expect(updateApiKeyResponse.status).to.be(204);
 
       const getResponse = await supertestWithoutAuth
-        .get(`${NOTIFICATION_POLICY_API_PATH}/${policyId}`)
+        .get(`${ACTION_POLICY_API_PATH}/${policyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 
@@ -73,7 +73,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should preserve all policy attributes when updating the API key', async () => {
       const createResponse = await supertestWithoutAuth
-        .post(NOTIFICATION_POLICY_API_PATH)
+        .post(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader())
         .send({
@@ -90,14 +90,14 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       const policyId = createResponse.body.id as string;
 
       const updateApiKeyResponse = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/${policyId}/_update_api_key`)
+        .post(`${ACTION_POLICY_API_PATH}/${policyId}/_update_api_key`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 
       expect(updateApiKeyResponse.status).to.be(204);
 
       const getResponse = await supertestWithoutAuth
-        .get(`${NOTIFICATION_POLICY_API_PATH}/${policyId}`)
+        .get(`${ACTION_POLICY_API_PATH}/${policyId}`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 
@@ -115,7 +115,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
 
     it('should return 404 when updating API key for a non-existent policy', async () => {
       const response = await supertestWithoutAuth
-        .post(`${NOTIFICATION_POLICY_API_PATH}/non-existent-id/_update_api_key`)
+        .post(`${ACTION_POLICY_API_PATH}/non-existent-id/_update_api_key`)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 

@@ -9,8 +9,8 @@ import expect from '@kbn/expect';
 import type { DeploymentAgnosticFtrProviderContext } from '../../../ftr_provider_context';
 import type { RoleCredentials } from '../../../services';
 
-const NOTIFICATION_POLICY_API_PATH = '/api/alerting/v2/notification_policies';
-const NOTIFICATION_POLICY_SO_TYPE = 'alerting_notification_policy';
+const ACTION_POLICY_API_PATH = '/api/alerting/v2/action_policies';
+const ACTION_POLICY_SO_TYPE = 'alerting_action_policy';
 
 export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
   const samlAuth = getService('samlAuth');
@@ -27,7 +27,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
     }
   ) {
     return supertestWithoutAuth
-      .post(NOTIFICATION_POLICY_API_PATH)
+      .post(ACTION_POLICY_API_PATH)
       .set(roleAuthc.apiKeyHeader)
       .set(samlAuth.getInternalRequestHeader())
       .send({
@@ -43,28 +43,28 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
     query?: Record<string, string | number | string[]>
   ) {
     const req = supertestWithoutAuth
-      .get(NOTIFICATION_POLICY_API_PATH)
+      .get(ACTION_POLICY_API_PATH)
       .set(roleAuthc.apiKeyHeader)
       .set(samlAuth.getInternalRequestHeader());
     return query ? req.query(query) : req;
   }
 
-  describe('List Notification Policies API', function () {
+  describe('List Action Policies API', function () {
     let roleAuthc: RoleCredentials;
 
     before(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       roleAuthc = await samlAuth.createM2mApiKeyWithRoleScope('admin');
     });
 
     after(async () => {
-      await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+      await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       await samlAuth.invalidateM2mApiKeyWithRoleScope(roleAuthc);
     });
 
     it('should return empty list when no policies exist', async () => {
       const response = await supertestWithoutAuth
-        .get(NOTIFICATION_POLICY_API_PATH)
+        .get(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 
@@ -76,7 +76,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(response.body.perPage).to.be(20);
     });
 
-    it('should return created notification policies', async () => {
+    it('should return created action policies', async () => {
       const createResponse1 = await createPolicy(roleAuthc, 'policy-1');
       expect(createResponse1.status).to.be(200);
 
@@ -84,7 +84,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(createResponse2.status).to.be(200);
 
       const response = await supertestWithoutAuth
-        .get(NOTIFICATION_POLICY_API_PATH)
+        .get(ACTION_POLICY_API_PATH)
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
 
@@ -115,7 +115,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       await createPolicy(roleAuthc, 'policy-3');
 
       const firstPage = await supertestWithoutAuth
-        .get(NOTIFICATION_POLICY_API_PATH)
+        .get(ACTION_POLICY_API_PATH)
         .query({ page: 1, perPage: 2 })
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
@@ -127,7 +127,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       expect(firstPage.body.perPage).to.be(2);
 
       const secondPage = await supertestWithoutAuth
-        .get(NOTIFICATION_POLICY_API_PATH)
+        .get(ACTION_POLICY_API_PATH)
         .query({ page: 2, perPage: 2 })
         .set(roleAuthc.apiKeyHeader)
         .set(samlAuth.getInternalRequestHeader());
@@ -143,7 +143,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       let seedCreatedBy: string;
 
       before(async () => {
-        await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+        await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
 
         const alphaResp = await createPolicy(roleAuthc, 'Alpha Policy', {
           description: 'Monitors CPU usage',
@@ -168,7 +168,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
       });
 
       after(async () => {
-        await kibanaServer.savedObjects.clean({ types: [NOTIFICATION_POLICY_SO_TYPE] });
+        await kibanaServer.savedObjects.clean({ types: [ACTION_POLICY_SO_TYPE] });
       });
 
       describe('search', () => {
@@ -246,7 +246,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           );
 
           await supertestWithoutAuth
-            .post(`${NOTIFICATION_POLICY_API_PATH}/${alphaPolicy.id}/_disable`)
+            .post(`${ACTION_POLICY_API_PATH}/${alphaPolicy.id}/_disable`)
             .set(roleAuthc.apiKeyHeader)
             .set(samlAuth.getInternalRequestHeader())
             .expect(200);
@@ -265,7 +265,7 @@ export default function ({ getService }: DeploymentAgnosticFtrProviderContext) {
           expect(disabledResponse.body.items[0].name).to.be('Alpha Policy');
 
           await supertestWithoutAuth
-            .post(`${NOTIFICATION_POLICY_API_PATH}/${alphaPolicy.id}/_enable`)
+            .post(`${ACTION_POLICY_API_PATH}/${alphaPolicy.id}/_enable`)
             .set(roleAuthc.apiKeyHeader)
             .set(samlAuth.getInternalRequestHeader())
             .expect(200);
