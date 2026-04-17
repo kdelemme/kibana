@@ -8,28 +8,28 @@
 import { useMutation, useQueryClient } from '@kbn/react-query';
 import { useService, CoreStart } from '@kbn/core-di-browser';
 import { i18n } from '@kbn/i18n';
-import { NotificationPoliciesApi } from '../services/notification_policies_api';
-import { notificationPolicyKeys } from './query_key_factory';
+import { ActionPoliciesApi } from '../services/action_policies_api';
+import { actionPolicyKeys } from './query_key_factory';
 
-export const useUpdateNotificationPolicyApiKey = () => {
-  const notificationPoliciesApi = useService(NotificationPoliciesApi);
+export const useDeleteActionPolicy = () => {
+  const actionPoliciesApi = useService(ActionPoliciesApi);
   const { toasts } = useService(CoreStart('notifications'));
   const queryClient = useQueryClient();
 
   return useMutation<void, Error, string>({
-    mutationFn: (id) => notificationPoliciesApi.updateNotificationPolicyApiKey(id),
+    mutationFn: (id) => actionPoliciesApi.deleteActionPolicy(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: notificationPolicyKeys.lists(), exact: false });
+      queryClient.invalidateQueries({ queryKey: actionPolicyKeys.lists(), exact: false });
       toasts.addSuccess(
-        i18n.translate('xpack.alertingV2.notificationPolicy.updateApiKeySuccess', {
-          defaultMessage: 'API key updated',
+        i18n.translate('xpack.alertingV2.actionPolicy.deleteSuccess', {
+          defaultMessage: 'Action policy deleted successfully',
         })
       );
     },
     onError: (error) => {
       toasts.addError(error, {
-        title: i18n.translate('xpack.alertingV2.notificationPolicy.updateApiKeyError', {
-          defaultMessage: 'Failed to update API key',
+        title: i18n.translate('xpack.alertingV2.actionPolicy.deleteError', {
+          defaultMessage: 'Failed to delete action policy',
         }),
       });
     },

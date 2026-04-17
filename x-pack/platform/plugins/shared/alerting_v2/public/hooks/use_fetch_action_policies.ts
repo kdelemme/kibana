@@ -8,11 +8,11 @@
 import { useQuery } from '@kbn/react-query';
 import { useService, CoreStart } from '@kbn/core-di-browser';
 import { i18n } from '@kbn/i18n';
-import type { FindNotificationPoliciesResponse } from '../services/notification_policies_api';
-import { NotificationPoliciesApi } from '../services/notification_policies_api';
-import { notificationPolicyKeys } from './query_key_factory';
+import type { FindActionPoliciesResponse } from '../services/action_policies_api';
+import { ActionPoliciesApi } from '../services/action_policies_api';
+import { actionPolicyKeys } from './query_key_factory';
 
-interface UseFetchNotificationPoliciesParams {
+interface UseFetchActionPoliciesParams {
   page: number;
   perPage: number;
   search?: string;
@@ -22,7 +22,7 @@ interface UseFetchNotificationPoliciesParams {
   sortOrder?: 'asc' | 'desc';
 }
 
-export const useFetchNotificationPolicies = ({
+export const useFetchActionPolicies = ({
   page,
   perPage,
   search,
@@ -30,12 +30,12 @@ export const useFetchNotificationPolicies = ({
   enabled,
   sortField,
   sortOrder,
-}: UseFetchNotificationPoliciesParams) => {
-  const notificationPoliciesApi = useService(NotificationPoliciesApi);
+}: UseFetchActionPoliciesParams) => {
+  const actionPoliciesApi = useService(ActionPoliciesApi);
   const { toasts } = useService(CoreStart('notifications'));
 
-  return useQuery<FindNotificationPoliciesResponse, Error>({
-    queryKey: notificationPolicyKeys.list({
+  return useQuery<FindActionPoliciesResponse, Error>({
+    queryKey: actionPolicyKeys.list({
       page,
       perPage,
       search,
@@ -45,7 +45,7 @@ export const useFetchNotificationPolicies = ({
       sortOrder,
     }),
     queryFn: () =>
-      notificationPoliciesApi.listNotificationPolicies({
+      actionPoliciesApi.listActionPolicies({
         page,
         perPage,
         search,
@@ -58,7 +58,7 @@ export const useFetchNotificationPolicies = ({
     keepPreviousData: true,
     onError: (error: Error) => {
       toasts.addError(error, {
-        title: i18n.translate('xpack.alertingV2.notificationPolicies.fetchError', {
+        title: i18n.translate('xpack.alertingV2.actionPolicies.fetchError', {
           defaultMessage: 'Failed to load notification policies',
         }),
       });
