@@ -6,17 +6,17 @@
  */
 
 import type { SavedObjectsModelVersionMap } from '@kbn/core-saved-objects-server';
-import { notificationPolicySavedObjectAttributesSchemaV1 } from '../schemas/notification_policy_saved_object_attributes';
+import { actionPolicySavedObjectAttributesSchemaV1 } from '../schemas/action_policy_saved_object_attributes';
 
-export const notificationPolicyModelVersions: SavedObjectsModelVersionMap = {
+export const actionPolicyModelVersions: SavedObjectsModelVersionMap = {
   '1': {
     changes: [],
     schemas: {
-      forwardCompatibility: notificationPolicySavedObjectAttributesSchemaV1.extends(
+      forwardCompatibility: actionPolicySavedObjectAttributesSchemaV1.extends(
         {},
         { unknowns: 'ignore' }
       ),
-      create: notificationPolicySavedObjectAttributesSchemaV1,
+      create: actionPolicySavedObjectAttributesSchemaV1,
     },
   },
 };

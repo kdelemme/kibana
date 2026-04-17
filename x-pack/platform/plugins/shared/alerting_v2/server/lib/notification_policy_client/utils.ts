@@ -12,7 +12,7 @@ import type {
   UpdateNotificationPolicyData,
 } from '@kbn/alerting-v2-schemas';
 import { z } from '@kbn/zod/v4';
-import type { NotificationPolicySavedObjectAttributes } from '../../saved_objects';
+import type { ActionPolicySavedObjectAttributes } from '../../saved_objects';
 
 const isoDateTimeString = z.string().datetime();
 
@@ -37,7 +37,7 @@ const resolveNextNullableField = <T>(
 };
 
 const toAuthResponse = (
-  auth: NotificationPolicySavedObjectAttributes['auth']
+  auth: ActionPolicySavedObjectAttributes['auth']
 ): NotificationPolicyResponse['auth'] => {
   return {
     owner: auth.owner,
@@ -56,14 +56,14 @@ export const buildCreateNotificationPolicyAttributes = ({
   updatedAt,
 }: {
   data: CreateNotificationPolicyData;
-  auth: NotificationPolicySavedObjectAttributes['auth'];
+  auth: ActionPolicySavedObjectAttributes['auth'];
   createdBy: string | null;
   createdByUsername: string | null;
   createdAt: string;
   updatedBy: string | null;
   updatedByUsername: string | null;
   updatedAt: string;
-}): NotificationPolicySavedObjectAttributes => {
+}): ActionPolicySavedObjectAttributes => {
   return {
     name: data.name,
     description: data.description,
@@ -93,13 +93,13 @@ export const buildUpdateNotificationPolicyAttributes = ({
   updatedByUsername,
   updatedAt,
 }: {
-  existing: NotificationPolicySavedObjectAttributes;
+  existing: ActionPolicySavedObjectAttributes;
   update: UpdateNotificationPolicyData;
-  auth: NotificationPolicySavedObjectAttributes['auth'];
+  auth: ActionPolicySavedObjectAttributes['auth'];
   updatedBy: string | null;
   updatedByUsername: string | null;
   updatedAt: string;
-}): NotificationPolicySavedObjectAttributes => {
+}): ActionPolicySavedObjectAttributes => {
   return {
     name: update.name ?? existing.name,
     description: update.description ?? existing.description,
@@ -128,7 +128,7 @@ export const transformNotificationPolicySoAttributesToApiResponse = ({
 }: {
   id: string;
   version?: string;
-  attributes: NotificationPolicySavedObjectAttributes;
+  attributes: ActionPolicySavedObjectAttributes;
 }): NotificationPolicyResponse => {
   return {
     id,

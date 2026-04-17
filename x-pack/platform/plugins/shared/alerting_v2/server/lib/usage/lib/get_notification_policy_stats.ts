@@ -7,7 +7,7 @@
 
 import type { ElasticsearchClient } from '@kbn/core/server';
 import { ALERTING_CASES_SAVED_OBJECT_INDEX } from '@kbn/core-saved-objects-server';
-import { NOTIFICATION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
+import { ACTION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
 import { TERMS_SIZE, bucketsToArray } from './constants';
 import type { NotificationPolicyStatsAggregations, NotificationPolicyStatsResults } from './types';
 
@@ -20,7 +20,7 @@ export async function getNotificationPolicyStats(
     track_total_hits: true,
     query: {
       bool: {
-        filter: [{ term: { type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE } }],
+        filter: [{ term: { type: ACTION_POLICY_SAVED_OBJECT_TYPE } }],
       },
     },
     // Runtime mappings for fields not indexed in the notification policy mappings
@@ -29,7 +29,7 @@ export async function getNotificationPolicyStats(
         type: 'boolean',
         script: {
           source: `
-            def np = params._source['${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}'];
+            def np = params._source['${ACTION_POLICY_SAVED_OBJECT_TYPE}'];
             if (np != null) {
               emit(np['matcher'] != null);
             } else {
@@ -42,7 +42,7 @@ export async function getNotificationPolicyStats(
         type: 'keyword',
         script: {
           source: `
-            def np = params._source['${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}'];
+            def np = params._source['${ACTION_POLICY_SAVED_OBJECT_TYPE}'];
             if (np != null) {
               def throttle = np['throttle'];
               if (throttle != null) {
@@ -57,7 +57,7 @@ export async function getNotificationPolicyStats(
         type: 'long',
         script: {
           source: `
-            def np = params._source['${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}'];
+            def np = params._source['${ACTION_POLICY_SAVED_OBJECT_TYPE}'];
             if (np != null) {
               def groupBy = np['groupBy'];
               if (groupBy != null) emit((long) groupBy.size());
@@ -68,7 +68,7 @@ export async function getNotificationPolicyStats(
     },
     aggs: {
       unique_workflow_count: {
-        cardinality: { field: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.destinations.id` },
+        cardinality: { field: `${ACTION_POLICY_SAVED_OBJECT_TYPE}.destinations.id` },
       },
       count_with_matcher: {
         filter: { term: { np_has_matcher: true } },
@@ -77,7 +77,7 @@ export async function getNotificationPolicyStats(
         terms: { field: 'np_throttle_interval', size: TERMS_SIZE },
       },
       count_with_group_by: {
-        filter: { exists: { field: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.groupBy` } },
+        filter: { exists: { field: `${ACTION_POLICY_SAVED_OBJECT_TYPE}.groupBy` } },
       },
       avg_group_by_fields_count: {
         avg: { field: 'np_group_by_count' },

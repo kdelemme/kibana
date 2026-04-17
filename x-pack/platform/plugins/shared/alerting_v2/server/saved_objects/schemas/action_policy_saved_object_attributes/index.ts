@@ -6,10 +6,10 @@
  */
 
 import type { TypeOf } from '@kbn/config-schema';
-import { notificationPolicySavedObjectAttributesSchema } from './v1';
+import { actionPolicySavedObjectAttributesSchema } from './v1';
 
-export type NotificationPolicySavedObjectAttributes = TypeOf<
-  typeof notificationPolicySavedObjectAttributesSchema
+export type ActionPolicySavedObjectAttributes = TypeOf<
+  typeof actionPolicySavedObjectAttributesSchema
 >;
 
-export { notificationPolicySavedObjectAttributesSchema as notificationPolicySavedObjectAttributesSchemaV1 };
+export { actionPolicySavedObjectAttributesSchema as actionPolicySavedObjectAttributesSchemaV1 };

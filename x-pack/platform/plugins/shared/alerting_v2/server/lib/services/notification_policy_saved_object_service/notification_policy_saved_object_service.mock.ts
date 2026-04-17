@@ -9,7 +9,7 @@ import type { SavedObjectsClientContract } from '@kbn/core/server';
 import { savedObjectsClientMock } from '@kbn/core-saved-objects-api-server-mocks';
 import type { EncryptedSavedObjectsClient } from '@kbn/encrypted-saved-objects-plugin/server';
 import { spacesMock } from '@kbn/spaces-plugin/server/mocks';
-import { NOTIFICATION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
+import { ACTION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
 import { NotificationPolicySavedObjectService } from './notification_policy_saved_object_service';
 
 /**
@@ -24,7 +24,7 @@ export function createMockEncryptedSavedObjects(
     if (!attrs) return Promise.reject(new Error('not found'));
     return Promise.resolve({
       id,
-      type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+      type: ACTION_POLICY_SAVED_OBJECT_TYPE,
       attributes: {
         auth: { apiKey: attrs.apiKey, createdByUser: attrs.createdByUser, owner: 'test-user' },
       },

@@ -15,7 +15,7 @@ import {
   type AlertAction,
 } from '../../resources/datastreams/alert_actions';
 import type {
-  NotificationPolicySavedObjectAttributes,
+  ActionPolicySavedObjectAttributes,
   RuleSavedObjectAttributes,
 } from '../../saved_objects';
 import { createRuleSoAttributes } from '../test_utils';
@@ -68,7 +68,7 @@ function mockRulesFindByIds(
 function mockNpFindAllDecrypted(
   spy: jest.SpyInstance,
   policyIds: string[],
-  overrides: Partial<NotificationPolicySavedObjectAttributes> = {}
+  overrides: Partial<ActionPolicySavedObjectAttributes> = {}
 ) {
   spy.mockResolvedValue(
     policyIds.map((id) => ({

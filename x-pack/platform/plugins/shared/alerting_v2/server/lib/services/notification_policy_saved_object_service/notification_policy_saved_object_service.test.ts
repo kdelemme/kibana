@@ -7,12 +7,12 @@
 
 import type { SavedObjectsClientContract } from '@kbn/core/server';
 import type { EncryptedSavedObjectsClient } from '@kbn/encrypted-saved-objects-plugin/server';
-import type { NotificationPolicySavedObjectAttributes } from '../../../saved_objects';
-import { NOTIFICATION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
+import type { ActionPolicySavedObjectAttributes } from '../../../saved_objects';
+import { ACTION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
 import type { NotificationPolicySavedObjectService } from './notification_policy_saved_object_service';
 import { createNotificationPolicySavedObjectService } from './notification_policy_saved_object_service.mock';
 
-const mockAttrs: NotificationPolicySavedObjectAttributes = {
+const mockAttrs: ActionPolicySavedObjectAttributes = {
   name: 'test-policy',
   description: 'A test notification policy',
   enabled: true,
@@ -50,7 +50,7 @@ describe('NotificationPolicySavedObjectService', () => {
     it('creates a saved object with the provided id', async () => {
       mockSoClient.create.mockResolvedValue({
         id: 'policy-1',
-        type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        type: ACTION_POLICY_SAVED_OBJECT_TYPE,
         attributes: mockAttrs,
         references: [],
         version: 'v1',
@@ -59,17 +59,16 @@ describe('NotificationPolicySavedObjectService', () => {
       const result = await service.create({ attrs: mockAttrs, id: 'policy-1' });
 
       expect(result).toEqual({ id: 'policy-1', version: 'v1' });
-      expect(mockSoClient.create).toHaveBeenCalledWith(
-        NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
-        mockAttrs,
-        { id: 'policy-1', overwrite: false }
-      );
+      expect(mockSoClient.create).toHaveBeenCalledWith(ACTION_POLICY_SAVED_OBJECT_TYPE, mockAttrs, {
+        id: 'policy-1',
+        overwrite: false,
+      });
     });
 
     it('generates an id when none is provided', async () => {
       mockSoClient.create.mockResolvedValue({
         id: expect.any(String),
-        type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        type: ACTION_POLICY_SAVED_OBJECT_TYPE,
         attributes: mockAttrs,
         references: [],
         version: 'v1',
@@ -77,11 +76,10 @@ describe('NotificationPolicySavedObjectService', () => {
 
       await service.create({ attrs: mockAttrs });
 
-      expect(mockSoClient.create).toHaveBeenCalledWith(
-        NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
-        mockAttrs,
-        { id: expect.any(String), overwrite: false }
-      );
+      expect(mockSoClient.create).toHaveBeenCalledWith(ACTION_POLICY_SAVED_OBJECT_TYPE, mockAttrs, {
+        id: expect.any(String),
+        overwrite: false,
+      });
     });
 
     it('propagates errors from the saved objects client', async () => {
@@ -95,7 +93,7 @@ describe('NotificationPolicySavedObjectService', () => {
     it('returns id, attributes, and version', async () => {
       mockSoClient.get.mockResolvedValue({
         id: 'policy-1',
-        type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        type: ACTION_POLICY_SAVED_OBJECT_TYPE,
         attributes: mockAttrs,
         references: [],
         version: 'v1',
@@ -105,7 +103,7 @@ describe('NotificationPolicySavedObjectService', () => {
 
       expect(result).toEqual({ id: 'policy-1', attributes: mockAttrs, version: 'v1' });
       expect(mockSoClient.get).toHaveBeenCalledWith(
-        NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        ACTION_POLICY_SAVED_OBJECT_TYPE,
         'policy-1',
         undefined
       );
@@ -114,7 +112,7 @@ describe('NotificationPolicySavedObjectService', () => {
     it('passes namespace when spaceId is provided', async () => {
       mockSoClient.get.mockResolvedValue({
         id: 'policy-1',
-        type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        type: ACTION_POLICY_SAVED_OBJECT_TYPE,
         attributes: mockAttrs,
         references: [],
         version: 'v1',
@@ -122,17 +120,15 @@ describe('NotificationPolicySavedObjectService', () => {
 
       await service.get('policy-1', 'custom-space');
 
-      expect(mockSoClient.get).toHaveBeenCalledWith(
-        NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
-        'policy-1',
-        { namespace: 'custom-space' }
-      );
+      expect(mockSoClient.get).toHaveBeenCalledWith(ACTION_POLICY_SAVED_OBJECT_TYPE, 'policy-1', {
+        namespace: 'custom-space',
+      });
     });
 
     it('does not pass namespace when spaceId is omitted', async () => {
       mockSoClient.get.mockResolvedValue({
         id: 'policy-1',
-        type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        type: ACTION_POLICY_SAVED_OBJECT_TYPE,
         attributes: mockAttrs,
         references: [],
       });
@@ -140,7 +136,7 @@ describe('NotificationPolicySavedObjectService', () => {
       await service.get('policy-1');
 
       expect(mockSoClient.get).toHaveBeenCalledWith(
-        NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        ACTION_POLICY_SAVED_OBJECT_TYPE,
         'policy-1',
         undefined
       );
@@ -151,7 +147,7 @@ describe('NotificationPolicySavedObjectService', () => {
     it('updates the saved object and returns id and version', async () => {
       mockSoClient.update.mockResolvedValue({
         id: 'policy-1',
-        type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        type: ACTION_POLICY_SAVED_OBJECT_TYPE,
         attributes: mockAttrs,
         references: [],
         version: 'v2',
@@ -161,7 +157,7 @@ describe('NotificationPolicySavedObjectService', () => {
 
       expect(result).toEqual({ id: 'policy-1', version: 'v2' });
       expect(mockSoClient.update).toHaveBeenCalledWith(
-        NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        ACTION_POLICY_SAVED_OBJECT_TYPE,
         'policy-1',
         mockAttrs,
         { version: 'v1' }
@@ -175,10 +171,7 @@ describe('NotificationPolicySavedObjectService', () => {
 
       await service.delete({ id: 'policy-1' });
 
-      expect(mockSoClient.delete).toHaveBeenCalledWith(
-        NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
-        'policy-1'
-      );
+      expect(mockSoClient.delete).toHaveBeenCalledWith(ACTION_POLICY_SAVED_OBJECT_TYPE, 'policy-1');
     });
   });
 
@@ -195,7 +188,7 @@ describe('NotificationPolicySavedObjectService', () => {
         saved_objects: [
           {
             id: 'policy-1',
-            type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+            type: ACTION_POLICY_SAVED_OBJECT_TYPE,
             attributes: mockAttrs,
             references: [],
             version: 'v1',
@@ -207,7 +200,7 @@ describe('NotificationPolicySavedObjectService', () => {
 
       expect(result).toEqual([{ id: 'policy-1', attributes: mockAttrs, version: 'v1' }]);
       expect(mockSoClient.bulkGet).toHaveBeenCalledWith(
-        [{ type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE, id: 'policy-1' }],
+        [{ type: ACTION_POLICY_SAVED_OBJECT_TYPE, id: 'policy-1' }],
         undefined
       );
     });
@@ -218,8 +211,8 @@ describe('NotificationPolicySavedObjectService', () => {
         saved_objects: [
           {
             id: 'policy-missing',
-            type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
-            attributes: {} as NotificationPolicySavedObjectAttributes,
+            type: ACTION_POLICY_SAVED_OBJECT_TYPE,
+            attributes: {} as ActionPolicySavedObjectAttributes,
             references: [],
             error: soError,
           },
@@ -237,15 +230,15 @@ describe('NotificationPolicySavedObjectService', () => {
         saved_objects: [
           {
             id: 'policy-1',
-            type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+            type: ACTION_POLICY_SAVED_OBJECT_TYPE,
             attributes: mockAttrs,
             references: [],
             version: 'v1',
           },
           {
             id: 'policy-missing',
-            type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
-            attributes: {} as NotificationPolicySavedObjectAttributes,
+            type: ACTION_POLICY_SAVED_OBJECT_TYPE,
+            attributes: {} as ActionPolicySavedObjectAttributes,
             references: [],
             error: soError,
           },
@@ -265,7 +258,7 @@ describe('NotificationPolicySavedObjectService', () => {
         saved_objects: [
           {
             id: 'policy-1',
-            type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+            type: ACTION_POLICY_SAVED_OBJECT_TYPE,
             attributes: mockAttrs,
             references: [],
             version: 'v1',
@@ -276,7 +269,7 @@ describe('NotificationPolicySavedObjectService', () => {
       await service.bulkGetByIds(['policy-1'], 'custom-space');
 
       expect(mockSoClient.bulkGet).toHaveBeenCalledWith(
-        [{ type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE, id: 'policy-1' }],
+        [{ type: ACTION_POLICY_SAVED_OBJECT_TYPE, id: 'policy-1' }],
         { namespace: 'custom-space' }
       );
     });
@@ -295,14 +288,14 @@ describe('NotificationPolicySavedObjectService', () => {
         saved_objects: [
           {
             id: 'policy-1',
-            type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+            type: ACTION_POLICY_SAVED_OBJECT_TYPE,
             attributes: {},
             references: [],
             version: 'v2',
           },
           {
             id: 'policy-2',
-            type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+            type: ACTION_POLICY_SAVED_OBJECT_TYPE,
             attributes: {},
             references: [],
             version: 'v3',
@@ -323,12 +316,12 @@ describe('NotificationPolicySavedObjectService', () => {
       ]);
       expect(mockSoClient.bulkUpdate).toHaveBeenCalledWith([
         {
-          type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+          type: ACTION_POLICY_SAVED_OBJECT_TYPE,
           id: 'policy-1',
           attributes: { enabled: true },
         },
         {
-          type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+          type: ACTION_POLICY_SAVED_OBJECT_TYPE,
           id: 'policy-2',
           attributes: { enabled: false },
         },
@@ -341,8 +334,8 @@ describe('NotificationPolicySavedObjectService', () => {
         saved_objects: [
           {
             id: 'policy-missing',
-            type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
-            attributes: {} as NotificationPolicySavedObjectAttributes,
+            type: ACTION_POLICY_SAVED_OBJECT_TYPE,
+            attributes: {} as ActionPolicySavedObjectAttributes,
             references: [],
             error: soError,
           },
@@ -370,12 +363,12 @@ describe('NotificationPolicySavedObjectService', () => {
         statuses: [
           {
             id: 'policy-1',
-            type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+            type: ACTION_POLICY_SAVED_OBJECT_TYPE,
             success: true,
           },
           {
             id: 'policy-2',
-            type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+            type: ACTION_POLICY_SAVED_OBJECT_TYPE,
             success: true,
           },
         ],
@@ -385,8 +378,8 @@ describe('NotificationPolicySavedObjectService', () => {
 
       expect(result).toEqual([{ id: 'policy-1' }, { id: 'policy-2' }]);
       expect(mockSoClient.bulkDelete).toHaveBeenCalledWith([
-        { type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE, id: 'policy-1' },
-        { type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE, id: 'policy-2' },
+        { type: ACTION_POLICY_SAVED_OBJECT_TYPE, id: 'policy-1' },
+        { type: ACTION_POLICY_SAVED_OBJECT_TYPE, id: 'policy-2' },
       ]);
     });
 
@@ -396,7 +389,7 @@ describe('NotificationPolicySavedObjectService', () => {
         statuses: [
           {
             id: 'policy-missing',
-            type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+            type: ACTION_POLICY_SAVED_OBJECT_TYPE,
             success: false,
             error: soError,
           },
@@ -428,12 +421,12 @@ describe('NotificationPolicySavedObjectService', () => {
 
       expect(result).toEqual(['production', 'critical', 'staging']);
       expect(mockSoClient.find).toHaveBeenCalledWith({
-        type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        type: ACTION_POLICY_SAVED_OBJECT_TYPE,
         perPage: 0,
         aggs: {
           tags: {
             terms: {
-              field: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
+              field: `${ACTION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
               size: 100,
               order: { _key: 'asc' },
             },
@@ -449,12 +442,12 @@ describe('NotificationPolicySavedObjectService', () => {
 
       expect(result).toEqual(['production']);
       expect(mockSoClient.find).toHaveBeenCalledWith({
-        type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        type: ACTION_POLICY_SAVED_OBJECT_TYPE,
         perPage: 0,
         aggs: {
           tags: {
             terms: {
-              field: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
+              field: `${ACTION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
               size: 100,
               order: { _key: 'asc' },
               include: 'prod.*',
@@ -519,7 +512,7 @@ describe('NotificationPolicySavedObjectService', () => {
       expect(
         mockEncryptedSoClient.createPointInTimeFinderDecryptedAsInternalUser
       ).toHaveBeenCalledWith({
-        type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        type: ACTION_POLICY_SAVED_OBJECT_TYPE,
         namespaces: ['*'],
         perPage: 1000,
       });
@@ -536,10 +529,10 @@ describe('NotificationPolicySavedObjectService', () => {
       expect(
         mockEncryptedSoClient.createPointInTimeFinderDecryptedAsInternalUser
       ).toHaveBeenCalledWith({
-        type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        type: ACTION_POLICY_SAVED_OBJECT_TYPE,
         namespaces: ['*'],
         perPage: 1000,
-        filter: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes.enabled: true`,
+        filter: `${ACTION_POLICY_SAVED_OBJECT_TYPE}.attributes.enabled: true`,
       });
     });
 

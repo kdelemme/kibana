@@ -19,12 +19,9 @@ import {
 } from '../../../resources/datastreams/alert_events';
 import type {
   RuleSavedObjectAttributes,
-  NotificationPolicySavedObjectAttributes,
+  ActionPolicySavedObjectAttributes,
 } from '../../../saved_objects';
-import {
-  RULE_SAVED_OBJECT_TYPE,
-  NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
-} from '../../../saved_objects';
+import { RULE_SAVED_OBJECT_TYPE, ACTION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
 import type { LoggerServiceContract } from '../../services/logger_service/logger_service';
 import { createLoggerService } from '../../services/logger_service/logger_service.mock';
 import { NotificationPolicySavedObjectService } from '../../services/notification_policy_saved_object_service/notification_policy_saved_object_service';
@@ -491,7 +488,7 @@ describe.skip('DispatcherService integration tests', () => {
     );
     npSoService = new NotificationPolicySavedObjectService(
       kibanaServer.coreStart.savedObjects.getUnsafeInternalClient({
-        includedHiddenTypes: [NOTIFICATION_POLICY_SAVED_OBJECT_TYPE],
+        includedHiddenTypes: [ACTION_POLICY_SAVED_OBJECT_TYPE],
       }),
       undefined as unknown as SpacesPluginStart,
       undefined as unknown as EncryptedSavedObjectsClient
@@ -1222,7 +1219,7 @@ async function seedRulesAndPolicies(
   rulesSoService: RulesSavedObjectServiceContract,
   npSoService: NotificationPolicySavedObjectServiceContract
 ): Promise<void> {
-  const policyAttrs: NotificationPolicySavedObjectAttributes = {
+  const policyAttrs: ActionPolicySavedObjectAttributes = {
     name: 'Test Policy',
     description: 'Test notification policy',
     enabled: true,
@@ -1241,7 +1238,7 @@ async function seedRulesAndPolicies(
   };
   await npSoService.create({ attrs: policyAttrs, id: NOTIFICATION_POLICY_ID });
 
-  const matcherPolicyAttrs: NotificationPolicySavedObjectAttributes = {
+  const matcherPolicyAttrs: ActionPolicySavedObjectAttributes = {
     ...policyAttrs,
     name: 'Matcher Policy',
     description: 'Only matches critical severity',
@@ -1250,7 +1247,7 @@ async function seedRulesAndPolicies(
   };
   await npSoService.create({ attrs: matcherPolicyAttrs, id: NOTIFICATION_POLICY_MATCHER_ID });
 
-  const groupByPolicyAttrs: NotificationPolicySavedObjectAttributes = {
+  const groupByPolicyAttrs: ActionPolicySavedObjectAttributes = {
     ...policyAttrs,
     name: 'GroupBy Policy',
     description: 'Groups by host.name',
@@ -1280,7 +1277,7 @@ async function seedRulesAndPolicies(
 
 async function setNotificationPolicyThrottle(
   npSoService: NotificationPolicySavedObjectServiceContract,
-  throttle: NotificationPolicySavedObjectAttributes['throttle'],
+  throttle: ActionPolicySavedObjectAttributes['throttle'],
   policyId: string = NOTIFICATION_POLICY_ID
 ): Promise<void> {
   const policy = await npSoService.get(policyId);
@@ -1309,7 +1306,7 @@ async function setNotificationPolicyEnabled(
 async function updateNotificationPolicy(
   npSoService: NotificationPolicySavedObjectServiceContract,
   policyId: string,
-  attrs: Partial<NotificationPolicySavedObjectAttributes>
+  attrs: Partial<ActionPolicySavedObjectAttributes>
 ): Promise<void> {
   const policy = await npSoService.get(policyId);
 

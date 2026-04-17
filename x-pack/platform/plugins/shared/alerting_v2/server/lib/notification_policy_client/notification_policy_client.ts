@@ -22,8 +22,8 @@ import { stringifyZodError } from '@kbn/zod-helpers/v4';
 import { inject, injectable } from 'inversify';
 import { partition } from 'lodash';
 import {
-  NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
-  type NotificationPolicySavedObjectAttributes,
+  ACTION_POLICY_SAVED_OBJECT_TYPE,
+  type ActionPolicySavedObjectAttributes,
 } from '../../saved_objects';
 import { EncryptedSavedObjectsClientToken } from '../dispatcher/steps/dispatch_step_tokens';
 import type { ApiKeyServiceContract } from '../services/api_key_service/api_key_service';
@@ -52,7 +52,7 @@ import {
 
 const resolveActionAttrs = (
   action: Exclude<NotificationPolicyBulkAction, { action: 'delete' } | { action: 'update_api_key' }>
-): Partial<NotificationPolicySavedObjectAttributes> => {
+): Partial<ActionPolicySavedObjectAttributes> => {
   switch (action.action) {
     case 'enable':
       return { enabled: true };
@@ -183,7 +183,7 @@ export class NotificationPolicyClient {
     const userProfile = await this.getUserProfile();
     const now = new Date().toISOString();
 
-    let existingPolicy: NotificationPolicySavedObjectAttributes;
+    let existingPolicy: ActionPolicySavedObjectAttributes;
     try {
       const doc = await this.notificationPolicySavedObjectService.get(params.options.id);
       existingPolicy = doc.attributes;
@@ -301,7 +301,7 @@ export class NotificationPolicyClient {
   public async updateNotificationPolicyApiKey({
     id,
   }: UpdateNotificationPolicyApiKeyParams): Promise<void> {
-    let existingPolicy: NotificationPolicySavedObjectAttributes;
+    let existingPolicy: ActionPolicySavedObjectAttributes;
     try {
       const doc = await this.notificationPolicySavedObjectService.get(id);
       existingPolicy = doc.attributes;
@@ -414,7 +414,7 @@ export class NotificationPolicyClient {
 
   private buildFindFilter(params: FindNotificationPoliciesParams): KueryNode | undefined {
     const conditions: KueryNode[] = [];
-    const attrPrefix = `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes`;
+    const attrPrefix = `${ACTION_POLICY_SAVED_OBJECT_TYPE}.attributes`;
 
     if (params.destinationType) {
       conditions.push(nodeBuilder.is(`${attrPrefix}.destinations.type`, params.destinationType));
@@ -485,8 +485,8 @@ export class NotificationPolicyClient {
   ): Promise<{ apiKey: string; createdByUser: boolean } | null> {
     try {
       const doc =
-        await this.esoClient.getDecryptedAsInternalUser<NotificationPolicySavedObjectAttributes>(
-          NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        await this.esoClient.getDecryptedAsInternalUser<ActionPolicySavedObjectAttributes>(
+          ACTION_POLICY_SAVED_OBJECT_TYPE,
           id,
           this.namespace ? { namespace: this.namespace } : undefined
         );
@@ -510,9 +510,9 @@ export class NotificationPolicyClient {
 
     try {
       const finder =
-        await this.esoClient.createPointInTimeFinderDecryptedAsInternalUser<NotificationPolicySavedObjectAttributes>(
+        await this.esoClient.createPointInTimeFinderDecryptedAsInternalUser<ActionPolicySavedObjectAttributes>(
           {
-            type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+            type: ACTION_POLICY_SAVED_OBJECT_TYPE,
             perPage: Math.min(ids.length, 1000),
             ...(this.namespace ? { namespaces: [this.namespace] } : {}),
           }

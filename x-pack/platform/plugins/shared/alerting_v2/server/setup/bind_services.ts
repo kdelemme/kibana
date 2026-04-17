@@ -59,7 +59,7 @@ import { UserService } from '../lib/services/user_service/user_service';
 import { ApiKeyServiceSavedObjectsClientToken } from '../lib/services/api_key_service/tokens';
 import {
   API_KEY_PENDING_INVALIDATION_TYPE,
-  NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+  ACTION_POLICY_SAVED_OBJECT_TYPE,
   RULE_SAVED_OBJECT_TYPE,
 } from '../saved_objects';
 import {
@@ -147,7 +147,7 @@ export function bindServices({ bind }: ContainerModuleLoadOptions) {
           'encryptedSavedObjects'
         )
       );
-      return eso.getClient({ includedHiddenTypes: [NOTIFICATION_POLICY_SAVED_OBJECT_TYPE] });
+      return eso.getClient({ includedHiddenTypes: [ACTION_POLICY_SAVED_OBJECT_TYPE] });
     })
     .inSingletonScope();
 
@@ -155,7 +155,7 @@ export function bindServices({ bind }: ContainerModuleLoadOptions) {
     .toResolvedValue(
       (savedObjectsClientFactory) =>
         savedObjectsClientFactory({
-          includedHiddenTypes: [NOTIFICATION_POLICY_SAVED_OBJECT_TYPE],
+          includedHiddenTypes: [ACTION_POLICY_SAVED_OBJECT_TYPE],
         }),
       [SavedObjectsClientFactory]
     )
@@ -170,7 +170,7 @@ export function bindServices({ bind }: ContainerModuleLoadOptions) {
       const savedObjects = get(CoreStart('savedObjects'));
       const spaces = get(PluginStart<AlertingServerStartDependencies['spaces']>('spaces'));
       const internalClient = savedObjects.createInternalRepository([
-        NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        ACTION_POLICY_SAVED_OBJECT_TYPE,
       ]);
       const esoClient = get(EncryptedSavedObjectsClientToken);
       return new NotificationPolicySavedObjectService(internalClient, spaces, esoClient);

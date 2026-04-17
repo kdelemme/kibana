@@ -8,9 +8,9 @@
 import type { SavedObjectsTypeMappingDefinition } from '@kbn/core-saved-objects-server';
 
 /**
- * Mappings for the notification policy saved object.
+ * Mappings for the action policy saved object.
  */
-export const notificationPolicyMappings: SavedObjectsTypeMappingDefinition = {
+export const actionPolicyMappings: SavedObjectsTypeMappingDefinition = {
   dynamic: false,
   properties: {
     name: { type: 'text', fields: { keyword: { type: 'keyword', ignore_above: 256 } } },

@@ -7,12 +7,12 @@
 
 import type { SavedObjectError } from '@kbn/core/types';
 import type { KueryNode } from '@kbn/es-query';
-import type { NotificationPolicySavedObjectAttributes } from '../../../saved_objects';
+import type { ActionPolicySavedObjectAttributes } from '../../../saved_objects';
 
 export type NotificationPolicySavedObjectBulkGetItem =
   | {
       id: string;
-      attributes: NotificationPolicySavedObjectAttributes;
+      attributes: ActionPolicySavedObjectAttributes;
       version?: string;
       namespaces?: string[];
     }
@@ -31,26 +31,26 @@ export type NotificationPolicySavedObjectBulkDeleteItem =
 
 export interface NotificationPolicySavedObjectServiceContract {
   create(params: {
-    attrs: NotificationPolicySavedObjectAttributes;
+    attrs: ActionPolicySavedObjectAttributes;
     id?: string;
   }): Promise<{ id: string; version?: string }>;
   get(
     id: string,
     spaceId?: string
-  ): Promise<{ id: string; attributes: NotificationPolicySavedObjectAttributes; version?: string }>;
+  ): Promise<{ id: string; attributes: ActionPolicySavedObjectAttributes; version?: string }>;
   bulkGetByIds(
     ids: string[],
     spaceId?: string
   ): Promise<NotificationPolicySavedObjectBulkGetItem[]>;
   update(params: {
     id: string;
-    attrs: Partial<NotificationPolicySavedObjectAttributes>;
+    attrs: Partial<ActionPolicySavedObjectAttributes>;
     version?: string;
   }): Promise<{ id: string; version?: string }>;
   bulkUpdate(params: {
     objects: Array<{
       id: string;
-      attrs: Partial<NotificationPolicySavedObjectAttributes>;
+      attrs: Partial<ActionPolicySavedObjectAttributes>;
     }>;
   }): Promise<NotificationPolicySavedObjectBulkUpdateItem[]>;
   findAllDecrypted(params?: {
@@ -68,7 +68,7 @@ export interface NotificationPolicySavedObjectServiceContract {
   }): Promise<{
     saved_objects: Array<{
       id: string;
-      attributes: NotificationPolicySavedObjectAttributes;
+      attributes: ActionPolicySavedObjectAttributes;
       version?: string;
     }>;
     total: number;

@@ -12,8 +12,8 @@ import type { EncryptedSavedObjectsClient } from '@kbn/encrypted-saved-objects-p
 import type { KueryNode } from '@kbn/es-query';
 import type { SpacesPluginStart } from '@kbn/spaces-plugin/server';
 import { inject, injectable } from 'inversify';
-import type { NotificationPolicySavedObjectAttributes } from '../../../saved_objects';
-import { NOTIFICATION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
+import type { ActionPolicySavedObjectAttributes } from '../../../saved_objects';
+import { ACTION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
 import type { AlertingServerStartDependencies } from '../../../types';
 import { EncryptedSavedObjectsClientToken } from '../../dispatcher/steps/dispatch_step_tokens';
 import { spaceIdToNamespace } from '../../space_id_to_namespace';
@@ -51,12 +51,12 @@ export class NotificationPolicySavedObjectService
     attrs,
     id,
   }: {
-    attrs: NotificationPolicySavedObjectAttributes;
+    attrs: ActionPolicySavedObjectAttributes;
     id?: string;
   }): Promise<{ id: string; version?: string }> {
     const notificationPolicyId = id ?? SavedObjectsUtils.generateId();
-    const result = await this.client.create<NotificationPolicySavedObjectAttributes>(
-      NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+    const result = await this.client.create<ActionPolicySavedObjectAttributes>(
+      ACTION_POLICY_SAVED_OBJECT_TYPE,
       attrs,
       {
         id: notificationPolicyId,
@@ -72,12 +72,12 @@ export class NotificationPolicySavedObjectService
     spaceId?: string
   ): Promise<{
     id: string;
-    attributes: NotificationPolicySavedObjectAttributes;
+    attributes: ActionPolicySavedObjectAttributes;
     version?: string;
   }> {
     const namespace = spaceIdToNamespace(this.spaces, spaceId);
-    const doc = await this.client.get<NotificationPolicySavedObjectAttributes>(
-      NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+    const doc = await this.client.get<ActionPolicySavedObjectAttributes>(
+      ACTION_POLICY_SAVED_OBJECT_TYPE,
       id,
       namespace ? { namespace } : undefined
     );
@@ -90,11 +90,11 @@ export class NotificationPolicySavedObjectService
     version,
   }: {
     id: string;
-    attrs: Partial<NotificationPolicySavedObjectAttributes>;
+    attrs: Partial<ActionPolicySavedObjectAttributes>;
     version?: string;
   }): Promise<{ id: string; version?: string }> {
-    const result = await this.client.update<NotificationPolicySavedObjectAttributes>(
-      NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+    const result = await this.client.update<ActionPolicySavedObjectAttributes>(
+      ACTION_POLICY_SAVED_OBJECT_TYPE,
       id,
       attrs,
       version ? { version } : undefined
@@ -108,16 +108,16 @@ export class NotificationPolicySavedObjectService
   }: {
     objects: Array<{
       id: string;
-      attrs: Partial<NotificationPolicySavedObjectAttributes>;
+      attrs: Partial<ActionPolicySavedObjectAttributes>;
     }>;
   }): Promise<NotificationPolicySavedObjectBulkUpdateItem[]> {
     if (objects.length === 0) {
       return [];
     }
 
-    const result = await this.client.bulkUpdate<NotificationPolicySavedObjectAttributes>(
+    const result = await this.client.bulkUpdate<ActionPolicySavedObjectAttributes>(
       objects.map(({ id, attrs }) => ({
-        type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+        type: ACTION_POLICY_SAVED_OBJECT_TYPE,
         id,
         attributes: attrs,
       }))
@@ -140,8 +140,8 @@ export class NotificationPolicySavedObjectService
     }
 
     const namespace = spaceIdToNamespace(this.spaces, spaceId);
-    const result = await this.client.bulkGet<NotificationPolicySavedObjectAttributes>(
-      ids.map((id) => ({ type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE, id })),
+    const result = await this.client.bulkGet<ActionPolicySavedObjectAttributes>(
+      ids.map((id) => ({ type: ACTION_POLICY_SAVED_OBJECT_TYPE, id })),
       namespace ? { namespace } : undefined
     );
 
@@ -163,13 +163,13 @@ export class NotificationPolicySavedObjectService
   }): Promise<NotificationPolicySavedObjectBulkGetItem[]> {
     const kqlFilter =
       params?.filter?.enabled !== undefined
-        ? `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes.enabled: ${params.filter.enabled}`
+        ? `${ACTION_POLICY_SAVED_OBJECT_TYPE}.attributes.enabled: ${params.filter.enabled}`
         : undefined;
 
     const finder =
-      await this.encryptedSavedObjectsClient.createPointInTimeFinderDecryptedAsInternalUser<NotificationPolicySavedObjectAttributes>(
+      await this.encryptedSavedObjectsClient.createPointInTimeFinderDecryptedAsInternalUser<ActionPolicySavedObjectAttributes>(
         {
-          type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+          type: ACTION_POLICY_SAVED_OBJECT_TYPE,
           namespaces: ['*'],
           perPage: 1000,
           ...(kqlFilter ? { filter: kqlFilter } : {}),
@@ -194,7 +194,7 @@ export class NotificationPolicySavedObjectService
   }
 
   public async delete({ id }: { id: string }): Promise<void> {
-    await this.client.delete(NOTIFICATION_POLICY_SAVED_OBJECT_TYPE, id);
+    await this.client.delete(ACTION_POLICY_SAVED_OBJECT_TYPE, id);
   }
 
   public async bulkDelete({
@@ -207,7 +207,7 @@ export class NotificationPolicySavedObjectService
     }
 
     const result = await this.client.bulkDelete(
-      ids.map((id) => ({ type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE, id }))
+      ids.map((id) => ({ type: ACTION_POLICY_SAVED_OBJECT_TYPE, id }))
     );
 
     return result.statuses.map((status) => {
@@ -233,8 +233,8 @@ export class NotificationPolicySavedObjectService
     sortField?: string;
     sortOrder?: 'asc' | 'desc';
   }) {
-    return this.client.find<NotificationPolicySavedObjectAttributes>({
-      type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+    return this.client.find<ActionPolicySavedObjectAttributes>({
+      type: ACTION_POLICY_SAVED_OBJECT_TYPE,
       page,
       perPage,
       search,
@@ -248,15 +248,15 @@ export class NotificationPolicySavedObjectService
   public async getDistinctTags(params?: { search?: string }): Promise<string[]> {
     const search = params?.search;
     const result = await this.client.find<
-      NotificationPolicySavedObjectAttributes,
+      ActionPolicySavedObjectAttributes,
       { tags: { buckets: Array<{ key: string }> } }
     >({
-      type: NOTIFICATION_POLICY_SAVED_OBJECT_TYPE,
+      type: ACTION_POLICY_SAVED_OBJECT_TYPE,
       perPage: 0,
       aggs: {
         tags: {
           terms: {
-            field: `${NOTIFICATION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
+            field: `${ACTION_POLICY_SAVED_OBJECT_TYPE}.attributes.tags`,
             size: 100,
             order: { _key: 'asc' },
             ...(search ? { include: `${escapeRegex(search)}.*` } : {}),
