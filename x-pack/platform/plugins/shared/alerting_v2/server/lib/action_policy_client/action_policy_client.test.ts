@@ -380,7 +380,7 @@ describe('ActionPolicyClient', () => {
   });
 
   describe('getActionPolicies', () => {
-    it('returns notification policies for multiple ids in input order', async () => {
+    it('returns action policies for multiple ids in input order', async () => {
       const firstAttributes: ActionPolicySavedObjectAttributes = {
         name: 'policy-two',
         description: 'policy-two description',
@@ -455,7 +455,7 @@ describe('ActionPolicyClient', () => {
       expect(res).toEqual([]);
     });
 
-    it('ignores missing notification policies and returns found policies', async () => {
+    it('ignores missing action policies and returns found policies', async () => {
       const firstAttributes: ActionPolicySavedObjectAttributes = {
         name: 'policy-found-one',
         description: 'policy-found-one description',

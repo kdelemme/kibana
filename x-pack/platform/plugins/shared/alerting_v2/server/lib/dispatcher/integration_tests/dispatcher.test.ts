@@ -612,7 +612,7 @@ describe.skip('DispatcherService integration tests', () => {
     });
   });
 
-  describe('when the notification policy has a throttle interval', () => {
+  describe('when the action policy has a throttle interval', () => {
     it('should persist notified actions for dispatched notification groups', async () => {
       await setActionPolicyThrottle(npSoService, {
         strategy: 'per_status_interval',
@@ -828,7 +828,7 @@ describe.skip('DispatcherService integration tests', () => {
     });
   });
 
-  describe('when the notification policy has a matcher', () => {
+  describe('when the action policy has a matcher', () => {
     beforeEach(async () => {
       await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
       await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_MATCHER_ID, true);
@@ -880,7 +880,7 @@ describe.skip('DispatcherService integration tests', () => {
     });
   });
 
-  describe('when the notification policy has groupBy fields', () => {
+  describe('when the action policy has groupBy fields', () => {
     beforeEach(async () => {
       await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_ID, false);
       await setActionPolicyEnabled(npSoService, NOTIFICATION_POLICY_GROUPBY_ID, true);
@@ -1221,7 +1221,7 @@ async function seedRulesAndPolicies(
 ): Promise<void> {
   const policyAttrs: ActionPolicySavedObjectAttributes = {
     name: 'Test Policy',
-    description: 'Test notification policy',
+    description: 'Test action policy',
     enabled: true,
     destinations: [{ type: 'workflow' as const, id: 'test-workflow' }],
     auth: {

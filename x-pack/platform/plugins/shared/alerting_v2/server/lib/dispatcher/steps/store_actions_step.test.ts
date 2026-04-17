@@ -451,7 +451,7 @@ describe('StoreActionsStep', () => {
           action_type: 'unmatched',
           rule_id: 'rule-unmatched',
           source: 'internal',
-          reason: 'no matching notification policy',
+          reason: 'no matching action policy',
           space_id: 'default',
         },
       ],
@@ -563,7 +563,7 @@ describe('StoreActionsStep', () => {
       action_type: 'unmatched',
       rule_id: 'rule-unmatched',
       source: 'internal',
-      reason: 'no matching notification policy',
+      reason: 'no matching action policy',
       space_id: 'default',
     });
   });

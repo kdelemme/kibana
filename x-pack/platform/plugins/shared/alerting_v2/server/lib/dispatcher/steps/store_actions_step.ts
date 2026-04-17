@@ -113,7 +113,7 @@ export class StoreActionsStep implements DispatcherStep {
             episode,
             actionType: 'unmatched',
             now,
-            reason: 'no matching notification policy',
+            reason: 'no matching action policy',
             spaceId: spaceIdForEpisode(episode),
           })
         ),

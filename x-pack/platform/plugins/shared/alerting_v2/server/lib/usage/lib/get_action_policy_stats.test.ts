@@ -87,7 +87,7 @@ describe('getActionPolicyStats', () => {
     expect(result.action_policies_count_by_throttle_interval).toEqual([]);
   });
 
-  it('returns empty results when no notification policies exist', async () => {
+  it('returns empty results when no action policies exist', async () => {
     mockSearchResponse({
       total: 0,
       uniqueWorkflowCount: 0,
