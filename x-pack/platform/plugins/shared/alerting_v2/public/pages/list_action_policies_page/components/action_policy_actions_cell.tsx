@@ -28,6 +28,7 @@ import {
 
 interface ActionPolicyActionsCellProps {
   policy: ActionPolicyResponse;
+  onViewDetails: (policy: ActionPolicyResponse) => void;
   onEdit: (id: string) => void;
   onClone: (policy: ActionPolicyResponse) => void;
   onDelete: (policy: ActionPolicyResponse) => void;
@@ -42,6 +43,7 @@ interface ActionPolicyActionsCellProps {
 
 export const ActionPolicyActionsCell = ({
   policy,
+  onViewDetails,
   onEdit,
   onClone,
   onDelete,
@@ -192,6 +194,19 @@ export const ActionPolicyActionsCell = ({
     <EuiFlexGroup gutterSize="xs" responsive={false} alignItems="center">
       <EuiFlexItem grow={false}>
         <EuiButtonIcon
+          iconType="eye"
+          color="text"
+          aria-label={i18n.translate(
+            'xpack.alertingV2.actionPoliciesList.action.viewDetails.description',
+            { defaultMessage: 'View action policy details' }
+          )}
+          onClick={() => onViewDetails(policy)}
+          isDisabled={isDisabled}
+          data-test-subj="actionPolicyViewDetailsButton"
+        />
+      </EuiFlexItem>
+      <EuiFlexItem grow={false}>
+        <EuiButtonIcon
           iconType="pencil"
           color="text"
           aria-label={i18n.translate(
@@ -199,18 +214,6 @@ export const ActionPolicyActionsCell = ({
             { defaultMessage: 'Edit this action policy' }
           )}
           onClick={() => onEdit(policy.id)}
-          isDisabled={isDisabled}
-        />
-      </EuiFlexItem>
-      <EuiFlexItem grow={false}>
-        <EuiButtonIcon
-          iconType="trash"
-          color="danger"
-          aria-label={i18n.translate(
-            'xpack.alertingV2.actionPoliciesList.action.delete.description',
-            { defaultMessage: 'Delete this action policy' }
-          )}
-          onClick={() => onDelete(policy)}
           isDisabled={isDisabled}
         />
       </EuiFlexItem>

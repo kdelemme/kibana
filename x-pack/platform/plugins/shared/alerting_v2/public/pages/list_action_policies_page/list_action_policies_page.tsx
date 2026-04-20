@@ -12,6 +12,7 @@ import {
   EuiCallOut,
   EuiFlexGroup,
   EuiFlexItem,
+  EuiLink,
   EuiPageHeader,
   EuiSpacer,
   EuiText,
@@ -34,6 +35,7 @@ import { DeleteActionPolicyConfirmModal } from '../../components/action_policy/d
 import { ActionPolicyDestinationsSummary } from '../../components/action_policy/action_policy_destinations_summary';
 import { ActionPolicySnoozePopover } from '../../components/action_policy/action_policy_snooze_popover';
 import { ActionPolicyStateBadge } from '../../components/action_policy/action_policy_state_badge';
+import { ActionPolicyDetailsFlyout } from '../../components/action_policy/details_flyout/action_policy_details_flyout';
 import { paths } from '../../constants';
 import { useBulkActionActionPolicies } from '../../hooks/use_bulk_action_action_policies';
 import { useCreateActionPolicy } from '../../hooks/use_create_action_policy';
@@ -72,6 +74,7 @@ export const ListActionPoliciesPage = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [policyToDelete, setPolicyToDelete] = useState<ActionPolicyResponse | null>(null);
   const [policyToUpdateApiKey, setPolicyToUpdateApiKey] = useState<string | null>(null);
+  const [policyToView, setPolicyToView] = useState<ActionPolicyResponse | null>(null);
   const [selectedPolicies, setSelectedPolicies] = useState<ActionPolicyResponse[]>([]);
 
   const { navigateToUrl } = useService(CoreStart('application'));
@@ -235,7 +238,14 @@ export const ListActionPoliciesPage = () => {
       sortable: true,
       render: (name: string, policy: ActionPolicyResponse) => (
         <EuiFlexGroup direction="column" gutterSize="none">
-          <EuiFlexItem>{name}</EuiFlexItem>
+          <EuiFlexItem>
+            <EuiLink
+              onClick={() => setPolicyToView(policy)}
+              data-test-subj={`actionPolicyDetailsLink-${policy.id}`}
+            >
+              {name}
+            </EuiLink>
+          </EuiFlexItem>
           {policy.description && (
             <EuiText size="xs" color="subdued" css={descriptionTextStyle}>
               {policy.description}
@@ -353,6 +363,7 @@ export const ListActionPoliciesPage = () => {
       render: (policy: ActionPolicyResponse) => (
         <ActionPolicyActionsCell
           policy={policy}
+          onViewDetails={setPolicyToView}
           onEdit={navigateToEdit}
           onClone={clonePolicy}
           onDelete={setPolicyToDelete}
@@ -515,6 +526,28 @@ export const ListActionPoliciesPage = () => {
             });
           }}
           isLoading={isUpdatingApiKey}
+        />
+      )}
+
+      {policyToView && (
+        <ActionPolicyDetailsFlyout
+          policy={policyToView}
+          onClose={() => setPolicyToView(null)}
+          onEdit={navigateToEdit}
+          onClone={clonePolicy}
+          onEnable={(id) => enablePolicy(id)}
+          onDisable={(id) => disablePolicy(id)}
+          onSnooze={(id, until) => snoozePolicy({ id, snoozedUntil: until })}
+          onCancelSnooze={(id) => unsnoozePolicy(id)}
+          onDelete={setPolicyToDelete}
+          isStateLoading={
+            (isEnabling && enableVariables === policyToView.id) ||
+            (isDisabling && disableVariables === policyToView.id)
+          }
+          isSnoozeLoading={
+            (isSnoozing && snoozeVariables?.id === policyToView.id) ||
+            (isUnsnoozing && unsnoozeVariables === policyToView.id)
+          }
         />
       )}
     </>
