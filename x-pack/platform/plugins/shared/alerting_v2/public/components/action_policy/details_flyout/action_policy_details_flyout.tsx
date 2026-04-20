@@ -10,6 +10,7 @@ import {
   EuiButton,
   EuiButtonEmpty,
   EuiCode,
+  EuiDescriptionList,
   EuiFlexGroup,
   EuiFlexItem,
   EuiFlyout,
@@ -20,6 +21,7 @@ import {
   EuiSplitPanel,
   EuiText,
   EuiTitle,
+  type EuiDescriptionListProps,
 } from '@elastic/eui';
 import type { ActionPolicyDestination, ActionPolicyResponse } from '@kbn/alerting-v2-schemas';
 import { CoreStart, useService } from '@kbn/core-di-browser';
@@ -27,39 +29,25 @@ import { i18n } from '@kbn/i18n';
 import { FormattedMessage } from '@kbn/i18n-react';
 import moment from 'moment';
 import React from 'react';
-import { ActionPolicySnoozePopover } from '../action_policy_snooze_popover';
 import { ActionPolicyStateBadge } from '../action_policy_state_badge';
-import { DispatchConfigSummary } from '../form/components/dispatch_config_summary';
 import { isSnoozed } from '../is_snoozed';
-import { formatSnoozeFullDate } from '../action_policy_snooze_form';
 import { getGroupingModeLabel, getThrottleStrategyLabel } from '../labels';
 import { WorkflowDestinationLink } from '../workflow_destination_link';
 
 const FLYOUT_TITLE_ID = 'actionPolicyDetailsFlyoutTitle';
+const EMPTY_VALUE = '-';
 
 interface ActionPolicyDetailsFlyoutProps {
   policy: ActionPolicyResponse;
   onClose: () => void;
   onEdit: (id: string) => void;
-  onClone: (policy: ActionPolicyResponse) => void;
-  onEnable: (id: string) => void;
-  onDisable: (id: string) => void;
-  onSnooze: (id: string, snoozedUntil: string) => void;
-  onCancelSnooze: (id: string) => void;
-  onDelete: (policy: ActionPolicyResponse) => void;
-  isStateLoading?: boolean;
-  isSnoozeLoading?: boolean;
 }
-
-const renderEmDash = () => <>&mdash;</>;
 
 const SectionPanel = ({
   title,
-  description,
   children,
 }: {
   title: React.ReactNode;
-  description?: React.ReactNode;
   children: React.ReactNode;
 }) => (
   <EuiSplitPanel.Outer borderRadius="m" hasShadow={true} hasBorder={true}>
@@ -67,26 +55,18 @@ const SectionPanel = ({
       <EuiTitle size="xs">
         <h3>{title}</h3>
       </EuiTitle>
-      {description && (
-        <EuiText size="xs" color="subdued">
-          {description}
-        </EuiText>
-      )}
     </EuiSplitPanel.Inner>
     <EuiSplitPanel.Inner>{children}</EuiSplitPanel.Inner>
   </EuiSplitPanel.Outer>
 );
 
-const FieldRow = ({ label, children }: { label: React.ReactNode; children: React.ReactNode }) => (
-  <EuiFlexGroup gutterSize="s" direction="column">
-    <EuiFlexItem>
-      <EuiText size="xs" color="subdued">
-        <strong>{label}</strong>
-      </EuiText>
-    </EuiFlexItem>
-    <EuiFlexItem>
-      <EuiText size="s">{children}</EuiText>
-    </EuiFlexItem>
+const BadgeList = ({ items }: { items: string[] }) => (
+  <EuiFlexGroup gutterSize="xs" wrap responsive={false}>
+    {items.map((item) => (
+      <EuiFlexItem grow={false} key={item}>
+        <EuiBadge color="hollow">{item}</EuiBadge>
+      </EuiFlexItem>
+    ))}
   </EuiFlexGroup>
 );
 
@@ -115,37 +95,117 @@ export const ActionPolicyDetailsFlyout = ({
   policy,
   onClose,
   onEdit,
-  onClone,
-  onEnable,
-  onDisable,
-  onSnooze,
-  onCancelSnooze,
-  onDelete,
-  isStateLoading = false,
-  isSnoozeLoading = false,
 }: ActionPolicyDetailsFlyoutProps) => {
   const settings = useService(CoreStart('settings'));
   const dateTimeFormat = settings.client.get<string>('dateFormat');
+  const formatDate = (value: string) => moment(value).format(dateTimeFormat);
 
   const snoozedActive = isSnoozed(policy.snoozedUntil);
-  const groupingMode = policy.groupingMode ?? 'per_episode';
-  const throttleStrategy = policy.throttle?.strategy;
-  const throttleInterval = policy.throttle?.interval;
 
   const handleEdit = () => {
     onClose();
     onEdit(policy.id);
   };
 
-  const handleClone = () => {
-    onClose();
-    onClone(policy);
-  };
+  const basicInfoItems: EuiDescriptionListProps['listItems'] = [
+    {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.basicInfo.description', {
+        defaultMessage: 'Description',
+      }),
+      description: policy.description ? policy.description : EMPTY_VALUE,
+    },
+    {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.basicInfo.tags', {
+        defaultMessage: 'Tags',
+      }),
+      description:
+        policy.tags && policy.tags.length > 0 ? <BadgeList items={policy.tags} /> : EMPTY_VALUE,
+    },
+  ];
 
-  const handleDelete = () => {
-    onClose();
-    onDelete(policy);
-  };
+  const matchConditionsItems: EuiDescriptionListProps['listItems'] = [
+    {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.matchConditions.matcher', {
+        defaultMessage: 'Matcher',
+      }),
+      description: policy.matcher ? (
+        <EuiCode>{policy.matcher}</EuiCode>
+      ) : (
+        <EuiText size="s" color="subdued">
+          <FormattedMessage
+            id="xpack.alertingV2.actionPolicy.detailsFlyout.matchConditions.matchesAll"
+            defaultMessage="Matches all alerts."
+          />
+        </EuiText>
+      ),
+    },
+  ];
+
+  const dispatchItems: EuiDescriptionListProps['listItems'] = [
+    {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.mode', {
+        defaultMessage: 'Dispatch per',
+      }),
+      description: getGroupingModeLabel(policy.groupingMode),
+    },
+  ];
+  if (policy.groupingMode === 'per_field' && policy.groupBy && policy.groupBy.length > 0) {
+    dispatchItems.push({
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.groupBy', {
+        defaultMessage: 'Group by',
+      }),
+      description: <BadgeList items={policy.groupBy} />,
+    });
+  }
+  dispatchItems.push({
+    title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.frequency', {
+      defaultMessage: 'Frequency',
+    }),
+    description: (
+      <>
+        {getThrottleStrategyLabel(policy.throttle?.strategy, policy.groupingMode)}
+        {policy.throttle?.interval && (
+          <>
+            {' '}
+            <EuiText size="xs" color="subdued">
+              <FormattedMessage
+                id="xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.interval"
+                defaultMessage="Every {interval}"
+                values={{ interval: policy.throttle.interval }}
+              />
+            </EuiText>
+          </>
+        )}
+      </>
+    ),
+  });
+
+  const metadataItems: EuiDescriptionListProps['listItems'] = [
+    {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.metadata.createdBy', {
+        defaultMessage: 'Created by',
+      }),
+      description: policy.createdByUsername ?? EMPTY_VALUE,
+    },
+    {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.metadata.createdAt', {
+        defaultMessage: 'Created at',
+      }),
+      description: formatDate(policy.createdAt),
+    },
+    {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.metadata.updatedBy', {
+        defaultMessage: 'Updated by',
+      }),
+      description: policy.updatedByUsername ?? EMPTY_VALUE,
+    },
+    {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.metadata.updatedAt', {
+        defaultMessage: 'Updated at',
+      }),
+      description: formatDate(policy.updatedAt),
+    },
+  ];
 
   return (
     <EuiFlyout
@@ -170,7 +230,7 @@ export const ActionPolicyDetailsFlyout = ({
         <EuiSpacer size="s" />
         <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false} wrap>
           <EuiFlexItem grow={false}>
-            <ActionPolicyStateBadge policy={policy} isLoading={isStateLoading} />
+            <ActionPolicyStateBadge policy={policy} isLoading={false} />
           </EuiFlexItem>
           {snoozedActive && policy.snoozedUntil && (
             <EuiFlexItem grow={false}>
@@ -178,7 +238,7 @@ export const ActionPolicyDetailsFlyout = ({
                 <FormattedMessage
                   id="xpack.alertingV2.actionPolicy.detailsFlyout.snoozedUntil"
                   defaultMessage="Snoozed until {date}"
-                  values={{ date: formatSnoozeFullDate(policy.snoozedUntil) }}
+                  values={{ date: formatDate(policy.snoozedUntil) }}
                 />
               </EuiBadge>
             </EuiFlexItem>
@@ -195,42 +255,7 @@ export const ActionPolicyDetailsFlyout = ({
             />
           }
         >
-          <EuiFlexGroup direction="column" gutterSize="m">
-            <EuiFlexItem>
-              <FieldRow
-                label={
-                  <FormattedMessage
-                    id="xpack.alertingV2.actionPolicy.detailsFlyout.basicInfo.description"
-                    defaultMessage="Description"
-                  />
-                }
-              >
-                {policy.description ? policy.description : renderEmDash()}
-              </FieldRow>
-            </EuiFlexItem>
-            <EuiFlexItem>
-              <FieldRow
-                label={
-                  <FormattedMessage
-                    id="xpack.alertingV2.actionPolicy.detailsFlyout.basicInfo.tags"
-                    defaultMessage="Tags"
-                  />
-                }
-              >
-                {policy.tags && policy.tags.length > 0 ? (
-                  <EuiFlexGroup gutterSize="xs" wrap responsive={false}>
-                    {policy.tags.map((tag) => (
-                      <EuiFlexItem grow={false} key={tag}>
-                        <EuiBadge color="hollow">{tag}</EuiBadge>
-                      </EuiFlexItem>
-                    ))}
-                  </EuiFlexGroup>
-                ) : (
-                  renderEmDash()
-                )}
-              </FieldRow>
-            </EuiFlexItem>
-          </EuiFlexGroup>
+          <EuiDescriptionList compressed type="column" listItems={basicInfoItems} />
         </SectionPanel>
 
         <EuiSpacer size="m" />
@@ -243,25 +268,7 @@ export const ActionPolicyDetailsFlyout = ({
             />
           }
         >
-          <FieldRow
-            label={
-              <FormattedMessage
-                id="xpack.alertingV2.actionPolicy.detailsFlyout.matchConditions.matcher"
-                defaultMessage="Matcher"
-              />
-            }
-          >
-            {policy.matcher ? (
-              <EuiCode>{policy.matcher}</EuiCode>
-            ) : (
-              <EuiText size="s" color="subdued">
-                <FormattedMessage
-                  id="xpack.alertingV2.actionPolicy.detailsFlyout.matchConditions.matchesAll"
-                  defaultMessage="Matches all alerts."
-                />
-              </EuiText>
-            )}
-          </FieldRow>
+          <EuiDescriptionList compressed type="column" listItems={matchConditionsItems} />
         </SectionPanel>
 
         <EuiSpacer size="m" />
@@ -274,72 +281,7 @@ export const ActionPolicyDetailsFlyout = ({
             />
           }
         >
-          <EuiFlexGroup direction="column" gutterSize="m">
-            <EuiFlexItem>
-              <FieldRow
-                label={
-                  <FormattedMessage
-                    id="xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.mode"
-                    defaultMessage="Dispatch per"
-                  />
-                }
-              >
-                {getGroupingModeLabel(policy.groupingMode)}
-              </FieldRow>
-            </EuiFlexItem>
-            {groupingMode === 'per_field' && policy.groupBy && policy.groupBy.length > 0 && (
-              <EuiFlexItem>
-                <FieldRow
-                  label={
-                    <FormattedMessage
-                      id="xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.groupBy"
-                      defaultMessage="Group by"
-                    />
-                  }
-                >
-                  <EuiFlexGroup gutterSize="xs" wrap responsive={false}>
-                    {policy.groupBy.map((field) => (
-                      <EuiFlexItem grow={false} key={field}>
-                        <EuiBadge color="hollow">{field}</EuiBadge>
-                      </EuiFlexItem>
-                    ))}
-                  </EuiFlexGroup>
-                </FieldRow>
-              </EuiFlexItem>
-            )}
-            <EuiFlexItem>
-              <FieldRow
-                label={
-                  <FormattedMessage
-                    id="xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.frequency"
-                    defaultMessage="Frequency"
-                  />
-                }
-              >
-                {getThrottleStrategyLabel(throttleStrategy, groupingMode)}
-                {throttleInterval && (
-                  <>
-                    {' '}
-                    <EuiText size="xs" color="subdued">
-                      <FormattedMessage
-                        id="xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.interval"
-                        defaultMessage="Every {interval}"
-                        values={{ interval: throttleInterval }}
-                      />
-                    </EuiText>
-                  </>
-                )}
-              </FieldRow>
-            </EuiFlexItem>
-            <EuiFlexItem>
-              <DispatchConfigSummary
-                groupingMode={groupingMode}
-                groupBy={policy.groupBy ?? []}
-                throttleStrategy={throttleStrategy ?? 'on_status_change'}
-                throttleInterval={throttleInterval ?? ''}
-              />
-            </EuiFlexItem>
-          </EuiFlexGroup>
+          <EuiDescriptionList compressed type="column" listItems={dispatchItems} />
         </SectionPanel>
 
         <EuiSpacer size="m" />
@@ -353,11 +295,11 @@ export const ActionPolicyDetailsFlyout = ({
           }
         >
           {policy.destinations.length === 0 ? (
-            renderEmDash()
+            EMPTY_VALUE
           ) : (
             <EuiFlexGroup direction="column" gutterSize="s">
-              {policy.destinations.map((destination, index) => (
-                <EuiFlexItem key={`${destination.type}-${destination.id}-${index}`}>
+              {policy.destinations.map((destination) => (
+                <EuiFlexItem key={`${destination.type}-${destination.id}`}>
                   <DestinationRow destination={destination} />
                 </EuiFlexItem>
               ))}
@@ -375,56 +317,7 @@ export const ActionPolicyDetailsFlyout = ({
             />
           }
         >
-          <EuiFlexGroup direction="column" gutterSize="m">
-            <EuiFlexItem>
-              <FieldRow
-                label={
-                  <FormattedMessage
-                    id="xpack.alertingV2.actionPolicy.detailsFlyout.metadata.createdBy"
-                    defaultMessage="Created by"
-                  />
-                }
-              >
-                {policy.createdByUsername ?? renderEmDash()}
-              </FieldRow>
-            </EuiFlexItem>
-            <EuiFlexItem>
-              <FieldRow
-                label={
-                  <FormattedMessage
-                    id="xpack.alertingV2.actionPolicy.detailsFlyout.metadata.createdAt"
-                    defaultMessage="Created at"
-                  />
-                }
-              >
-                {moment(policy.createdAt).format(dateTimeFormat)}
-              </FieldRow>
-            </EuiFlexItem>
-            <EuiFlexItem>
-              <FieldRow
-                label={
-                  <FormattedMessage
-                    id="xpack.alertingV2.actionPolicy.detailsFlyout.metadata.updatedBy"
-                    defaultMessage="Updated by"
-                  />
-                }
-              >
-                {policy.updatedByUsername ?? renderEmDash()}
-              </FieldRow>
-            </EuiFlexItem>
-            <EuiFlexItem>
-              <FieldRow
-                label={
-                  <FormattedMessage
-                    id="xpack.alertingV2.actionPolicy.detailsFlyout.metadata.updatedAt"
-                    defaultMessage="Updated at"
-                  />
-                }
-              >
-                {moment(policy.updatedAt).format(dateTimeFormat)}
-              </FieldRow>
-            </EuiFlexItem>
-          </EuiFlexGroup>
+          <EuiDescriptionList compressed type="column" listItems={metadataItems} />
         </SectionPanel>
       </EuiFlyoutBody>
 
@@ -443,90 +336,21 @@ export const ActionPolicyDetailsFlyout = ({
             </EuiButtonEmpty>
           </EuiFlexItem>
           <EuiFlexItem grow={false}>
-            <EuiFlexGroup gutterSize="s" responsive={false} alignItems="center">
-              {policy.enabled && (
-                <EuiFlexItem grow={false}>
-                  <ActionPolicySnoozePopover
-                    policy={policy}
-                    onSnooze={onSnooze}
-                    onCancelSnooze={onCancelSnooze}
-                    isLoading={isSnoozeLoading}
-                  />
-                </EuiFlexItem>
+            <EuiButton
+              fill
+              iconType="pencil"
+              onClick={handleEdit}
+              data-test-subj="detailsFlyoutEditButton"
+              aria-label={i18n.translate(
+                'xpack.alertingV2.actionPolicy.detailsFlyout.edit.ariaLabel',
+                { defaultMessage: 'Edit this action policy' }
               )}
-              <EuiFlexItem grow={false}>
-                {policy.enabled ? (
-                  <EuiButton
-                    color="text"
-                    iconType="stop"
-                    isLoading={isStateLoading}
-                    onClick={() => onDisable(policy.id)}
-                    data-test-subj="detailsFlyoutDisableButton"
-                  >
-                    <FormattedMessage
-                      id="xpack.alertingV2.actionPolicy.detailsFlyout.disable"
-                      defaultMessage="Disable"
-                    />
-                  </EuiButton>
-                ) : (
-                  <EuiButton
-                    color="text"
-                    iconType="play"
-                    isLoading={isStateLoading}
-                    onClick={() => onEnable(policy.id)}
-                    data-test-subj="detailsFlyoutEnableButton"
-                  >
-                    <FormattedMessage
-                      id="xpack.alertingV2.actionPolicy.detailsFlyout.enable"
-                      defaultMessage="Enable"
-                    />
-                  </EuiButton>
-                )}
-              </EuiFlexItem>
-              <EuiFlexItem grow={false}>
-                <EuiButton
-                  color="text"
-                  iconType="copy"
-                  onClick={handleClone}
-                  data-test-subj="detailsFlyoutCloneButton"
-                >
-                  <FormattedMessage
-                    id="xpack.alertingV2.actionPolicy.detailsFlyout.clone"
-                    defaultMessage="Clone"
-                  />
-                </EuiButton>
-              </EuiFlexItem>
-              <EuiFlexItem grow={false}>
-                <EuiButton
-                  color="danger"
-                  iconType="trash"
-                  onClick={handleDelete}
-                  data-test-subj="detailsFlyoutDeleteButton"
-                >
-                  <FormattedMessage
-                    id="xpack.alertingV2.actionPolicy.detailsFlyout.delete"
-                    defaultMessage="Delete"
-                  />
-                </EuiButton>
-              </EuiFlexItem>
-              <EuiFlexItem grow={false}>
-                <EuiButton
-                  fill
-                  iconType="pencil"
-                  onClick={handleEdit}
-                  data-test-subj="detailsFlyoutEditButton"
-                  aria-label={i18n.translate(
-                    'xpack.alertingV2.actionPolicy.detailsFlyout.edit.ariaLabel',
-                    { defaultMessage: 'Edit this action policy' }
-                  )}
-                >
-                  <FormattedMessage
-                    id="xpack.alertingV2.actionPolicy.detailsFlyout.edit"
-                    defaultMessage="Edit"
-                  />
-                </EuiButton>
-              </EuiFlexItem>
-            </EuiFlexGroup>
+            >
+              <FormattedMessage
+                id="xpack.alertingV2.actionPolicy.detailsFlyout.edit"
+                defaultMessage="Edit"
+              />
+            </EuiButton>
           </EuiFlexItem>
         </EuiFlexGroup>
       </EuiFlyoutFooter>

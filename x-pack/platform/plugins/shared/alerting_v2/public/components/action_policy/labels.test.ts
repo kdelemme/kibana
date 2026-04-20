@@ -62,6 +62,11 @@ describe('getThrottleStrategyLabel', () => {
     expect(getThrottleStrategyLabel(undefined, 'all')).toBe('Not configured');
   });
 
+  it('returns the fallback when mode is null or undefined', () => {
+    expect(getThrottleStrategyLabel('on_status_change', null)).toBe('Not configured');
+    expect(getThrottleStrategyLabel('time_interval', undefined)).toBe('Not configured');
+  });
+
   it('returns the fallback when strategy does not exist for the given mode', () => {
     expect(getThrottleStrategyLabel('on_status_change', 'all')).toBe('Not configured');
   });

@@ -25,9 +25,9 @@ export const getGroupingModeLabel = (mode: GroupingMode | null | undefined): str
 
 export const getThrottleStrategyLabel = (
   strategy: ThrottleStrategy | null | undefined,
-  mode: GroupingMode
+  mode: GroupingMode | null | undefined
 ): string => {
-  if (strategy == null) return NOT_CONFIGURED_LABEL;
+  if (strategy == null || mode == null) return NOT_CONFIGURED_LABEL;
   const options =
     mode === 'per_episode' ? PER_EPISODE_STRATEGY_OPTIONS : AGGREGATE_STRATEGY_OPTIONS;
   const match = options.find((option) => option.value === strategy);

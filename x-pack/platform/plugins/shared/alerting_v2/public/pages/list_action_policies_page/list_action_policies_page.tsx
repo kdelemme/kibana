@@ -534,20 +534,6 @@ export const ListActionPoliciesPage = () => {
           policy={policyToView}
           onClose={() => setPolicyToView(null)}
           onEdit={navigateToEdit}
-          onClone={clonePolicy}
-          onEnable={(id) => enablePolicy(id)}
-          onDisable={(id) => disablePolicy(id)}
-          onSnooze={(id, until) => snoozePolicy({ id, snoozedUntil: until })}
-          onCancelSnooze={(id) => unsnoozePolicy(id)}
-          onDelete={setPolicyToDelete}
-          isStateLoading={
-            (isEnabling && enableVariables === policyToView.id) ||
-            (isDisabling && disableVariables === policyToView.id)
-          }
-          isSnoozeLoading={
-            (isSnoozing && snoozeVariables?.id === policyToView.id) ||
-            (isUnsnoozing && unsnoozeVariables === policyToView.id)
-          }
         />
       )}
     </>

@@ -36,20 +36,11 @@ jest.mock('../../../hooks/use_fetch_workflow', () => ({
   }),
 }));
 
-jest.mock('../action_policy_snooze_popover', () => ({
-  ActionPolicySnoozePopover: () => <span data-test-subj="mockedSnoozePopover">Snooze</span>,
-}));
-
 const TEST_SUBJ = {
   flyout: 'actionPolicyDetailsFlyout',
   title: 'actionPolicyDetailsFlyoutTitle',
   closeButton: 'detailsFlyoutCloseButton',
   editButton: 'detailsFlyoutEditButton',
-  cloneButton: 'detailsFlyoutCloneButton',
-  deleteButton: 'detailsFlyoutDeleteButton',
-  enableButton: 'detailsFlyoutEnableButton',
-  disableButton: 'detailsFlyoutDisableButton',
-  snoozePopover: 'mockedSnoozePopover',
 } as const;
 
 const futureIso = (): string => new Date(Date.now() + 1000 * 60 * 60).toISOString();
@@ -84,12 +75,6 @@ interface RenderProps {
   policy?: ActionPolicyResponse;
   onClose?: jest.Mock;
   onEdit?: jest.Mock;
-  onClone?: jest.Mock;
-  onEnable?: jest.Mock;
-  onDisable?: jest.Mock;
-  onSnooze?: jest.Mock;
-  onCancelSnooze?: jest.Mock;
-  onDelete?: jest.Mock;
 }
 
 const renderFlyout = (props: RenderProps = {}) => {
@@ -97,12 +82,6 @@ const renderFlyout = (props: RenderProps = {}) => {
   const handlers = {
     onClose: props.onClose ?? jest.fn(),
     onEdit: props.onEdit ?? jest.fn(),
-    onClone: props.onClone ?? jest.fn(),
-    onEnable: props.onEnable ?? jest.fn(),
-    onDisable: props.onDisable ?? jest.fn(),
-    onSnooze: props.onSnooze ?? jest.fn(),
-    onCancelSnooze: props.onCancelSnooze ?? jest.fn(),
-    onDelete: props.onDelete ?? jest.fn(),
   };
 
   render(
@@ -137,9 +116,8 @@ describe('ActionPolicyDetailsFlyout', () => {
     });
 
     it('does not render a snoozed-until chip when snoozedUntil is null or in the past', () => {
-      const { policy: first } = renderFlyout({ policy: createPolicy({ snoozedUntil: null }) });
+      renderFlyout({ policy: createPolicy({ snoozedUntil: null }) });
       expect(screen.queryByText(/Snoozed until/i)).not.toBeInTheDocument();
-      expect(first).toBeDefined();
     });
   });
 
@@ -219,56 +197,13 @@ describe('ActionPolicyDetailsFlyout', () => {
       expect(handlers.onEdit).toHaveBeenCalledWith('policy-1');
     });
 
-    it('closes the flyout and calls onClone with the policy when Clone is clicked', async () => {
-      const user = userEvent.setup();
-      const { handlers, policy } = renderFlyout();
-
-      await user.click(screen.getByTestId(TEST_SUBJ.cloneButton));
-
-      expect(handlers.onClose).toHaveBeenCalledTimes(1);
-      expect(handlers.onClone).toHaveBeenCalledWith(policy);
-    });
-
-    it('closes the flyout and calls onDelete with the policy when Delete is clicked', async () => {
-      const user = userEvent.setup();
-      const { handlers, policy } = renderFlyout();
-
-      await user.click(screen.getByTestId(TEST_SUBJ.deleteButton));
-
-      expect(handlers.onClose).toHaveBeenCalledTimes(1);
-      expect(handlers.onDelete).toHaveBeenCalledWith(policy);
-    });
-
-    it('renders a Disable button and calls onDisable when the policy is enabled', async () => {
-      const user = userEvent.setup();
-      const { handlers } = renderFlyout();
-
-      await user.click(screen.getByTestId(TEST_SUBJ.disableButton));
-
-      expect(handlers.onDisable).toHaveBeenCalledWith('policy-1');
-      expect(screen.queryByTestId(TEST_SUBJ.enableButton)).not.toBeInTheDocument();
-    });
-
-    it('renders an Enable button and calls onEnable when the policy is disabled', async () => {
-      const user = userEvent.setup();
-      const { handlers } = renderFlyout({ policy: createPolicy({ enabled: false }) });
-
-      await user.click(screen.getByTestId(TEST_SUBJ.enableButton));
-
-      expect(handlers.onEnable).toHaveBeenCalledWith('policy-1');
-      expect(screen.queryByTestId(TEST_SUBJ.disableButton)).not.toBeInTheDocument();
-    });
-
-    it('renders the snooze popover when the policy is enabled', () => {
+    it('does not render Clone, Delete, Enable, Disable, or Snooze controls', () => {
       renderFlyout();
 
-      expect(screen.getByTestId(TEST_SUBJ.snoozePopover)).toBeInTheDocument();
-    });
-
-    it('hides the snooze popover when the policy is disabled', () => {
-      renderFlyout({ policy: createPolicy({ enabled: false }) });
-
-      expect(screen.queryByTestId(TEST_SUBJ.snoozePopover)).not.toBeInTheDocument();
+      expect(screen.queryByTestId('detailsFlyoutCloneButton')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('detailsFlyoutDeleteButton')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('detailsFlyoutEnableButton')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('detailsFlyoutDisableButton')).not.toBeInTheDocument();
     });
   });
 });
