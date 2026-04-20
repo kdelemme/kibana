@@ -26,7 +26,7 @@ export const UpdateApiKeyConfirmationModal = ({
   const titleId = useGeneratedHtmlId();
   return (
     <EuiConfirmModal
-      id="updateApiKeyNotificationPoliciesConfirmModal"
+      id="updateApiKeyActionPoliciesConfirmModal"
       aria-labelledby={titleId}
       titleProps={{ id: titleId }}
       title={i18n.translate('xpack.alertingV2.actionPolicy.updateApiKeyModal.title', {

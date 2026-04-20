@@ -15,7 +15,7 @@ import { ListActionPoliciesPage } from './list_action_policies_page';
 
 const mockNavigateToUrl = jest.fn();
 const mockGetUrlForApp = jest.fn();
-const mockUseFetchNotificationPolicies = jest.fn();
+const mockUseFetchActionPolicies = jest.fn();
 const mockCreateActionPolicy = jest.fn();
 const mockDeleteActionPolicy = jest.fn();
 const mockEnableActionPolicy = jest.fn();
@@ -54,7 +54,7 @@ jest.mock('@kbn/core-di-browser', () => ({
 }));
 
 jest.mock('../../hooks/use_fetch_action_policies', () => ({
-  useFetchActionPolicies: (...args: unknown[]) => mockUseFetchNotificationPolicies(...args),
+  useFetchActionPolicies: (...args: unknown[]) => mockUseFetchActionPolicies(...args),
 }));
 
 jest.mock('../../hooks/use_create_action_policy', () => ({
@@ -195,7 +195,7 @@ describe('ListActionPoliciesPage', () => {
       isError: false,
       error: null,
     });
-    mockUseFetchNotificationPolicies.mockReturnValue({
+    mockUseFetchActionPolicies.mockReturnValue({
       data: {
         items: [createPolicy()],
         total: 1,
@@ -221,8 +221,8 @@ describe('ListActionPoliciesPage', () => {
     expect(screen.queryByLabelText('Filter by destination type')).toBeNull();
     expect(screen.queryByRole('button', { name: 'Refresh' })).toBeNull();
 
-    expect(mockUseFetchNotificationPolicies).toHaveBeenCalled();
-    expect(mockUseFetchNotificationPolicies.mock.calls[0][0]).not.toHaveProperty('destinationType');
+    expect(mockUseFetchActionPolicies).toHaveBeenCalled();
+    expect(mockUseFetchActionPolicies.mock.calls[0][0]).not.toHaveProperty('destinationType');
   });
 
   it('renders a workflow count summary in the destinations column', () => {

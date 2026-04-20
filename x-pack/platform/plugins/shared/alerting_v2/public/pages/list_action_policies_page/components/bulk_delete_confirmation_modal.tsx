@@ -26,7 +26,7 @@ export const BulkDeleteConfirmationModal = ({
   const titleId = useGeneratedHtmlId();
   return (
     <EuiConfirmModal
-      id="bulkDeleteNotificationPoliciesConfirmModal"
+      id="bulkDeleteActionPoliciesConfirmModal"
       aria-labelledby={titleId}
       titleProps={{ id: titleId }}
       title={i18n.translate('xpack.alertingV2.actionPolicy.bulkDeleteModal.title', {
