@@ -18,12 +18,11 @@ import {
   EuiFlyoutFooter,
   EuiFlyoutHeader,
   EuiSpacer,
-  EuiSplitPanel,
   EuiText,
   EuiTitle,
   type EuiDescriptionListProps,
 } from '@elastic/eui';
-import type { ActionPolicyDestination, ActionPolicyResponse } from '@kbn/alerting-v2-schemas';
+import type { ActionPolicyResponse } from '@kbn/alerting-v2-schemas';
 import { CoreStart, useService } from '@kbn/core-di-browser';
 import { i18n } from '@kbn/i18n';
 import { FormattedMessage } from '@kbn/i18n-react';
@@ -32,70 +31,20 @@ import React from 'react';
 import { ActionPolicyStateBadge } from '../action_policy_state_badge';
 import { isSnoozed } from '../is_snoozed';
 import { getGroupingModeLabel, getThrottleStrategyLabel } from '../labels';
-import { WorkflowDestinationLink } from '../workflow_destination_link';
+import { BadgeList } from './badge_list';
+import { DestinationRow } from './destination_row';
+import { SectionPanel } from './section_panel';
 
 const FLYOUT_TITLE_ID = 'actionPolicyDetailsFlyoutTitle';
 const EMPTY_VALUE = '-';
 
-interface ActionPolicyDetailsFlyoutProps {
+interface Props {
   policy: ActionPolicyResponse;
   onClose: () => void;
   onEdit: (id: string) => void;
 }
 
-const SectionPanel = ({
-  title,
-  children,
-}: {
-  title: React.ReactNode;
-  children: React.ReactNode;
-}) => (
-  <EuiSplitPanel.Outer borderRadius="m" hasShadow={true} hasBorder={true}>
-    <EuiSplitPanel.Inner color="subdued">
-      <EuiTitle size="xs">
-        <h3>{title}</h3>
-      </EuiTitle>
-    </EuiSplitPanel.Inner>
-    <EuiSplitPanel.Inner>{children}</EuiSplitPanel.Inner>
-  </EuiSplitPanel.Outer>
-);
-
-const BadgeList = ({ items }: { items: string[] }) => (
-  <EuiFlexGroup gutterSize="xs" wrap responsive={false}>
-    {items.map((item) => (
-      <EuiFlexItem grow={false} key={item}>
-        <EuiBadge color="hollow">{item}</EuiBadge>
-      </EuiFlexItem>
-    ))}
-  </EuiFlexGroup>
-);
-
-const DestinationRow = ({ destination }: { destination: ActionPolicyDestination }) => {
-  if (destination.type === 'workflow') {
-    return (
-      <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
-        <EuiFlexItem grow={false}>
-          <EuiBadge color="hollow" iconType="workflow">
-            <FormattedMessage
-              id="xpack.alertingV2.actionPolicy.detailsFlyout.destination.workflow"
-              defaultMessage="Workflow"
-            />
-          </EuiBadge>
-        </EuiFlexItem>
-        <EuiFlexItem grow={false}>
-          <WorkflowDestinationLink id={destination.id} />
-        </EuiFlexItem>
-      </EuiFlexGroup>
-    );
-  }
-  return null;
-};
-
-export const ActionPolicyDetailsFlyout = ({
-  policy,
-  onClose,
-  onEdit,
-}: ActionPolicyDetailsFlyoutProps) => {
+export const ActionPolicyDetailsFlyout = ({ policy, onClose, onEdit }: Props) => {
   const settings = useService(CoreStart('settings'));
   const dateTimeFormat = settings.client.get<string>('dateFormat');
   const formatDate = (value: string) => moment(value).format(dateTimeFormat);

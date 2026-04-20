@@ -14,17 +14,18 @@ import {
   EuiPanel,
   EuiPopover,
   useEuiTheme,
+  useGeneratedHtmlId,
   type EuiContextMenuPanelDescriptor,
 } from '@elastic/eui';
 import { css } from '@emotion/react';
 import type { ActionPolicyResponse } from '@kbn/alerting-v2-schemas';
 import { i18n } from '@kbn/i18n';
 import React, { useState } from 'react';
-import { isSnoozed } from '../../../components/action_policy/is_snoozed';
 import {
   ActionPolicySnoozeForm,
   formatSnoozeDate,
 } from '../../../components/action_policy/action_policy_snooze_form';
+import { isSnoozed } from '../../../components/action_policy/is_snoozed';
 
 interface ActionPolicyActionsCellProps {
   policy: ActionPolicyResponse;
@@ -57,6 +58,7 @@ export const ActionPolicyActionsCell = ({
 }: ActionPolicyActionsCellProps) => {
   const { euiTheme } = useEuiTheme();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const popoverTitleId = useGeneratedHtmlId();
 
   const togglePopover = () => setIsPopoverOpen((prev) => !prev);
   const closePopover = () => setIsPopoverOpen(false);
@@ -86,6 +88,16 @@ export const ActionPolicyActionsCell = ({
       items: [
         ...snoozeItem,
         ...(policy.enabled ? [{ isSeparator: true as const }] : []),
+        {
+          name: i18n.translate('xpack.alertingV2.actionPoliciesList.action.viewDetails', {
+            defaultMessage: 'View details',
+          }),
+          icon: 'eye',
+          onClick: () => {
+            closePopover();
+            onViewDetails(policy);
+          },
+        },
         {
           name: i18n.translate('xpack.alertingV2.actionPoliciesList.action.edit', {
             defaultMessage: 'Edit',
@@ -219,6 +231,7 @@ export const ActionPolicyActionsCell = ({
       </EuiFlexItem>
       <EuiFlexItem grow={false}>
         <EuiPopover
+          aria-labelledby={popoverTitleId}
           button={
             <EuiButtonIcon
               iconType="boxesHorizontal"
