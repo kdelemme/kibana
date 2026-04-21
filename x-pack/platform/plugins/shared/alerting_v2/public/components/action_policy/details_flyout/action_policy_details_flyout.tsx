@@ -165,12 +165,6 @@ export const ActionPolicyDetailsFlyout = ({ policy, onClose, onEdit }: Props) =>
       data-test-subj="actionPolicyDetailsFlyout"
     >
       <EuiFlyoutHeader hasBorder>
-        <EuiText size="xs" color="subdued">
-          <FormattedMessage
-            id="xpack.alertingV2.actionPolicy.detailsFlyout.eyebrow"
-            defaultMessage="Action policy details"
-          />
-        </EuiText>
         <EuiTitle size="m">
           <h2 id={FLYOUT_TITLE_ID} data-test-subj="actionPolicyDetailsFlyoutTitle">
             {policy.name}
