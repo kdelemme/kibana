@@ -10,6 +10,10 @@ import type { ElasticsearchClient } from '@kbn/core/server';
 import type { EncryptedSavedObjectsClient } from '@kbn/encrypted-saved-objects-plugin/server';
 import type { WorkflowsServerPluginSetup } from '@kbn/workflows-management-plugin/server';
 import {
+  ACTION_POLICY_EXECUTIONS_DATA_STREAM,
+  type ActionPolicyExecution,
+} from '../../../resources/datastreams/action_policy_executions';
+import {
   ALERT_ACTIONS_DATA_STREAM,
   type AlertAction,
 } from '../../../resources/datastreams/alert_actions';
@@ -24,6 +28,7 @@ import type {
 import { RULE_SAVED_OBJECT_TYPE, ACTION_POLICY_SAVED_OBJECT_TYPE } from '../../../saved_objects';
 import type { LoggerServiceContract } from '../../services/logger_service/logger_service';
 import { createLoggerService } from '../../services/logger_service/logger_service.mock';
+import { createMockResourceManager } from '../../services/resource_service/resource_manager.mock';
 import { ActionPolicySavedObjectService } from '../../services/action_policy_saved_object_service/action_policy_saved_object_service';
 import type { ActionPolicySavedObjectServiceContract } from '../../services/action_policy_saved_object_service/action_policy_saved_object_service';
 import {
@@ -50,6 +55,7 @@ import {
   ApplyThrottlingStep,
   DispatchStep,
   StoreActionsStep,
+  StoreExecutionHistoryStep,
 } from '../steps';
 import { waitForDataStreamsReady } from './helpers/wait';
 import { setupTestServers } from './setup_test_servers';
@@ -493,7 +499,11 @@ describe('DispatcherService integration tests', () => {
       undefined as unknown as EncryptedSavedObjectsClient
     );
 
-    await waitForDataStreamsReady(esClient, [ALERT_EVENTS_DATA_STREAM, ALERT_ACTIONS_DATA_STREAM]);
+    await waitForDataStreamsReady(esClient, [
+      ALERT_EVENTS_DATA_STREAM,
+      ALERT_ACTIONS_DATA_STREAM,
+      ACTION_POLICY_EXECUTIONS_DATA_STREAM,
+    ]);
 
     await seedRulesAndPolicies(rulesSoService, npSoService);
   });
@@ -526,6 +536,9 @@ describe('DispatcherService integration tests', () => {
         .map((doc) => ({ id: doc.id, attributes: doc.attributes }));
     });
 
+    const resourceManager = createMockResourceManager();
+    resourceManager.isReady.mockReturnValue(true);
+
     const pipeline = new DispatcherPipeline(mockLoggerService, [
       new FetchEpisodesStep(queryService),
       new FetchSuppressionsStep(queryService),
@@ -537,10 +550,12 @@ describe('DispatcherService integration tests', () => {
       new ApplyThrottlingStep(queryService, mockLoggerService),
       new DispatchStep(mockLoggerService, mockWfm),
       new StoreActionsStep(storageService),
+      new StoreExecutionHistoryStep(storageService, resourceManager, mockLoggerService),
     ]);
     dispatcherService = new DispatcherService(pipeline);
 
     await setActionPolicyThrottle(npSoService, null);
+    await updateActionPolicy(npSoService, ACTION_POLICY_ID, { groupingMode: null });
     await setActionPolicyEnabled(npSoService, ACTION_POLICY_ID, true);
     await setActionPolicyEnabled(npSoService, ACTION_POLICY_MATCHER_ID, false);
     await setActionPolicyEnabled(npSoService, ACTION_POLICY_GROUPBY_ID, false);
@@ -1172,12 +1187,200 @@ describe('DispatcherService integration tests', () => {
       expect(totalNotified.hits.hits).toHaveLength(2);
     });
   });
+
+  describe('action policy execution history', () => {
+    it('records a dispatched execution per episode for each matched policy', async () => {
+      await seedAlertEvents(esClient, ALERT_EVENTS_TEST_DATA);
+
+      const result = await dispatcherService.run({
+        previousStartedAt: new Date('2026-01-22T07:00:00.000Z'),
+      });
+
+      expect(result.startedAt).toBeDefined();
+
+      await esClient.indices.refresh({ index: ACTION_POLICY_EXECUTIONS_DATA_STREAM });
+
+      const response = await esClient.search<ActionPolicyExecution>({
+        index: ACTION_POLICY_EXECUTIONS_DATA_STREAM,
+        query: { term: { outcome: 'dispatched' } },
+        size: 100,
+      });
+
+      const executions = response.hits.hits.map((hit) => hit._source!);
+      expect(executions).toHaveLength(3);
+      executions.forEach((execution) => {
+        expect(execution).toMatchObject({
+          outcome: 'dispatched',
+          action_policy_id: ACTION_POLICY_ID,
+          action_policy_name: 'Test Policy',
+          rule_id: 'rule-1',
+          rule_name: 'Test Rule',
+          group_hash: 'rule-1-series-1',
+          space_id: 'default',
+          workflow_ids: ['test-workflow'],
+        });
+        expect(execution.action_group_id).toEqual(expect.any(String));
+        expect(execution.episode_id).toEqual(expect.any(String));
+        expect(execution['@timestamp']).toEqual(result.startedAt.toISOString());
+      });
+    });
+
+    it('records a throttled execution when a subsequent event arrives with unchanged status', async () => {
+      await setActionPolicyThrottle(npSoService, { strategy: 'on_status_change' });
+      await seedAlertEvents(esClient, ALERT_EVENTS_TEST_DATA);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-01-22T07:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({
+        index: `${ALERT_ACTIONS_DATA_STREAM},${ACTION_POLICY_EXECUTIONS_DATA_STREAM}`,
+      });
+
+      const firstRun = await esClient.search<ActionPolicyExecution>({
+        index: ACTION_POLICY_EXECUTIONS_DATA_STREAM,
+        query: { term: { outcome: 'throttled' } },
+        size: 100,
+      });
+      expect(firstRun.hits.hits).toHaveLength(0);
+
+      await seedAlertEvents(esClient, [
+        {
+          '@timestamp': '2026-01-22T07:55:00.000Z',
+          type: 'alert',
+          rule: { id: 'rule-1', version: 1 },
+          group_hash: 'rule-1-series-1',
+          episode: { id: 'rule-1-series-1-episode-3', status: 'active' },
+          data: {},
+          status: 'breached',
+          source: 'internal',
+          space_id: 'default',
+        },
+      ]);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-01-22T07:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ACTION_POLICY_EXECUTIONS_DATA_STREAM });
+
+      const secondRun = await esClient.search<ActionPolicyExecution>({
+        index: ACTION_POLICY_EXECUTIONS_DATA_STREAM,
+        query: { term: { outcome: 'throttled' } },
+        size: 100,
+      });
+
+      const throttled = secondRun.hits.hits.map((hit) => hit._source!);
+      expect(throttled).toHaveLength(1);
+      expect(throttled[0]).toMatchObject({
+        outcome: 'throttled',
+        action_policy_id: ACTION_POLICY_ID,
+        action_policy_name: 'Test Policy',
+        rule_id: 'rule-1',
+        episode_id: 'rule-1-series-1-episode-3',
+      });
+      expect(throttled[0].action_group_id).toEqual(expect.any(String));
+    });
+
+    it('records an unmatched execution for episodes that do not match any enabled policy', async () => {
+      await setActionPolicyEnabled(npSoService, ACTION_POLICY_ID, false);
+      await setActionPolicyEnabled(npSoService, ACTION_POLICY_MATCHER_ID, true);
+
+      await seedAlertEvents(esClient, [
+        {
+          '@timestamp': '2026-02-01T10:10:00.000Z',
+          type: 'alert',
+          rule: { id: 'rule-matcher', version: 1 },
+          group_hash: 'rule-matcher-series-1',
+          episode: { id: 'rule-matcher-s1-ep3', status: 'active' },
+          data: { severity: 'warning' },
+          status: 'breached',
+          source: 'internal',
+          space_id: 'default',
+        },
+      ]);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-02-01T09:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ACTION_POLICY_EXECUTIONS_DATA_STREAM });
+
+      const response = await esClient.search<ActionPolicyExecution>({
+        index: ACTION_POLICY_EXECUTIONS_DATA_STREAM,
+        query: { term: { outcome: 'unmatched' } },
+        size: 100,
+      });
+
+      const unmatched = response.hits.hits.map((hit) => hit._source!);
+      expect(unmatched).toHaveLength(1);
+      expect(unmatched[0]).toMatchObject({
+        outcome: 'unmatched',
+        action_policy_id: null,
+        action_policy_name: null,
+        rule_id: 'rule-matcher',
+        rule_name: 'Test Rule',
+        episode_id: 'rule-matcher-s1-ep3',
+        workflow_ids: [],
+        action_group_id: null,
+        space_id: 'default',
+      });
+    });
+
+    it('records both dispatched and unmatched executions in a single run', async () => {
+      await setActionPolicyEnabled(npSoService, ACTION_POLICY_ID, false);
+      await setActionPolicyEnabled(npSoService, ACTION_POLICY_MATCHER_ID, true);
+      await seedAlertEvents(esClient, MATCHER_ALERT_EVENTS);
+
+      await dispatcherService.run({
+        previousStartedAt: new Date('2026-02-01T09:00:00.000Z'),
+      });
+
+      await esClient.indices.refresh({ index: ACTION_POLICY_EXECUTIONS_DATA_STREAM });
+
+      const dispatchedResponse = await esClient.search<ActionPolicyExecution>({
+        index: ACTION_POLICY_EXECUTIONS_DATA_STREAM,
+        query: { term: { outcome: 'dispatched' } },
+        size: 100,
+      });
+      const unmatchedResponse = await esClient.search<ActionPolicyExecution>({
+        index: ACTION_POLICY_EXECUTIONS_DATA_STREAM,
+        query: { term: { outcome: 'unmatched' } },
+        size: 100,
+      });
+
+      expect(dispatchedResponse.hits.hits).toHaveLength(2);
+      expect(unmatchedResponse.hits.hits).toHaveLength(1);
+
+      dispatchedResponse.hits.hits.forEach((hit) => {
+        expect(hit._source).toMatchObject({
+          outcome: 'dispatched',
+          action_policy_id: ACTION_POLICY_MATCHER_ID,
+          rule_id: 'rule-matcher',
+        });
+      });
+
+      expect(unmatchedResponse.hits.hits[0]._source).toMatchObject({
+        outcome: 'unmatched',
+        action_policy_id: null,
+        episode_id: 'rule-matcher-s1-ep3',
+      });
+    });
+  });
 });
 
 async function cleanupDataStreams(esClient: ElasticsearchClient): Promise<void> {
+  await esClient.indices
+    .refresh({
+      index: `${ALERT_EVENTS_DATA_STREAM},${ALERT_ACTIONS_DATA_STREAM},${ACTION_POLICY_EXECUTIONS_DATA_STREAM}`,
+    })
+    .catch((error) => {
+      // noop
+    });
+
   await esClient
     .deleteByQuery({
-      index: `${ALERT_EVENTS_DATA_STREAM},${ALERT_ACTIONS_DATA_STREAM}`,
+      index: `${ALERT_EVENTS_DATA_STREAM},${ALERT_ACTIONS_DATA_STREAM},${ACTION_POLICY_EXECUTIONS_DATA_STREAM}`,
       query: { match_all: {} },
       refresh: true,
       wait_for_completion: true,

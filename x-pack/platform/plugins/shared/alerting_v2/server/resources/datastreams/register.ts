@@ -9,6 +9,7 @@ import type { ElasticsearchClient } from '@kbn/core/server';
 import type { Logger } from '@kbn/logging';
 import { DatastreamInitializer } from '../../lib/services/resource_service/datastream_initializer';
 import type { ResourceManagerContract } from '../../lib/services/resource_service/resource_manager';
+import { getActionPolicyExecutionsResourceDefinition } from './action_policy_executions';
 import { getAlertActionsResourceDefinition } from './alert_actions';
 import { getAlertEventsResourceDefinition } from './alert_events';
 import type { ResourceDefinition } from './types';
@@ -29,6 +30,16 @@ export function registerDatastreams({
 
     resourceManager.registerResource(resourceDefinition.key, initializer);
   }
+
+  const executionHistoryDefinition = getActionPolicyExecutionsResourceDefinition();
+  const executionHistoryInitializer = new DatastreamInitializer(
+    logger,
+    esClient,
+    executionHistoryDefinition
+  );
+  resourceManager.registerResource(executionHistoryDefinition.key, executionHistoryInitializer, {
+    optional: true,
+  });
 }
 
 function getDataStreamResourceDefinitions(): ResourceDefinition[] {
