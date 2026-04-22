@@ -64,6 +64,7 @@ export function createRule(overrides: Partial<Rule> = {}): Rule {
   return {
     id: 'rule-1',
     spaceId: 'default',
+    kind: 'alert',
     name: 'Test rule',
     description: '',
     tags: [],

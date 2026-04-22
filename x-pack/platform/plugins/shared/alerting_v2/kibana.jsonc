@@ -27,7 +27,8 @@
       "charts",
       "management",
       "kibanaUtils",
-      "share"
+      "share",
+      "eventLog"
     ],
     "optionalPlugins": ["usageCollection"],
     "requiredBundles": ["alerting", "kibanaReact"],

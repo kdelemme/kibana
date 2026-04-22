@@ -50,6 +50,7 @@ export interface DispatcherTaskState {
 export interface Rule {
   id: RuleId;
   spaceId: string;
+  kind: 'alert' | 'signal';
   name: string;
   description: string;
   tags: string[];

@@ -16,6 +16,11 @@ import { TaskDefinition } from '../lib/services/task_run_scope_service/create_ta
 import { registerSavedObjects } from '../saved_objects';
 import { dispatcherUiSettings } from '../lib/dispatcher/ui_settings';
 import { EsServiceInternalToken } from '../lib/services/es_service/tokens';
+import {
+  ACTION_POLICY_EVENT_ACTIONS,
+  ACTION_POLICY_EVENT_PROVIDER,
+  ActionPolicyExecutionEventLoggerToken,
+} from '../lib/dispatcher/steps/store_execution_history_step_tokens';
 
 export function bindOnSetup({ bind }: ContainerModuleLoadOptions) {
   bind(OnSetup).toConstantValue((container) => {
@@ -45,6 +50,18 @@ export function bindOnSetup({ bind }: ContainerModuleLoadOptions) {
     }));
 
     container.get(CoreSetup('uiSettings')).registerGlobal(dispatcherUiSettings);
+
+    const eventLogService = container.get(
+      PluginSetup<AlertingServerSetupDependencies['eventLog']>('eventLog')
+    );
+    eventLogService.registerProviderActions(
+      ACTION_POLICY_EVENT_PROVIDER,
+      Object.values(ACTION_POLICY_EVENT_ACTIONS)
+    );
+    const eventLogger = eventLogService.getLogger({
+      event: { provider: ACTION_POLICY_EVENT_PROVIDER },
+    });
+    container.bind(ActionPolicyExecutionEventLoggerToken).toConstantValue(eventLogger);
 
     // Trigger task registration via onActivation callbacks
     container.getAll(TaskDefinition);

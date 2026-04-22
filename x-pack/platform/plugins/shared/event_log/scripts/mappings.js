@@ -459,6 +459,35 @@ exports.EcsCustomPropertyMappings = {
           },
         },
       },
+      alerting_v2: {
+        properties: {
+          episode_count: {
+            type: 'long',
+          },
+          episode_ids: {
+            type: 'keyword',
+            ignore_above: 1024,
+          },
+          rule_count: {
+            type: 'long',
+          },
+          rule_ids: {
+            type: 'keyword',
+            ignore_above: 1024,
+          },
+          action_group_count: {
+            type: 'long',
+          },
+          action_group_ids: {
+            type: 'keyword',
+            ignore_above: 1024,
+          },
+          workflow_ids: {
+            type: 'keyword',
+            ignore_above: 1024,
+          },
+        },
+      },
     },
   },
 };
@@ -496,4 +525,8 @@ exports.EcsEventLogMultiValuedProperties = [
   'kibana.alert.rule.gap.filled_intervals',
   'kibana.alert.rule.gap.unfilled_intervals',
   'kibana.gap_auto_fill.execution.rule_ids',
+  'kibana.alerting_v2.episode_ids',
+  'kibana.alerting_v2.rule_ids',
+  'kibana.alerting_v2.action_group_ids',
+  'kibana.alerting_v2.workflow_ids',
 ];
