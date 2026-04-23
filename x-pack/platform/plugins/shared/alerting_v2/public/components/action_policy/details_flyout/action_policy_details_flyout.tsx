@@ -9,6 +9,7 @@ import {
   EuiBadge,
   EuiButton,
   EuiButtonEmpty,
+  EuiButtonIcon,
   EuiCode,
   EuiDescriptionList,
   EuiFlexGroup,
@@ -16,7 +17,8 @@ import {
   EuiFlyout,
   EuiFlyoutBody,
   EuiFlyoutFooter,
-  EuiFlyoutHeader,
+  EuiHorizontalRule,
+  EuiPanel,
   EuiSpacer,
   EuiText,
   EuiTitle,
@@ -33,7 +35,6 @@ import { isSnoozed } from '../is_snoozed';
 import { getGroupingModeLabel, getThrottleStrategyLabel } from '../labels';
 import { BadgeList } from './badge_list';
 import { DestinationRow } from './destination_row';
-import { SectionPanel } from './section_panel';
 
 const FLYOUT_TITLE_ID = 'actionPolicyDetailsFlyoutTitle';
 const EMPTY_VALUE = '-';
@@ -56,25 +57,22 @@ export const ActionPolicyDetailsFlyout = ({ policy, onClose, onEdit }: Props) =>
     onEdit(policy.id);
   };
 
-  const basicInfoItems: EuiDescriptionListProps['listItems'] = [
+  const actionPolicyItems: EuiDescriptionListProps['listItems'] = [
     {
-      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.basicInfo.description', {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.description', {
         defaultMessage: 'Description',
       }),
       description: policy.description ? policy.description : EMPTY_VALUE,
     },
     {
-      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.basicInfo.tags', {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.tags', {
         defaultMessage: 'Tags',
       }),
       description:
         policy.tags && policy.tags.length > 0 ? <BadgeList items={policy.tags} /> : EMPTY_VALUE,
     },
-  ];
-
-  const matchConditionsItems: EuiDescriptionListProps['listItems'] = [
     {
-      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.matchConditions.matcher', {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.matcher', {
         defaultMessage: 'Matcher',
       }),
       description: policy.matcher ? (
@@ -82,32 +80,29 @@ export const ActionPolicyDetailsFlyout = ({ policy, onClose, onEdit }: Props) =>
       ) : (
         <EuiText size="s" color="subdued">
           <FormattedMessage
-            id="xpack.alertingV2.actionPolicy.detailsFlyout.matchConditions.matchesAll"
+            id="xpack.alertingV2.actionPolicy.detailsFlyout.matchesAll"
             defaultMessage="Matches all alerts."
           />
         </EuiText>
       ),
     },
-  ];
-
-  const dispatchItems: EuiDescriptionListProps['listItems'] = [
     {
-      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.mode', {
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.dispatchMode', {
         defaultMessage: 'Dispatch per',
       }),
       description: getGroupingModeLabel(policy.groupingMode),
     },
   ];
   if (policy.groupingMode === 'per_field' && policy.groupBy && policy.groupBy.length > 0) {
-    dispatchItems.push({
-      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.groupBy', {
+    actionPolicyItems.push({
+      title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.groupBy', {
         defaultMessage: 'Group by',
       }),
       description: <BadgeList items={policy.groupBy} />,
     });
   }
-  dispatchItems.push({
-    title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.frequency', {
+  actionPolicyItems.push({
+    title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.frequency', {
       defaultMessage: 'Frequency',
     }),
     description: (
@@ -118,7 +113,7 @@ export const ActionPolicyDetailsFlyout = ({ policy, onClose, onEdit }: Props) =>
             {' '}
             <EuiText size="xs" color="subdued">
               <FormattedMessage
-                id="xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.interval"
+                id="xpack.alertingV2.actionPolicy.detailsFlyout.interval"
                 defaultMessage="Every {interval}"
                 values={{ interval: policy.throttle.interval }}
               />
@@ -127,6 +122,23 @@ export const ActionPolicyDetailsFlyout = ({ policy, onClose, onEdit }: Props) =>
         )}
       </>
     ),
+  });
+  actionPolicyItems.push({
+    title: i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.destinations', {
+      defaultMessage: 'Destinations',
+    }),
+    description:
+      policy.destinations.length === 0 ? (
+        EMPTY_VALUE
+      ) : (
+        <EuiFlexGroup direction="column" gutterSize="xs">
+          {policy.destinations.map((destination) => (
+            <EuiFlexItem key={`${destination.type}-${destination.id}`}>
+              <DestinationRow destination={destination} />
+            </EuiFlexItem>
+          ))}
+        </EuiFlexGroup>
+      ),
   });
 
   const metadataItems: EuiDescriptionListProps['listItems'] = [
@@ -158,144 +170,143 @@ export const ActionPolicyDetailsFlyout = ({ policy, onClose, onEdit }: Props) =>
 
   return (
     <EuiFlyout
+      type="push"
+      hasAnimation
+      size="s"
+      ownFocus
+      hideCloseButton
+      paddingSize="none"
       onClose={onClose}
       aria-labelledby={FLYOUT_TITLE_ID}
-      size="m"
-      ownFocus
       data-test-subj="actionPolicyDetailsFlyout"
     >
-      <EuiFlyoutHeader hasBorder>
-        <EuiTitle size="m">
-          <h2 id={FLYOUT_TITLE_ID} data-test-subj="actionPolicyDetailsFlyoutTitle">
-            {policy.name}
-          </h2>
-        </EuiTitle>
-        <EuiSpacer size="s" />
-        <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false} wrap>
+      <EuiPanel
+        paddingSize="xs"
+        hasShadow={false}
+        hasBorder={false}
+        borderRadius="none"
+        color="transparent"
+      >
+        <EuiFlexGroup
+          justifyContent="flexEnd"
+          gutterSize="s"
+          responsive={false}
+          alignItems="center"
+        >
           <EuiFlexItem grow={false}>
-            <ActionPolicyStateBadge policy={policy} isLoading={false} />
-          </EuiFlexItem>
-          {snoozedActive && policy.snoozedUntil && (
-            <EuiFlexItem grow={false}>
-              <EuiBadge color="accent" iconType="bellSlash">
-                <FormattedMessage
-                  id="xpack.alertingV2.actionPolicy.detailsFlyout.snoozedUntil"
-                  defaultMessage="Snoozed until {date}"
-                  values={{ date: formatDate(policy.snoozedUntil) }}
-                />
-              </EuiBadge>
-            </EuiFlexItem>
-          )}
-        </EuiFlexGroup>
-      </EuiFlyoutHeader>
-
-      <EuiFlyoutBody>
-        <SectionPanel
-          title={
-            <FormattedMessage
-              id="xpack.alertingV2.actionPolicy.detailsFlyout.basicInfo.title"
-              defaultMessage="Basic information"
-            />
-          }
-        >
-          <EuiDescriptionList compressed type="column" listItems={basicInfoItems} />
-        </SectionPanel>
-
-        <EuiSpacer size="m" />
-
-        <SectionPanel
-          title={
-            <FormattedMessage
-              id="xpack.alertingV2.actionPolicy.detailsFlyout.matchConditions.title"
-              defaultMessage="Match conditions"
-            />
-          }
-        >
-          <EuiDescriptionList compressed type="column" listItems={matchConditionsItems} />
-        </SectionPanel>
-
-        <EuiSpacer size="m" />
-
-        <SectionPanel
-          title={
-            <FormattedMessage
-              id="xpack.alertingV2.actionPolicy.detailsFlyout.dispatch.title"
-              defaultMessage="Dispatch"
-            />
-          }
-        >
-          <EuiDescriptionList compressed type="column" listItems={dispatchItems} />
-        </SectionPanel>
-
-        <EuiSpacer size="m" />
-
-        <SectionPanel
-          title={
-            <FormattedMessage
-              id="xpack.alertingV2.actionPolicy.detailsFlyout.destinations.title"
-              defaultMessage="Destinations"
-            />
-          }
-        >
-          {policy.destinations.length === 0 ? (
-            EMPTY_VALUE
-          ) : (
-            <EuiFlexGroup direction="column" gutterSize="s">
-              {policy.destinations.map((destination) => (
-                <EuiFlexItem key={`${destination.type}-${destination.id}`}>
-                  <DestinationRow destination={destination} />
-                </EuiFlexItem>
-              ))}
-            </EuiFlexGroup>
-          )}
-        </SectionPanel>
-
-        <EuiSpacer size="m" />
-
-        <SectionPanel
-          title={
-            <FormattedMessage
-              id="xpack.alertingV2.actionPolicy.detailsFlyout.metadata.title"
-              defaultMessage="Metadata"
-            />
-          }
-        >
-          <EuiDescriptionList compressed type="column" listItems={metadataItems} />
-        </SectionPanel>
-      </EuiFlyoutBody>
-
-      <EuiFlyoutFooter>
-        <EuiFlexGroup justifyContent="spaceBetween" responsive={false}>
-          <EuiFlexItem grow={false}>
-            <EuiButtonEmpty
-              onClick={onClose}
-              data-test-subj="detailsFlyoutCloseButton"
+            <EuiButtonIcon
               iconType="cross"
-            >
-              <FormattedMessage
-                id="xpack.alertingV2.actionPolicy.detailsFlyout.close"
-                defaultMessage="Close"
-              />
-            </EuiButtonEmpty>
-          </EuiFlexItem>
-          <EuiFlexItem grow={false}>
-            <EuiButton
-              fill
-              iconType="pencil"
-              onClick={handleEdit}
-              data-test-subj="detailsFlyoutEditButton"
-              aria-label={i18n.translate(
-                'xpack.alertingV2.actionPolicy.detailsFlyout.edit.ariaLabel',
-                { defaultMessage: 'Edit this action policy' }
-              )}
-            >
-              <FormattedMessage
-                id="xpack.alertingV2.actionPolicy.detailsFlyout.edit"
-                defaultMessage="Edit"
-              />
-            </EuiButton>
+              color="text"
+              onClick={onClose}
+              aria-label={i18n.translate('xpack.alertingV2.actionPolicy.detailsFlyout.closeIcon', {
+                defaultMessage: 'Close',
+              })}
+              data-test-subj="detailsFlyoutCloseIcon"
+            />
           </EuiFlexItem>
         </EuiFlexGroup>
+      </EuiPanel>
+      <EuiHorizontalRule margin="none" />
+      <EuiFlyoutBody>
+        <EuiPanel
+          paddingSize="m"
+          hasShadow={false}
+          hasBorder={false}
+          borderRadius="none"
+          color="transparent"
+        >
+          <EuiTitle size="s" id={FLYOUT_TITLE_ID}>
+            <h2 data-test-subj="actionPolicyDetailsFlyoutTitle">{policy.name}</h2>
+          </EuiTitle>
+          <EuiSpacer size="s" />
+          <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false} wrap>
+            <EuiFlexItem grow={false}>
+              <ActionPolicyStateBadge policy={policy} isLoading={false} />
+            </EuiFlexItem>
+            {snoozedActive && policy.snoozedUntil && (
+              <EuiFlexItem grow={false}>
+                <EuiBadge color="accent" iconType="bellSlash">
+                  <FormattedMessage
+                    id="xpack.alertingV2.actionPolicy.detailsFlyout.snoozedUntil"
+                    defaultMessage="Snoozed until {date}"
+                    values={{ date: formatDate(policy.snoozedUntil) }}
+                  />
+                </EuiBadge>
+              </EuiFlexItem>
+            )}
+          </EuiFlexGroup>
+        </EuiPanel>
+        <EuiHorizontalRule margin="xs" />
+        <EuiPanel
+          paddingSize="m"
+          hasShadow={false}
+          hasBorder={false}
+          borderRadius="none"
+          color="transparent"
+        >
+          <EuiTitle size="xs">
+            <h3>
+              <FormattedMessage
+                id="xpack.alertingV2.actionPolicy.detailsFlyout.actionPolicy.title"
+                defaultMessage="Definition"
+              />
+            </h3>
+          </EuiTitle>
+          <EuiSpacer size="s" />
+          <EuiDescriptionList compressed type="column" listItems={actionPolicyItems} />
+          <EuiHorizontalRule />
+          <EuiTitle size="xs">
+            <h3>
+              <FormattedMessage
+                id="xpack.alertingV2.actionPolicy.detailsFlyout.metadata.title"
+                defaultMessage="Metadata"
+              />
+            </h3>
+          </EuiTitle>
+          <EuiSpacer size="s" />
+          <EuiDescriptionList compressed type="column" listItems={metadataItems} />
+        </EuiPanel>
+      </EuiFlyoutBody>
+      <EuiFlyoutFooter>
+        <EuiPanel
+          paddingSize="m"
+          hasShadow={false}
+          hasBorder={false}
+          borderRadius="none"
+          color="transparent"
+        >
+          <EuiFlexGroup justifyContent="spaceBetween" responsive={false}>
+            <EuiFlexItem grow={false}>
+              <EuiButtonEmpty
+                onClick={onClose}
+                data-test-subj="detailsFlyoutCloseButton"
+                iconType="cross"
+              >
+                <FormattedMessage
+                  id="xpack.alertingV2.actionPolicy.detailsFlyout.close"
+                  defaultMessage="Close"
+                />
+              </EuiButtonEmpty>
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
+              <EuiButton
+                fill
+                iconType="pencil"
+                onClick={handleEdit}
+                data-test-subj="detailsFlyoutEditButton"
+                aria-label={i18n.translate(
+                  'xpack.alertingV2.actionPolicy.detailsFlyout.edit.ariaLabel',
+                  { defaultMessage: 'Edit this action policy' }
+                )}
+              >
+                <FormattedMessage
+                  id="xpack.alertingV2.actionPolicy.detailsFlyout.edit"
+                  defaultMessage="Edit"
+                />
+              </EuiButton>
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        </EuiPanel>
       </EuiFlyoutFooter>
     </EuiFlyout>
   );
