@@ -12,7 +12,6 @@ import { ACTION_POLICY_SAVED_OBJECT_TYPE, RULE_SAVED_OBJECT_TYPE } from '../../.
 import type {
   ActionGroup,
   ActionPolicyId,
-  AlertEpisode,
   DispatcherPipelineState,
   DispatcherStep,
   DispatcherStepOutput,
@@ -24,6 +23,7 @@ import {
   ActionPolicyExecutionEventLoggerToken,
   type ActionPolicyEventAction,
 } from './store_execution_history_step_tokens';
+import { getUnmatchedEpisodes } from './unmatched_episodes';
 
 const RULE_REF_CAP = 50;
 
@@ -58,6 +58,8 @@ interface UnmatchedAlertingV2Fields {
   episode_count: number;
   episode_ids: string[];
 }
+
+type AlertingV2Fields = PolicySummaryAlertingV2Fields | UnmatchedAlertingV2Fields;
 
 @injectable()
 export class StoreExecutionHistoryStep implements DispatcherStep {
@@ -95,23 +97,11 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
       });
     }
 
-    const unmatchedByRule = aggregateUnmatchedByRule(
+    const unmatched = aggregateUnmatchedByRule(
       getUnmatchedEpisodes(dispatchable, dispatch, throttled)
     );
-    for (const [ruleId, episodeIds] of unmatchedByRule) {
-      const rule = rules?.get(ruleId);
-      this.eventLogger.logEvent(
-        buildEvent<UnmatchedAlertingV2Fields>({
-          timestamp,
-          action: ACTION_POLICY_EVENT_ACTIONS.UNMATCHED,
-          spaceId: rule?.spaceId ?? 'default',
-          savedObjects: [ruleRef({ id: ruleId, spaceId: rule?.spaceId, kind: rule?.kind })],
-          alertingV2: {
-            episode_count: episodeIds.size,
-            episode_ids: Array.from(episodeIds),
-          },
-        })
-      );
+    for (const [ruleId, episodeIds] of unmatched) {
+      this.emitUnmatchedSummary({ timestamp, ruleId, episodeIds, rules });
     }
 
     return { type: 'continue' };
@@ -145,7 +135,7 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
     ];
 
     this.eventLogger.logEvent(
-      buildEvent<PolicySummaryAlertingV2Fields>({
+      buildEvent({
         timestamp,
         action,
         spaceId: summary.spaceId,
@@ -154,10 +144,36 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
           episode_count: summary.episodeIds.size,
           episode_ids: Array.from(summary.episodeIds),
           rule_count: summary.ruleIds.size,
-          ...(spillOver.length > 0 ? { rule_ids: spillOver } : {}),
+          rule_ids: spillOver.length > 0 ? spillOver : undefined,
           action_group_count: summary.actionGroupIds.size,
           action_group_ids: Array.from(summary.actionGroupIds),
           workflow_ids: Array.from(summary.workflowIds),
+        },
+      })
+    );
+  }
+
+  private emitUnmatchedSummary({
+    timestamp,
+    ruleId,
+    episodeIds,
+    rules,
+  }: {
+    timestamp: string;
+    ruleId: RuleId;
+    episodeIds: Set<string>;
+    rules: Map<RuleId, Rule> | undefined;
+  }): void {
+    const rule = rules?.get(ruleId);
+    this.eventLogger.logEvent(
+      buildEvent({
+        timestamp,
+        action: ACTION_POLICY_EVENT_ACTIONS.UNMATCHED,
+        spaceId: rule?.spaceId ?? 'default',
+        savedObjects: [ruleRef({ id: ruleId, spaceId: rule?.spaceId, kind: rule?.kind })],
+        alertingV2: {
+          episode_count: episodeIds.size,
+          episode_ids: Array.from(episodeIds),
         },
       })
     );
@@ -191,7 +207,9 @@ function aggregateByPolicy(groups: readonly ActionGroup[]): Map<ActionPolicyId, 
   return summaries;
 }
 
-function aggregateUnmatchedByRule(unmatched: readonly AlertEpisode[]): Map<RuleId, Set<string>> {
+function aggregateUnmatchedByRule(
+  unmatched: ReturnType<typeof getUnmatchedEpisodes>
+): Map<RuleId, Set<string>> {
   const byRule = new Map<RuleId, Set<string>>();
   for (const episode of unmatched) {
     let ids = byRule.get(episode.rule_id);
@@ -202,22 +220,6 @@ function aggregateUnmatchedByRule(unmatched: readonly AlertEpisode[]): Map<RuleI
     ids.add(episode.episode_id);
   }
   return byRule;
-}
-
-function getUnmatchedEpisodes(
-  dispatchable: readonly AlertEpisode[],
-  dispatch: readonly ActionGroup[],
-  throttled: readonly ActionGroup[]
-): AlertEpisode[] {
-  const handled = new Set<string>();
-  for (const group of [...dispatch, ...throttled]) {
-    for (const ep of group.episodes) {
-      handled.add(`${ep.rule_id}:${ep.group_hash}:${ep.episode_id}`);
-    }
-  }
-  return dispatchable.filter(
-    (ep) => !handled.has(`${ep.rule_id}:${ep.group_hash}:${ep.episode_id}`)
-  );
 }
 
 function ruleRef({
@@ -247,7 +249,7 @@ function policyRef({ id, spaceId }: { id: string; spaceId: string }): SavedObjec
   };
 }
 
-function buildEvent<T extends PolicySummaryAlertingV2Fields | UnmatchedAlertingV2Fields>({
+function buildEvent({
   timestamp,
   action,
   spaceId,
@@ -258,13 +260,11 @@ function buildEvent<T extends PolicySummaryAlertingV2Fields | UnmatchedAlertingV
   action: ActionPolicyEventAction;
   spaceId: string;
   savedObjects: SavedObjectRef[];
-  alertingV2: T;
+  alertingV2: AlertingV2Fields;
 }): IEvent {
   return {
     '@timestamp': timestamp,
-    event: {
-      action,
-    },
+    event: { action },
     kibana: {
       saved_objects: savedObjects,
       space_ids: [spaceId],
