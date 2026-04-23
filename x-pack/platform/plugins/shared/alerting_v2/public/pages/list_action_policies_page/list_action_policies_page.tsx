@@ -74,7 +74,7 @@ export const ListActionPoliciesPage = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [policyToDelete, setPolicyToDelete] = useState<ActionPolicyResponse | null>(null);
   const [policyToUpdateApiKey, setPolicyToUpdateApiKey] = useState<string | null>(null);
-  const [policyToView, setPolicyToView] = useState<ActionPolicyResponse | null>(null);
+  const [policyToViewId, setPolicyToViewId] = useState<string | null>(null);
   const [selectedPolicies, setSelectedPolicies] = useState<ActionPolicyResponse[]>([]);
 
   const { navigateToUrl } = useService(CoreStart('application'));
@@ -164,6 +164,7 @@ export const ListActionPoliciesPage = () => {
 
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
+  const policyToView = policyToViewId ? items.find((p) => p.id === policyToViewId) ?? null : null;
 
   const onTableChange = ({
     page: tablePage,
@@ -240,7 +241,7 @@ export const ListActionPoliciesPage = () => {
         <EuiFlexGroup direction="column" gutterSize="none">
           <EuiFlexItem>
             <EuiLink
-              onClick={() => setPolicyToView(policy)}
+              onClick={() => setPolicyToViewId(policy.id)}
               data-test-subj={`actionPolicyDetailsLink-${policy.id}`}
             >
               {name}
@@ -363,7 +364,7 @@ export const ListActionPoliciesPage = () => {
       render: (policy: ActionPolicyResponse) => (
         <ActionPolicyActionsCell
           policy={policy}
-          onViewDetails={setPolicyToView}
+          onViewDetails={(p) => setPolicyToViewId(p.id)}
           onEdit={navigateToEdit}
           onClone={clonePolicy}
           onDelete={setPolicyToDelete}
@@ -532,8 +533,19 @@ export const ListActionPoliciesPage = () => {
       {policyToView && (
         <ActionPolicyDetailsFlyout
           policy={policyToView}
-          onClose={() => setPolicyToView(null)}
+          onClose={() => setPolicyToViewId(null)}
           onEdit={navigateToEdit}
+          onClone={clonePolicy}
+          onDelete={setPolicyToDelete}
+          onEnable={(id) => enablePolicy(id)}
+          onDisable={(id) => disablePolicy(id)}
+          onSnooze={(id, until) => snoozePolicy({ id, snoozedUntil: until })}
+          onCancelSnooze={(id) => unsnoozePolicy(id)}
+          onUpdateApiKey={(id) => setPolicyToUpdateApiKey(id)}
+          isStateLoading={
+            (isEnabling && enableVariables === policyToView.id) ||
+            (isDisabling && disableVariables === policyToView.id)
+          }
         />
       )}
     </>

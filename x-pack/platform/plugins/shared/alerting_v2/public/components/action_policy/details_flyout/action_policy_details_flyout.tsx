@@ -30,6 +30,7 @@ import { i18n } from '@kbn/i18n';
 import { FormattedMessage } from '@kbn/i18n-react';
 import moment from 'moment';
 import React from 'react';
+import { ActionPolicyActionsMenu } from '../action_policy_actions_menu';
 import { ActionPolicyStateBadge } from '../action_policy_state_badge';
 import { isSnoozed } from '../is_snoozed';
 import { getGroupingModeLabel, getThrottleStrategyLabel } from '../labels';
@@ -43,9 +44,29 @@ interface Props {
   policy: ActionPolicyResponse;
   onClose: () => void;
   onEdit: (id: string) => void;
+  onClone: (policy: ActionPolicyResponse) => void;
+  onDelete: (policy: ActionPolicyResponse) => void;
+  onEnable: (id: string) => void;
+  onDisable: (id: string) => void;
+  onSnooze: (id: string, snoozedUntil: string) => void;
+  onCancelSnooze: (id: string) => void;
+  onUpdateApiKey: (id: string) => void;
+  isStateLoading?: boolean;
 }
 
-export const ActionPolicyDetailsFlyout = ({ policy, onClose, onEdit }: Props) => {
+export const ActionPolicyDetailsFlyout = ({
+  policy,
+  onClose,
+  onEdit,
+  onClone,
+  onDelete,
+  onEnable,
+  onDisable,
+  onSnooze,
+  onCancelSnooze,
+  onUpdateApiKey,
+  isStateLoading = false,
+}: Props) => {
   const settings = useService(CoreStart('settings'));
   const dateTimeFormat = settings.client.get<string>('dateFormat');
   const formatDate = (value: string) => moment(value).format(dateTimeFormat);
@@ -55,6 +76,21 @@ export const ActionPolicyDetailsFlyout = ({ policy, onClose, onEdit }: Props) =>
   const handleEdit = () => {
     onClose();
     onEdit(policy.id);
+  };
+
+  const handleClone = (p: ActionPolicyResponse) => {
+    onClose();
+    onClone(p);
+  };
+
+  const handleDelete = (p: ActionPolicyResponse) => {
+    onClose();
+    onDelete(p);
+  };
+
+  const handleUpdateApiKey = (id: string) => {
+    onClose();
+    onUpdateApiKey(id);
   };
 
   const actionPolicyItems: EuiDescriptionListProps['listItems'] = [
@@ -193,6 +229,20 @@ export const ActionPolicyDetailsFlyout = ({ policy, onClose, onEdit }: Props) =>
           responsive={false}
           alignItems="center"
         >
+          <EuiFlexItem grow={false}>
+            <ActionPolicyActionsMenu
+              policy={policy}
+              onClone={handleClone}
+              onDelete={handleDelete}
+              onEnable={onEnable}
+              onDisable={onDisable}
+              onSnooze={onSnooze}
+              onCancelSnooze={onCancelSnooze}
+              onUpdateApiKey={handleUpdateApiKey}
+              isStateLoading={isStateLoading}
+              data-test-subj="detailsFlyoutActionsMenuButton"
+            />
+          </EuiFlexItem>
           <EuiFlexItem grow={false}>
             <EuiButtonIcon
               iconType="cross"

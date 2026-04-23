@@ -41,6 +41,7 @@ const TEST_SUBJ = {
   title: 'actionPolicyDetailsFlyoutTitle',
   closeButton: 'detailsFlyoutCloseButton',
   editButton: 'detailsFlyoutEditButton',
+  actionsMenuButton: 'detailsFlyoutActionsMenuButton',
 } as const;
 
 const futureIso = (): string => new Date(Date.now() + 1000 * 60 * 60).toISOString();
@@ -75,6 +76,13 @@ interface RenderProps {
   policy?: ActionPolicyResponse;
   onClose?: jest.Mock;
   onEdit?: jest.Mock;
+  onClone?: jest.Mock;
+  onDelete?: jest.Mock;
+  onEnable?: jest.Mock;
+  onDisable?: jest.Mock;
+  onSnooze?: jest.Mock;
+  onCancelSnooze?: jest.Mock;
+  onUpdateApiKey?: jest.Mock;
 }
 
 const renderFlyout = (props: RenderProps = {}) => {
@@ -82,6 +90,13 @@ const renderFlyout = (props: RenderProps = {}) => {
   const handlers = {
     onClose: props.onClose ?? jest.fn(),
     onEdit: props.onEdit ?? jest.fn(),
+    onClone: props.onClone ?? jest.fn(),
+    onDelete: props.onDelete ?? jest.fn(),
+    onEnable: props.onEnable ?? jest.fn(),
+    onDisable: props.onDisable ?? jest.fn(),
+    onSnooze: props.onSnooze ?? jest.fn(),
+    onCancelSnooze: props.onCancelSnooze ?? jest.fn(),
+    onUpdateApiKey: props.onUpdateApiKey ?? jest.fn(),
   };
 
   render(
@@ -196,14 +211,68 @@ describe('ActionPolicyDetailsFlyout', () => {
       expect(handlers.onClose).toHaveBeenCalledTimes(1);
       expect(handlers.onEdit).toHaveBeenCalledWith('policy-1');
     });
+  });
 
-    it('does not render Clone, Delete, Enable, Disable, or Snooze controls', () => {
+  describe('actions menu', () => {
+    it('renders the actions menu trigger next to the close icon', () => {
       renderFlyout();
 
-      expect(screen.queryByTestId('detailsFlyoutCloneButton')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('detailsFlyoutDeleteButton')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('detailsFlyoutEnableButton')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('detailsFlyoutDisableButton')).not.toBeInTheDocument();
+      expect(screen.getByTestId(TEST_SUBJ.actionsMenuButton)).toBeInTheDocument();
+    });
+
+    it('calls onClone and closes the flyout when Clone is selected', async () => {
+      const user = userEvent.setup({ pointerEventsCheck: 0 });
+      const { handlers, policy } = renderFlyout();
+
+      await user.click(screen.getByTestId(TEST_SUBJ.actionsMenuButton));
+      await user.click(screen.getByText('Clone'));
+
+      expect(handlers.onClose).toHaveBeenCalledTimes(1);
+      expect(handlers.onClone).toHaveBeenCalledWith(policy);
+    });
+
+    it('calls onDelete and closes the flyout when Delete is selected', async () => {
+      const user = userEvent.setup({ pointerEventsCheck: 0 });
+      const { handlers, policy } = renderFlyout();
+
+      await user.click(screen.getByTestId(TEST_SUBJ.actionsMenuButton));
+      await user.click(screen.getByText('Delete'));
+
+      expect(handlers.onClose).toHaveBeenCalledTimes(1);
+      expect(handlers.onDelete).toHaveBeenCalledWith(policy);
+    });
+
+    it('calls onDisable without closing the flyout when Disable is selected on an enabled policy', async () => {
+      const user = userEvent.setup({ pointerEventsCheck: 0 });
+      const { handlers, policy } = renderFlyout();
+
+      await user.click(screen.getByTestId(TEST_SUBJ.actionsMenuButton));
+      await user.click(screen.getByText('Disable'));
+
+      expect(handlers.onDisable).toHaveBeenCalledWith(policy.id);
+      expect(handlers.onClose).not.toHaveBeenCalled();
+    });
+
+    it('calls onEnable without closing the flyout when Enable is selected on a disabled policy', async () => {
+      const user = userEvent.setup({ pointerEventsCheck: 0 });
+      const { handlers, policy } = renderFlyout({ policy: createPolicy({ enabled: false }) });
+
+      await user.click(screen.getByTestId(TEST_SUBJ.actionsMenuButton));
+      await user.click(screen.getByText('Enable'));
+
+      expect(handlers.onEnable).toHaveBeenCalledWith(policy.id);
+      expect(handlers.onClose).not.toHaveBeenCalled();
+    });
+
+    it('calls onUpdateApiKey and closes the flyout when Update API key is selected', async () => {
+      const user = userEvent.setup({ pointerEventsCheck: 0 });
+      const { handlers, policy } = renderFlyout();
+
+      await user.click(screen.getByTestId(TEST_SUBJ.actionsMenuButton));
+      await user.click(screen.getByText('Update API key'));
+
+      expect(handlers.onClose).toHaveBeenCalledTimes(1);
+      expect(handlers.onUpdateApiKey).toHaveBeenCalledWith(policy.id);
     });
   });
 });

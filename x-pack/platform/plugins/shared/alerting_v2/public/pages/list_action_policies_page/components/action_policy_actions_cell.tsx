@@ -5,27 +5,11 @@
  * 2.0.
  */
 
-import {
-  EuiButtonIcon,
-  EuiContextMenu,
-  EuiFlexGroup,
-  EuiFlexItem,
-  EuiIcon,
-  EuiPanel,
-  EuiPopover,
-  useEuiTheme,
-  useGeneratedHtmlId,
-  type EuiContextMenuPanelDescriptor,
-} from '@elastic/eui';
-import { css } from '@emotion/react';
+import { EuiButtonIcon, EuiFlexGroup, EuiFlexItem } from '@elastic/eui';
 import type { ActionPolicyResponse } from '@kbn/alerting-v2-schemas';
 import { i18n } from '@kbn/i18n';
-import React, { useState } from 'react';
-import {
-  ActionPolicySnoozeForm,
-  formatSnoozeDate,
-} from '../../../components/action_policy/action_policy_snooze_form';
-import { isSnoozed } from '../../../components/action_policy/is_snoozed';
+import React from 'react';
+import { ActionPolicyActionsMenu } from '../../../components/action_policy/action_policy_actions_menu';
 
 interface ActionPolicyActionsCellProps {
   policy: ActionPolicyResponse;
@@ -56,152 +40,6 @@ export const ActionPolicyActionsCell = ({
   isStateLoading,
   isDisabled = false,
 }: ActionPolicyActionsCellProps) => {
-  const { euiTheme } = useEuiTheme();
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const popoverTitleId = useGeneratedHtmlId();
-
-  const togglePopover = () => setIsPopoverOpen((prev) => !prev);
-  const closePopover = () => setIsPopoverOpen(false);
-
-  const snoozed = isSnoozed(policy.snoozedUntil);
-
-  const snoozeItem = policy.enabled
-    ? [
-        {
-          name: snoozed
-            ? i18n.translate('xpack.alertingV2.actionPoliciesList.action.snoozedUntil', {
-                defaultMessage: 'Snoozed until {date}',
-                values: { date: formatSnoozeDate(policy.snoozedUntil!) },
-              })
-            : i18n.translate('xpack.alertingV2.actionPoliciesList.action.snooze', {
-                defaultMessage: 'Snooze',
-              }),
-          icon: 'bellSlash',
-          panel: 1,
-        },
-      ]
-    : [];
-
-  const panels: EuiContextMenuPanelDescriptor[] = [
-    {
-      id: 0,
-      items: [
-        ...snoozeItem,
-        ...(policy.enabled ? [{ isSeparator: true as const }] : []),
-        {
-          name: i18n.translate('xpack.alertingV2.actionPoliciesList.action.viewDetails', {
-            defaultMessage: 'View details',
-          }),
-          icon: 'eye',
-          onClick: () => {
-            closePopover();
-            onViewDetails(policy);
-          },
-        },
-        {
-          name: i18n.translate('xpack.alertingV2.actionPoliciesList.action.edit', {
-            defaultMessage: 'Edit',
-          }),
-          icon: 'pencil',
-          onClick: () => {
-            closePopover();
-            onEdit(policy.id);
-          },
-        },
-        {
-          name: i18n.translate('xpack.alertingV2.actionPoliciesList.action.clone', {
-            defaultMessage: 'Clone',
-          }),
-          icon: 'copy',
-          onClick: () => {
-            closePopover();
-            onClone(policy);
-          },
-        },
-        {
-          name: policy.enabled
-            ? i18n.translate('xpack.alertingV2.actionPoliciesList.action.disable', {
-                defaultMessage: 'Disable',
-              })
-            : i18n.translate('xpack.alertingV2.actionPoliciesList.action.enable', {
-                defaultMessage: 'Enable',
-              }),
-          icon: policy.enabled ? 'stop' : 'play',
-          disabled: isStateLoading,
-          onClick: () => {
-            closePopover();
-            if (policy.enabled) {
-              onDisable(policy.id);
-            } else {
-              onEnable(policy.id);
-            }
-          },
-        },
-        {
-          name: i18n.translate('xpack.alertingV2.actionPoliciesList.action.updateApiKey', {
-            defaultMessage: 'Update API key',
-          }),
-          icon: 'key',
-          onClick: () => {
-            closePopover();
-            onUpdateApiKey(policy.id);
-          },
-        },
-        {
-          name: i18n.translate('xpack.alertingV2.actionPoliciesList.action.delete', {
-            defaultMessage: 'Delete',
-          }),
-          icon: 'trash',
-          css: css`
-            color: ${euiTheme.colors.textDanger};
-            padding: ${euiTheme.size.s};
-          `,
-          onClick: () => {
-            closePopover();
-            onDelete(policy);
-          },
-        },
-      ],
-    },
-    {
-      id: 1,
-      title: (
-        <EuiFlexGroup alignItems="center" gutterSize="s">
-          <EuiFlexItem grow={false}>
-            <EuiIcon
-              type="bellSlash"
-              aria-label={i18n.translate(
-                'xpack.alertingV2.actionPoliciesList.action.snoozeNotifications.ariaLabel',
-                { defaultMessage: 'Snooze notifications' }
-              )}
-            />
-          </EuiFlexItem>
-          <EuiFlexItem grow={false}>
-            {i18n.translate('xpack.alertingV2.actionPoliciesList.action.snoozeNotifications', {
-              defaultMessage: 'Snooze notifications',
-            })}
-          </EuiFlexItem>
-        </EuiFlexGroup>
-      ),
-      width: 320,
-      content: (
-        <EuiPanel>
-          <ActionPolicySnoozeForm
-            isSnoozed={snoozed}
-            onApplySnooze={(snoozedUntil) => {
-              onSnooze(policy.id, snoozedUntil);
-              closePopover();
-            }}
-            onCancelSnooze={() => {
-              onCancelSnooze(policy.id);
-              closePopover();
-            }}
-          />
-        </EuiPanel>
-      ),
-    },
-  ];
-
   return (
     <EuiFlexGroup gutterSize="xs" responsive={false} alignItems="center">
       <EuiFlexItem grow={false}>
@@ -230,26 +68,20 @@ export const ActionPolicyActionsCell = ({
         />
       </EuiFlexItem>
       <EuiFlexItem grow={false}>
-        <EuiPopover
-          aria-labelledby={popoverTitleId}
-          button={
-            <EuiButtonIcon
-              iconType="boxesHorizontal"
-              color="text"
-              aria-label={i18n.translate('xpack.alertingV2.actionPoliciesList.action.more', {
-                defaultMessage: 'More actions',
-              })}
-              onClick={togglePopover}
-              isDisabled={isDisabled}
-            />
-          }
-          isOpen={isPopoverOpen}
-          closePopover={closePopover}
-          anchorPosition="downRight"
-          panelPaddingSize="s"
-        >
-          <EuiContextMenu initialPanelId={0} panels={panels} size="s" />
-        </EuiPopover>
+        <ActionPolicyActionsMenu
+          policy={policy}
+          onViewDetails={onViewDetails}
+          onEdit={onEdit}
+          onClone={onClone}
+          onDelete={onDelete}
+          onEnable={onEnable}
+          onDisable={onDisable}
+          onSnooze={onSnooze}
+          onCancelSnooze={onCancelSnooze}
+          onUpdateApiKey={onUpdateApiKey}
+          isStateLoading={isStateLoading}
+          isDisabled={isDisabled}
+        />
       </EuiFlexItem>
     </EuiFlexGroup>
   );
