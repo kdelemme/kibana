@@ -79,7 +79,9 @@ const stateSchemaV1 = schema.object({
   action_policies_count_with_matcher: schema.maybe(schema.number()),
   action_policies_count_with_group_by: schema.maybe(schema.number()),
   action_policies_avg_group_by_fields_count: schema.maybe(schema.nullable(schema.number())),
-  action_policies_count_by_throttle_interval: schema.maybe(schema.arrayOf(nameValuePairSchema)),
+  action_policies_count_by_throttle_interval: schema.maybe(
+    schema.arrayOf(nameValuePairSchema, { maxSize: 100 })
+  ),
 
   // alert event stats
   alerts_count: schema.maybe(schema.number()),
