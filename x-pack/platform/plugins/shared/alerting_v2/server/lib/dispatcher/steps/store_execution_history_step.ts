@@ -11,6 +11,7 @@ import { SAVED_OBJECT_REL_PRIMARY } from '@kbn/event-log-plugin/server';
 import { ACTION_POLICY_SAVED_OBJECT_TYPE, RULE_SAVED_OBJECT_TYPE } from '../../../saved_objects';
 import type {
   ActionGroup,
+  ActionGroupId,
   ActionPolicyId,
   DispatcherPipelineState,
   DispatcherStep,
@@ -42,6 +43,7 @@ interface PolicySummary {
   ruleIds: Set<RuleId>;
   actionGroupIds: Set<string>;
   workflowIds: Set<string>;
+  workflowExecutionIds: Set<string>;
 }
 
 interface PolicySummaryAlertingV2Fields {
@@ -52,6 +54,7 @@ interface PolicySummaryAlertingV2Fields {
   action_group_count: number;
   action_group_ids: string[];
   workflow_ids: string[];
+  workflow_execution_ids: string[];
 }
 
 interface UnmatchedAlertingV2Fields {
@@ -71,7 +74,14 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
   ) {}
 
   public async execute(state: Readonly<DispatcherPipelineState>): Promise<DispatcherStepOutput> {
-    const { dispatch = [], throttled = [], dispatchable = [], rules, input } = state;
+    const {
+      dispatch = [],
+      throttled = [],
+      dispatchable = [],
+      dispatchedExecutions,
+      rules,
+      input,
+    } = state;
 
     if (dispatch.length === 0 && throttled.length === 0 && dispatchable.length === 0) {
       return { type: 'continue' };
@@ -79,7 +89,7 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
 
     const timestamp = input.startedAt.toISOString();
 
-    for (const summary of aggregateByPolicy(dispatch).values()) {
+    for (const summary of aggregateByPolicy(dispatch, dispatchedExecutions).values()) {
       this.emitPolicySummary({
         timestamp,
         summary,
@@ -148,6 +158,7 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
           action_group_count: summary.actionGroupIds.size,
           action_group_ids: Array.from(summary.actionGroupIds),
           workflow_ids: Array.from(summary.workflowIds),
+          workflow_execution_ids: Array.from(summary.workflowExecutionIds),
         },
       })
     );
@@ -180,7 +191,10 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
   }
 }
 
-function aggregateByPolicy(groups: readonly ActionGroup[]): Map<ActionPolicyId, PolicySummary> {
+function aggregateByPolicy(
+  groups: readonly ActionGroup[],
+  dispatchedExecutions?: Map<ActionGroupId, string[]>
+): Map<ActionPolicyId, PolicySummary> {
   const summaries = new Map<ActionPolicyId, PolicySummary>();
   for (const group of groups) {
     let summary = summaries.get(group.policyId);
@@ -192,12 +206,16 @@ function aggregateByPolicy(groups: readonly ActionGroup[]): Map<ActionPolicyId, 
         ruleIds: new Set(),
         actionGroupIds: new Set(),
         workflowIds: new Set(),
+        workflowExecutionIds: new Set(),
       };
       summaries.set(group.policyId, summary);
     }
     summary.actionGroupIds.add(group.id);
     for (const destination of group.destinations) {
       summary.workflowIds.add(destination.id);
+    }
+    for (const executionId of dispatchedExecutions?.get(group.id) ?? []) {
+      summary.workflowExecutionIds.add(executionId);
     }
     for (const episode of group.episodes) {
       summary.episodeIds.add(episode.episode_id);

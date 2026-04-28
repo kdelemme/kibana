@@ -135,6 +135,7 @@ export interface DispatcherPipelineState {
   readonly groups?: ActionGroup[];
   readonly dispatch?: ActionGroup[];
   readonly throttled?: ActionGroup[];
+  readonly dispatchedExecutions?: Map<ActionGroupId, string[]>;
 }
 
 export type DispatcherHaltReason = 'no_episodes' | 'no_actions';

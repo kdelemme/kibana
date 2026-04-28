@@ -59,6 +59,10 @@ describe('StoreExecutionHistoryStep', () => {
           [ruleB.id, ruleB],
         ]),
         policies: new Map<ActionPolicyId, ActionPolicy>([[policy.id, policy]]),
+        dispatchedExecutions: new Map([
+          ['group-1', ['exec-a']],
+          ['group-2', ['exec-b']],
+        ]),
       })
     );
 
@@ -94,6 +98,7 @@ describe('StoreExecutionHistoryStep', () => {
       action_group_count: 2,
       action_group_ids: ['group-1', 'group-2'],
       workflow_ids: ['wf-a', 'wf-b'],
+      workflow_execution_ids: ['exec-a', 'exec-b'],
     });
   });
 
@@ -154,6 +159,7 @@ describe('StoreExecutionHistoryStep', () => {
       action_group_count: 1,
       action_group_ids: ['group-1'],
       workflow_ids: ['wf-a'],
+      workflow_execution_ids: [],
     });
   });
 

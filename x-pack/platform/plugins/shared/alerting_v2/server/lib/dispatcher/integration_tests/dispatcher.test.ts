@@ -624,6 +624,7 @@ describe('DispatcherService integration tests', () => {
       expect(summaryEvent?.kibana?.alerting_v2?.dispatcher?.episode_ids).toHaveLength(3);
       expect(summaryEvent?.kibana?.alerting_v2?.dispatcher?.rule_count).toBe(1);
       expect(summaryEvent?.kibana?.alerting_v2?.dispatcher?.action_group_count).toBe(3);
+      expect(summaryEvent?.kibana?.alerting_v2?.dispatcher?.workflow_execution_ids).toEqual([]);
     });
   });
 

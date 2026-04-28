@@ -488,6 +488,10 @@ exports.EcsCustomPropertyMappings = {
                 type: 'keyword',
                 ignore_above: 1024,
               },
+              workflow_execution_ids: {
+                type: 'keyword',
+                ignore_above: 1024,
+              },
             },
           },
         },
@@ -533,4 +537,5 @@ exports.EcsEventLogMultiValuedProperties = [
   'kibana.alerting_v2.dispatcher.rule_ids',
   'kibana.alerting_v2.dispatcher.action_group_ids',
   'kibana.alerting_v2.dispatcher.workflow_ids',
+  'kibana.alerting_v2.dispatcher.workflow_execution_ids',
 ];

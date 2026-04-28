@@ -325,6 +325,7 @@ export const EventSchema = schema.maybe(
                 action_group_count: ecsStringOrNumber(),
                 action_group_ids: ecsStringMulti(),
                 workflow_ids: ecsStringMulti(),
+                workflow_execution_ids: ecsStringMulti(),
               })
             ),
           })
