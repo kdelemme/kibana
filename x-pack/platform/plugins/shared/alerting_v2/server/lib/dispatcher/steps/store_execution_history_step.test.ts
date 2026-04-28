@@ -87,7 +87,7 @@ describe('StoreExecutionHistoryStep', () => {
         namespace: undefined,
       },
     ]);
-    expect(event?.kibana?.alerting_v2).toEqual({
+    expect(event?.kibana?.alerting_v2?.dispatcher).toEqual({
       episode_count: 3,
       episode_ids: ['ep-1', 'ep-2', 'ep-3'],
       rule_count: 2,
@@ -147,7 +147,7 @@ describe('StoreExecutionHistoryStep', () => {
     expect(eventLogger.logEvent).toHaveBeenCalledTimes(1);
     const [[event]] = eventLogger.logEvent.mock.calls;
     expect(event?.event?.action).toBe('throttled');
-    expect(event?.kibana?.alerting_v2).toEqual({
+    expect(event?.kibana?.alerting_v2?.dispatcher).toEqual({
       episode_count: 1,
       episode_ids: ['ep-1'],
       rule_count: 1,
@@ -189,13 +189,13 @@ describe('StoreExecutionHistoryStep', () => {
         namespace: undefined,
       },
     ]);
-    expect(eventA?.kibana?.alerting_v2).toEqual({
+    expect(eventA?.kibana?.alerting_v2?.dispatcher).toEqual({
       episode_count: 2,
       episode_ids: ['ep-a1', 'ep-a2'],
     });
 
     const eventB = byRuleId.get('rule-b');
-    expect(eventB?.kibana?.alerting_v2).toEqual({
+    expect(eventB?.kibana?.alerting_v2?.dispatcher).toEqual({
       episode_count: 1,
       episode_ids: ['ep-b1'],
     });
@@ -223,7 +223,7 @@ describe('StoreExecutionHistoryStep', () => {
     const actions = eventLogger.logEvent.mock.calls.map(([event]) => event?.event?.action);
     expect(actions).toEqual(['dispatched', 'throttled', 'unmatched']);
     const unmatchedEvent = eventLogger.logEvent.mock.calls[2][0];
-    expect(unmatchedEvent?.kibana?.alerting_v2?.episode_ids).toEqual(['ep-unmatched']);
+    expect(unmatchedEvent?.kibana?.alerting_v2?.dispatcher?.episode_ids).toEqual(['ep-unmatched']);
   });
 
   it('short-circuits when there is nothing to record', async () => {
@@ -291,7 +291,7 @@ describe('StoreExecutionHistoryStep', () => {
     );
 
     const [[event]] = eventLogger.logEvent.mock.calls;
-    expect(event?.kibana?.alerting_v2?.workflow_ids).toEqual(['wf-a', 'wf-b', 'wf-c']);
+    expect(event?.kibana?.alerting_v2?.dispatcher?.workflow_ids).toEqual(['wf-a', 'wf-b', 'wf-c']);
   });
 
   it('stamps @timestamp from pipeline input.startedAt', async () => {
@@ -313,7 +313,7 @@ describe('StoreExecutionHistoryStep', () => {
     expect(event?.['@timestamp']).toBe('2027-06-01T12:34:56.789Z');
   });
 
-  it('spills rule ids beyond the SO-ref cap into kibana.alerting_v2.rule_ids', async () => {
+  it('spills rule ids beyond the SO-ref cap into kibana.alerting_v2.dispatcher.rule_ids', async () => {
     const policy = createActionPolicy({ id: 'policy-1' });
     const ruleIds = Array.from({ length: 55 }, (_, i) => `rule-${i}`);
     const rules = new Map<RuleId, Rule>(
@@ -341,9 +341,9 @@ describe('StoreExecutionHistoryStep', () => {
     const refs = event?.kibana?.saved_objects ?? [];
     const ruleRefs = refs.filter((ref) => ref?.type === RULE_SAVED_OBJECT_TYPE);
     expect(ruleRefs).toHaveLength(50);
-    expect(event?.kibana?.alerting_v2?.rule_count).toBe(55);
-    expect(event?.kibana?.alerting_v2?.rule_ids).toHaveLength(5);
-    expect(event?.kibana?.alerting_v2?.rule_ids).toEqual(
+    expect(event?.kibana?.alerting_v2?.dispatcher?.rule_count).toBe(55);
+    expect(event?.kibana?.alerting_v2?.dispatcher?.rule_ids).toHaveLength(5);
+    expect(event?.kibana?.alerting_v2?.dispatcher?.rule_ids).toEqual(
       expect.arrayContaining(['rule-50', 'rule-51', 'rule-52', 'rule-53', 'rule-54'])
     );
   });
@@ -368,6 +368,6 @@ describe('StoreExecutionHistoryStep', () => {
     );
 
     const [[event]] = eventLogger.logEvent.mock.calls;
-    expect(event?.kibana?.alerting_v2?.rule_ids).toBeUndefined();
+    expect(event?.kibana?.alerting_v2?.dispatcher?.rule_ids).toBeUndefined();
   });
 });

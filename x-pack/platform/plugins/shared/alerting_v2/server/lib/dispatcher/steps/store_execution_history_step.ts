@@ -268,7 +268,7 @@ function buildEvent({
     kibana: {
       saved_objects: savedObjects,
       space_ids: [spaceId],
-      alerting_v2: alertingV2,
+      alerting_v2: { dispatcher: alertingV2 },
     },
   };
 }

@@ -620,10 +620,10 @@ describe('DispatcherService integration tests', () => {
       const [[summaryEvent]] = eventLogger.logEvent.mock.calls;
       const refTypes = summaryEvent?.kibana?.saved_objects?.map((ref) => ref?.type);
       expect(refTypes).toEqual([ACTION_POLICY_SAVED_OBJECT_TYPE, RULE_SAVED_OBJECT_TYPE]);
-      expect(summaryEvent?.kibana?.alerting_v2?.episode_count).toBe(3);
-      expect(summaryEvent?.kibana?.alerting_v2?.episode_ids).toHaveLength(3);
-      expect(summaryEvent?.kibana?.alerting_v2?.rule_count).toBe(1);
-      expect(summaryEvent?.kibana?.alerting_v2?.action_group_count).toBe(3);
+      expect(summaryEvent?.kibana?.alerting_v2?.dispatcher?.episode_count).toBe(3);
+      expect(summaryEvent?.kibana?.alerting_v2?.dispatcher?.episode_ids).toHaveLength(3);
+      expect(summaryEvent?.kibana?.alerting_v2?.dispatcher?.rule_count).toBe(1);
+      expect(summaryEvent?.kibana?.alerting_v2?.dispatcher?.action_group_count).toBe(3);
     });
   });
 
