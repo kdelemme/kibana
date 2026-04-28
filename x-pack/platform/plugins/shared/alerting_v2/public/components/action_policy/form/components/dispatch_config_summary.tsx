@@ -17,11 +17,16 @@ interface DispatchConfigSummaryProps {
   throttleInterval: string;
 }
 
+type DurationUnit = 's' | 'm' | 'h' | 'd';
+
+const isDurationUnit = (c: string): c is DurationUnit =>
+  c === 's' || c === 'm' || c === 'h' || c === 'd';
+
 const formatInterval = (raw: string): string => {
   if (!raw) return '';
   const unit = raw.charAt(raw.length - 1);
   const value = parseInt(raw, 10);
-  if (Number.isNaN(value)) return raw;
+  if (Number.isNaN(value) || !isDurationUnit(unit)) return raw;
   switch (unit) {
     case 's':
       return i18n.translate('xpack.alertingV2.actionPolicy.form.dispatchSummary.duration.seconds', {
@@ -43,8 +48,6 @@ const formatInterval = (raw: string): string => {
         defaultMessage: '{value, plural, one {# day} other {# days}}',
         values: { value },
       });
-    default:
-      return `${value}${unit}`;
   }
 };
 
