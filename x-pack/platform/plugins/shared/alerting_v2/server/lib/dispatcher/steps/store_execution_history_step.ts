@@ -89,10 +89,12 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
     }
 
     const timestamp = input.startedAt.toISOString();
+    const { executionUuid } = input;
 
     for (const summary of aggregateByPolicy(dispatch, dispatchedExecutions).values()) {
       this.emitPolicySummary({
         timestamp,
+        executionUuid,
         summary,
         action: ACTION_POLICY_EVENT_ACTIONS.DISPATCHED,
         rules,
@@ -102,6 +104,7 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
     for (const summary of aggregateByPolicy(throttled).values()) {
       this.emitPolicySummary({
         timestamp,
+        executionUuid,
         summary,
         action: ACTION_POLICY_EVENT_ACTIONS.THROTTLED,
         rules,
@@ -112,7 +115,7 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
       getUnmatchedEpisodes(dispatchable, dispatch, throttled)
     );
     for (const [ruleId, episodeIds] of unmatched) {
-      this.emitUnmatchedSummary({ timestamp, ruleId, episodeIds, rules });
+      this.emitUnmatchedSummary({ timestamp, executionUuid, ruleId, episodeIds, rules });
     }
 
     return { type: 'continue' };
@@ -120,11 +123,13 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
 
   private emitPolicySummary({
     timestamp,
+    executionUuid,
     summary,
     action,
     rules,
   }: {
     timestamp: string;
+    executionUuid: string;
     summary: PolicySummary;
     action: ActionPolicyEventAction;
     rules: Map<RuleId, Rule> | undefined;
@@ -148,6 +153,7 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
     this.eventLogService.logEvent(
       buildEvent({
         timestamp,
+        executionUuid,
         action,
         spaceId: summary.spaceId,
         savedObjects: refs,
@@ -167,11 +173,13 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
 
   private emitUnmatchedSummary({
     timestamp,
+    executionUuid,
     ruleId,
     episodeIds,
     rules,
   }: {
     timestamp: string;
+    executionUuid: string;
     ruleId: RuleId;
     episodeIds: Set<string>;
     rules: Map<RuleId, Rule> | undefined;
@@ -180,6 +188,7 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
     this.eventLogService.logEvent(
       buildEvent({
         timestamp,
+        executionUuid,
         action: ACTION_POLICY_EVENT_ACTIONS.UNMATCHED,
         spaceId: rule?.spaceId ?? 'default',
         savedObjects: [ruleRef({ id: ruleId, spaceId: rule?.spaceId, kind: rule?.kind })],
@@ -270,12 +279,14 @@ function policyRef({ id, spaceId }: { id: string; spaceId: string }): SavedObjec
 
 function buildEvent({
   timestamp,
+  executionUuid,
   action,
   spaceId,
   savedObjects,
   alertingV2,
 }: {
   timestamp: string;
+  executionUuid: string;
   action: ActionPolicyEventAction;
   spaceId: string;
   savedObjects: SavedObjectRef[];
@@ -287,7 +298,12 @@ function buildEvent({
     kibana: {
       saved_objects: savedObjects,
       space_ids: [spaceId],
-      alerting_v2: { dispatcher: alertingV2 },
+      alerting_v2: {
+        dispatcher: {
+          ...alertingV2,
+          execution: { uuid: executionUuid },
+        },
+      },
     },
   };
 }
