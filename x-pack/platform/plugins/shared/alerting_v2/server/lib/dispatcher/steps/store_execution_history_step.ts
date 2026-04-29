@@ -6,9 +6,11 @@
  */
 
 import { inject, injectable } from 'inversify';
-import type { IEvent, IEventLogger } from '@kbn/event-log-plugin/server';
+import type { IEvent } from '@kbn/event-log-plugin/server';
 import { SAVED_OBJECT_REL_PRIMARY } from '@kbn/event-log-plugin/server';
 import { ACTION_POLICY_SAVED_OBJECT_TYPE, RULE_SAVED_OBJECT_TYPE } from '../../../saved_objects';
+import type { EventLogServiceContract } from '../../services/event_log_service/event_log_service';
+import { EventLogServiceToken } from '../../services/event_log_service/tokens';
 import type {
   ActionGroup,
   ActionGroupId,
@@ -21,9 +23,8 @@ import type {
 } from '../types';
 import {
   ACTION_POLICY_EVENT_ACTIONS,
-  ActionPolicyExecutionEventLoggerToken,
   type ActionPolicyEventAction,
-} from './store_execution_history_step_tokens';
+} from './constants';
 import { getUnmatchedEpisodes } from './unmatched_episodes';
 
 const RULE_REF_CAP = 50;
@@ -69,8 +70,8 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
   public readonly name = 'store_execution_history';
 
   constructor(
-    @inject(ActionPolicyExecutionEventLoggerToken)
-    private readonly eventLogger: IEventLogger
+    @inject(EventLogServiceToken)
+    private readonly eventLogService: EventLogServiceContract
   ) {}
 
   public async execute(state: Readonly<DispatcherPipelineState>): Promise<DispatcherStepOutput> {
@@ -144,7 +145,7 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
       }),
     ];
 
-    this.eventLogger.logEvent(
+    this.eventLogService.logEvent(
       buildEvent({
         timestamp,
         action,
@@ -176,7 +177,7 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
     rules: Map<RuleId, Rule> | undefined;
   }): void {
     const rule = rules?.get(ruleId);
-    this.eventLogger.logEvent(
+    this.eventLogService.logEvent(
       buildEvent({
         timestamp,
         action: ACTION_POLICY_EVENT_ACTIONS.UNMATCHED,

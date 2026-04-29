@@ -16,11 +16,11 @@ import { TaskDefinition } from '../lib/services/task_run_scope_service/create_ta
 import { registerSavedObjects } from '../saved_objects';
 import { dispatcherUiSettings } from '../lib/dispatcher/ui_settings';
 import { EsServiceInternalToken } from '../lib/services/es_service/tokens';
+import { EventLoggerToken } from '../lib/services/event_log_service/tokens';
 import {
   ACTION_POLICY_EVENT_ACTIONS,
   ACTION_POLICY_EVENT_PROVIDER,
-  ActionPolicyExecutionEventLoggerToken,
-} from '../lib/dispatcher/steps/store_execution_history_step_tokens';
+} from '../lib/dispatcher/steps/constants';
 
 export function bindOnSetup({ bind }: ContainerModuleLoadOptions) {
   bind(OnSetup).toConstantValue((container) => {
@@ -61,7 +61,7 @@ export function bindOnSetup({ bind }: ContainerModuleLoadOptions) {
     const eventLogger = eventLogService.getLogger({
       event: { provider: ACTION_POLICY_EVENT_PROVIDER },
     });
-    container.bind(ActionPolicyExecutionEventLoggerToken).toConstantValue(eventLogger);
+    container.bind(EventLoggerToken).toConstantValue(eventLogger);
 
     // Trigger task registration via onActivation callbacks
     container.getAll(TaskDefinition);

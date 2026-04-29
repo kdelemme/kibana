@@ -5,8 +5,9 @@
  * 2.0.
  */
 
-import { eventLoggerMock } from '@kbn/event-log-plugin/server/mocks';
+import type { eventLoggerMock } from '@kbn/event-log-plugin/server/mocks';
 import { ACTION_POLICY_SAVED_OBJECT_TYPE, RULE_SAVED_OBJECT_TYPE } from '../../../saved_objects';
+import { createEventLogService } from '../../services/event_log_service/event_log_service.mock';
 import {
   createActionGroup,
   createActionPolicy,
@@ -22,8 +23,9 @@ describe('StoreExecutionHistoryStep', () => {
   let step: StoreExecutionHistoryStep;
 
   beforeEach(() => {
-    eventLogger = eventLoggerMock.create();
-    step = new StoreExecutionHistoryStep(eventLogger);
+    const { eventLogService, mockEventLogger } = createEventLogService();
+    eventLogger = mockEventLogger;
+    step = new StoreExecutionHistoryStep(eventLogService);
   });
 
   it('emits one dispatched summary per policy with aggregated episode/rule/group counts', async () => {
