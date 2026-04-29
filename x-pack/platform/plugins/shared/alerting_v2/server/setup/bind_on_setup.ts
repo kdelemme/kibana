@@ -14,7 +14,7 @@ import { registerAlertingV2UsageCollector } from '../lib/usage/usage_collector';
 import { registerFeaturePrivileges } from '../lib/security/privileges';
 import { TaskDefinition } from '../lib/services/task_run_scope_service/create_task_runner';
 import { registerSavedObjects } from '../saved_objects';
-import { dispatcherUiSettings } from '../lib/dispatcher/ui_settings';
+import { alertingV2UiSettings } from '../ui_settings/advanced_settings';
 import { EsServiceInternalToken } from '../lib/services/es_service/tokens';
 import { EventLoggerToken } from '../lib/services/event_log_service/tokens';
 import {
@@ -49,7 +49,8 @@ export function bindOnSetup({ bind }: ContainerModuleLoadOptions) {
       alertingVTwo: {},
     }));
 
-    container.get(CoreSetup('uiSettings')).registerGlobal(dispatcherUiSettings);
+    const uiSettingsSetup = container.get(CoreSetup('uiSettings'));
+    uiSettingsSetup.registerGlobal(alertingV2UiSettings);
 
     const eventLogService = container.get(
       PluginSetup<AlertingServerSetupDependencies['eventLog']>('eventLog')
