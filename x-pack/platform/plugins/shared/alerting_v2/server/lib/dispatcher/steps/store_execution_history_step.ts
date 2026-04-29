@@ -47,7 +47,7 @@ interface PolicySummary {
   workflowExecutionIds: Set<string>;
 }
 
-interface PolicySummaryAlertingV2Fields {
+interface PolicySummaryDispatcherFields {
   episode_count: number;
   episode_ids: string[];
   rule_count: number;
@@ -58,12 +58,12 @@ interface PolicySummaryAlertingV2Fields {
   workflow_execution_ids: string[];
 }
 
-interface UnmatchedAlertingV2Fields {
+interface UnmatchedDispatcherFields {
   episode_count: number;
   episode_ids: string[];
 }
 
-type AlertingV2Fields = PolicySummaryAlertingV2Fields | UnmatchedAlertingV2Fields;
+type DispatcherFields = PolicySummaryDispatcherFields | UnmatchedDispatcherFields;
 
 @injectable()
 export class StoreExecutionHistoryStep implements DispatcherStep {
@@ -157,7 +157,7 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
         action,
         spaceId: summary.spaceId,
         savedObjects: refs,
-        alertingV2: {
+        dispatcherFields: {
           episode_count: summary.episodeIds.size,
           episode_ids: Array.from(summary.episodeIds),
           rule_count: summary.ruleIds.size,
@@ -192,7 +192,7 @@ export class StoreExecutionHistoryStep implements DispatcherStep {
         action: ACTION_POLICY_EVENT_ACTIONS.UNMATCHED,
         spaceId: rule?.spaceId ?? 'default',
         savedObjects: [ruleRef({ id: ruleId, spaceId: rule?.spaceId, kind: rule?.kind })],
-        alertingV2: {
+        dispatcherFields: {
           episode_count: episodeIds.size,
           episode_ids: Array.from(episodeIds),
         },
@@ -283,14 +283,14 @@ function buildEvent({
   action,
   spaceId,
   savedObjects,
-  alertingV2,
+  dispatcherFields,
 }: {
   timestamp: string;
   executionUuid: string;
   action: ActionPolicyEventAction;
   spaceId: string;
   savedObjects: SavedObjectRef[];
-  alertingV2: AlertingV2Fields;
+  dispatcherFields: DispatcherFields;
 }): IEvent {
   return {
     '@timestamp': timestamp,
@@ -300,7 +300,7 @@ function buildEvent({
       space_ids: [spaceId],
       alerting_v2: {
         dispatcher: {
-          ...alertingV2,
+          ...dispatcherFields,
           execution: { uuid: executionUuid },
         },
       },
