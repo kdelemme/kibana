@@ -282,7 +282,7 @@ function buildEvent({
 }): IEvent {
   return {
     '@timestamp': timestamp,
-    event: { action },
+    event: { action, outcome: 'success' },
     kibana: {
       saved_objects: savedObjects,
       space_ids: [spaceId],

@@ -69,6 +69,7 @@ describe('StoreExecutionHistoryStep', () => {
     expect(eventLogger.logEvent).toHaveBeenCalledTimes(1);
     const [[event]] = eventLogger.logEvent.mock.calls;
     expect(event?.event?.action).toBe('dispatched');
+    expect(event?.event?.outcome).toBe('success');
     expect(event?.kibana?.saved_objects).toEqual([
       {
         type: ACTION_POLICY_SAVED_OBJECT_TYPE,
@@ -152,6 +153,7 @@ describe('StoreExecutionHistoryStep', () => {
     expect(eventLogger.logEvent).toHaveBeenCalledTimes(1);
     const [[event]] = eventLogger.logEvent.mock.calls;
     expect(event?.event?.action).toBe('throttled');
+    expect(event?.event?.outcome).toBe('success');
     expect(event?.kibana?.alerting_v2?.dispatcher).toEqual({
       episode_count: 1,
       episode_ids: ['ep-1'],
@@ -186,6 +188,7 @@ describe('StoreExecutionHistoryStep', () => {
 
     const eventA = byRuleId.get('rule-a');
     expect(eventA?.event?.action).toBe('unmatched');
+    expect(eventA?.event?.outcome).toBe('success');
     expect(eventA?.kibana?.saved_objects).toEqual([
       {
         type: RULE_SAVED_OBJECT_TYPE,
@@ -228,6 +231,8 @@ describe('StoreExecutionHistoryStep', () => {
     expect(eventLogger.logEvent).toHaveBeenCalledTimes(3);
     const actions = eventLogger.logEvent.mock.calls.map(([event]) => event?.event?.action);
     expect(actions).toEqual(['dispatched', 'throttled', 'unmatched']);
+    const outcomes = eventLogger.logEvent.mock.calls.map(([event]) => event?.event?.outcome);
+    expect(outcomes).toEqual(['success', 'success', 'success']);
     const unmatchedEvent = eventLogger.logEvent.mock.calls[2][0];
     expect(unmatchedEvent?.kibana?.alerting_v2?.dispatcher?.episode_ids).toEqual(['ep-unmatched']);
   });
