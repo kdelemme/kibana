@@ -21,10 +21,7 @@ import type {
   Rule,
   RuleId,
 } from '../types';
-import {
-  ACTION_POLICY_EVENT_ACTIONS,
-  type ActionPolicyEventAction,
-} from './constants';
+import { ACTION_POLICY_EVENT_ACTIONS, type ActionPolicyEventAction } from './constants';
 import { getUnmatchedEpisodes } from './unmatched_episodes';
 
 const RULE_REF_CAP = 50;
