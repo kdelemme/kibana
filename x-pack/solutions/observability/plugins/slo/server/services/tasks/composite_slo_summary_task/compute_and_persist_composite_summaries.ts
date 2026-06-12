@@ -244,7 +244,7 @@ async function fetchMemberDefinitions(
         );
       }
     },
-    { concurrency: 10, stopOnError: false }
+    { concurrency: 3, stopOnError: false }
   );
   return memberMapBySpace;
 }
