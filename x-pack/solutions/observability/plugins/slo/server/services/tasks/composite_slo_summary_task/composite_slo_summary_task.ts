@@ -22,6 +22,7 @@ import { SO_SLO_COMPOSITE_TYPE } from '../../../saved_objects/slo_composite';
 import { computeAndPersistCompositeSummaries } from './compute_and_persist_composite_summaries';
 import { COMPOSITE_SLO_SUMMARY_TASK_SKIP_REASON } from './constants';
 import { isCompositeSloEnabled } from '../../../utils/is_composite_slo_enabled';
+import { DefaultSLODefinitionRepository } from '../../slo_definition_repository';
 
 export const TYPE = 'slo:composite-slo-summary-task';
 
@@ -148,9 +149,12 @@ export class CompositeSloSummaryTask {
       coreStart.savedObjects.createInternalRepository([SO_SLO_COMPOSITE_TYPE])
     );
 
+    const sloRepository = new DefaultSLODefinitionRepository(internalSoClient, this.logger);
+
     await computeAndPersistCompositeSummaries({
       esClient,
       soClient: internalSoClient,
+      sloRepository,
       logger: this.logger,
       abortController,
     });

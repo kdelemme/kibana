@@ -6,37 +6,34 @@
  */
 
 import { errors } from '@elastic/elasticsearch';
-import pMap from 'p-map';
 import { addTransactionLabels, withSpan } from '@kbn/apm-utils';
-import apm from 'elastic-apm-node';
 import type {
   ElasticsearchClient,
   Logger,
   SavedObject,
   SavedObjectsClientContract,
 } from '@kbn/core/server';
-import { escapeKuery } from '@kbn/es-query';
-import { ALL_VALUE, compositeSloDefinitionSchema, sloDefinitionSchema } from '@kbn/slo-schema';
-import { isLeft } from 'fp-ts/Either';
-import { chunk, merge } from 'lodash';
+import { ALL_VALUE, compositeSloDefinitionSchema } from '@kbn/slo-schema';
+import apm from 'elastic-apm-node';
+import { chunk } from 'lodash';
+import pMap from 'p-map';
 import { COMPOSITE_SUMMARY_INDEX_NAME } from '../../../../common/constants';
 import type {
   CompositeSLODefinition,
   SLODefinition,
   StoredCompositeSLODefinition,
-  StoredSLODefinition,
 } from '../../../domain/models';
 import { toRichRollingTimeWindow, type TimeWindow } from '../../../domain/models/time_window';
 import { SO_SLO_COMPOSITE_TYPE } from '../../../saved_objects/slo_composite';
-import { SO_SLO_TYPE } from '../../../saved_objects/slo';
 import { DefaultBurnRatesClient } from '../../burn_rates_client';
 import { buildCompositeSloSummaryDocId } from '../../composites/composite_slo_summary_index';
 import { buildCompositeSummaryDoc } from '../../composites/composite_summary_writer';
-import { DefaultSummaryClient } from '../../summary_client';
 import {
   computeCompositeSummary,
   type MemberSummaryData,
 } from '../../composites/compute_composite_summary';
+import type { SLODefinitionRepository } from '../../slo_definition_repository';
+import { DefaultSummaryClient } from '../../summary_client';
 import { COMPOSITE_SLO_SUMMARY_TASK_SPAN_NAMES } from './constants';
 
 type SpaceItems = Array<{ compositeSlo: CompositeSLODefinition }>;
@@ -54,6 +51,7 @@ interface RunStats {
 interface Dependencies {
   esClient: ElasticsearchClient;
   soClient: SavedObjectsClientContract;
+  sloRepository: SLODefinitionRepository;
   logger: Logger;
   abortController: AbortController;
 }
@@ -68,6 +66,7 @@ export async function computeAndPersistCompositeSummaries({
   esClient,
   soClient,
   logger,
+  sloRepository,
   abortController,
 }: Dependencies): Promise<void> {
   const burnRatesClient = new DefaultBurnRatesClient(esClient);
@@ -119,7 +118,7 @@ export async function computeAndPersistCompositeSummaries({
           name: COMPOSITE_SLO_SUMMARY_TASK_SPAN_NAMES.FETCH_MEMBER_DEFINITIONS,
           ...spanOpts,
         },
-        async () => fetchMemberDefinitions(bySpace, soClient, logger, stats)
+        async () => fetchMemberDefinitions(bySpace, sloRepository, logger, stats)
       );
 
       const summaryResultBySpace = await withSpan(
@@ -224,7 +223,7 @@ function groupBySpace(
 
 async function fetchMemberDefinitions(
   bySpace: Map<string, SpaceItems>,
-  soClient: SavedObjectsClientContract,
+  sloRepository: SLODefinitionRepository,
   logger: Logger,
   stats: RunStats
 ): Promise<Map<string, MemberDefinitionMap>> {
@@ -236,7 +235,7 @@ async function fetchMemberDefinitions(
         ...new Set(items.flatMap(({ compositeSlo }) => compositeSlo.members.map((m) => m.sloId))),
       ];
       try {
-        const slos = await findMemberSLOs(allIds, spaceId, soClient, logger);
+        const slos = await findMemberSLOs(allIds, sloRepository);
         memberMapBySpace.set(spaceId, new Map(slos.map((slo) => [slo.id, slo])));
       } catch (err) {
         stats.spaceErrors++;
@@ -405,60 +404,14 @@ function decodeCompositeSLO(
 
 async function findMemberSLOs(
   ids: string[],
-  spaceId: string,
-  soClient: SavedObjectsClientContract,
-  logger: Logger
+  sloRepository: SLODefinitionRepository
 ): Promise<SLODefinition[]> {
   if (ids.length === 0) return [];
 
-  // The KQL `field:(a or b or ... or N)` filter translates to a bool/should with N term clauses.
-  // In ES 8.x, indices.query.bool.max_clause_count is deprecated and replaced by a dynamic
-  // heuristic (minimum ~1024, higher based on JVM heap). Our worst-case of ~2500 unique member
-  // IDs per page (100 composites × 25 members, deduplicated) exceeds the minimum on constrained
-  // clusters. Chunking to MEMBER_ID_CHUNK_SIZE keeps each query well under the limit.
-  // soClient.bulkGet is not an option because SO ids are auto-generated and differ from
-  // attributes.id — resolving them would require a find anyway.
   const chunks = chunk(ids, MEMBER_ID_CHUNK_SIZE);
   const responses = await Promise.all(
-    chunks.map((chunkIds) =>
-      soClient.find<StoredSLODefinition>({
-        type: SO_SLO_TYPE,
-        namespaces: [spaceId],
-        page: 1,
-        perPage: chunkIds.length,
-        filter: `${SO_SLO_TYPE}.attributes.id:(${chunkIds.map(escapeKuery).join(' or ')})`,
-      })
-    )
+    chunks.map((chunkIds) => sloRepository.findAllByIds(chunkIds))
   );
 
-  return responses
-    .flatMap((r) => r.saved_objects)
-    .map((so) => decodeStoredSLO(so, logger))
-    .filter((slo): slo is SLODefinition => slo !== undefined);
-}
-
-function decodeStoredSLO(
-  so: SavedObject<StoredSLODefinition>,
-  logger: Logger
-): SLODefinition | undefined {
-  const stored = so.attributes;
-  const result = sloDefinitionSchema.decode({
-    ...stored,
-    groupBy: stored.groupBy ?? ALL_VALUE,
-    version: stored.version ?? 1,
-    settings: merge(
-      { preventInitialBackfill: false, syncDelay: '1m', frequency: '1m' },
-      stored.settings
-    ),
-    createdBy: stored.createdBy ?? so.created_by,
-    updatedBy: stored.updatedBy ?? so.updated_by,
-    artifacts: { dashboards: [] },
-  });
-
-  if (isLeft(result)) {
-    logger.warn(`Invalid stored SLO [${stored.id}], skipping`);
-    return undefined;
-  }
-
-  return result.right;
+  return responses.flatMap((r) => r);
 }
