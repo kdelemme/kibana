@@ -36,7 +36,6 @@ import type { SLODefinitionRepository } from '../../slo_definition_repository';
 import { DefaultSummaryClient } from '../../summary_client';
 import { COMPOSITE_SLO_SUMMARY_TASK_SPAN_NAMES } from './constants';
 
-type SpaceItems = Array<{ compositeSlo: CompositeSLODefinition }>;
 type MemberDefinitionMap = Map<string, SLODefinition>;
 type SummaryResult = Awaited<ReturnType<DefaultSummaryClient['computeSummaries']>>[number];
 type SummaryResultMap = Map<string, SummaryResult>;
@@ -205,8 +204,8 @@ function groupBySpace(
   savedObjects: SavedObject<StoredCompositeSLODefinition>[],
   logger: Logger,
   stats: RunStats
-): Map<string, SpaceItems> {
-  const bySpace = new Map<string, SpaceItems>();
+): Map<string, CompositeSLODefinition[]> {
+  const bySpace = new Map<string, CompositeSLODefinition[]>();
   for (const so of savedObjects) {
     const spaceId = so.namespaces?.[0] ?? 'default';
     const compositeSlo = decodeCompositeSLO(so, logger);
@@ -215,14 +214,14 @@ function groupBySpace(
       continue;
     }
     const items = bySpace.get(spaceId) ?? [];
-    items.push({ compositeSlo });
+    items.push(compositeSlo);
     bySpace.set(spaceId, items);
   }
   return bySpace;
 }
 
 async function fetchMemberDefinitions(
-  bySpace: Map<string, SpaceItems>,
+  bySpace: Map<string, CompositeSLODefinition[]>,
   sloRepository: SLODefinitionRepository,
   logger: Logger,
   stats: RunStats
@@ -232,7 +231,7 @@ async function fetchMemberDefinitions(
     [...bySpace.entries()],
     async ([spaceId, items]) => {
       const allIds = [
-        ...new Set(items.flatMap(({ compositeSlo }) => compositeSlo.members.map((m) => m.sloId))),
+        ...new Set(items.flatMap((compositeSlo) => compositeSlo.members.map((m) => m.sloId))),
       ];
       try {
         const slos = await findMemberSLOs(allIds, sloRepository);
@@ -252,7 +251,7 @@ async function fetchMemberDefinitions(
 const COMPUTE_SUMMARIES_BATCH_SIZE = 300;
 
 async function fetchMemberSummaries(
-  bySpace: Map<string, SpaceItems>,
+  bySpace: Map<string, CompositeSLODefinition[]>,
   memberMapBySpace: Map<string, MemberDefinitionMap>,
   summaryClient: DefaultSummaryClient,
   logger: Logger,
@@ -269,7 +268,7 @@ async function fetchMemberSummaries(
         string,
         { slo: SLODefinition; instanceId: string; timeWindowOverride: TimeWindow }
       >();
-      for (const { compositeSlo } of items) {
+      for (const compositeSlo of items) {
         const richTimeWindow = toRichRollingTimeWindow(compositeSlo.timeWindow);
         for (const member of compositeSlo.members) {
           const slo = memberDefinitionMap.get(member.sloId);
@@ -308,7 +307,7 @@ async function fetchMemberSummaries(
 }
 
 function buildBulkOps(
-  bySpace: Map<string, SpaceItems>,
+  bySpace: Map<string, CompositeSLODefinition[]>,
   memberMapBySpace: Map<string, MemberDefinitionMap>,
   summaryResultBySpace: Map<string, SummaryResultMap>,
   logger: Logger,
@@ -320,7 +319,7 @@ function buildBulkOps(
     const summaryResultMap = summaryResultBySpace.get(spaceId);
     if (!memberDefinitionMap || !summaryResultMap) continue;
 
-    for (const { compositeSlo } of items) {
+    for (const compositeSlo of items) {
       try {
         const richTimeWindow = toRichRollingTimeWindow(compositeSlo.timeWindow);
         const unresolvedMemberIds: string[] = [];
