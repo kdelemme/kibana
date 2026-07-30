@@ -10,7 +10,7 @@ import type { IScopedClusterClient, Logger } from '@kbn/core/server';
 import type { SLODefinition } from '../domain/models';
 import { SecurityException } from '../errors';
 import { retryTransientEsErrors } from '../utils/retry';
-import type { ITransformManager } from './transform_manager';
+import type { ITransformManager } from './rollup_transform_manager';
 import type { ITransformGenerator } from './transform_generators';
 
 type TransformId = string;

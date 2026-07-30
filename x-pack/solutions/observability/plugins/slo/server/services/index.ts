@@ -15,7 +15,7 @@ export * from './historical_summary_client';
 export * from './resource_installer';
 export * from './burn_rates_client';
 export * from './slo_definition_repository';
-export * from './transform_manager';
+export * from './rollup_transform_manager';
 export * from './summay_transform_manager';
 export * from './update_slo';
 export * from './summary_client';

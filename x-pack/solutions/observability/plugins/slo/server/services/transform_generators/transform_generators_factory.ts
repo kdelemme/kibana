@@ -7,6 +7,7 @@
 
 import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/api/types';
 import type { DataViewsService } from '@kbn/data-views-plugin/server';
+import { assertNever } from '@kbn/std';
 import {
   ApmTransactionDurationTransformGenerator,
   ApmTransactionErrorRateTransformGenerator,
@@ -27,7 +28,8 @@ export class TransformGeneratorsFactory implements ITransformGenerator {
   ) {}
 
   public async generate(slo: SLODefinition): Promise<TransformPutTransformRequest> {
-    switch (slo.indicator.type) {
+    const indicatorType = slo.indicator.type;
+    switch (indicatorType) {
       case 'sli.apm.transactionDuration':
         return new ApmTransactionDurationTransformGenerator(
           this.spaceId,
@@ -70,6 +72,8 @@ export class TransformGeneratorsFactory implements ITransformGenerator {
           this.dataViewsService,
           this.isServerless
         ).generate(slo);
+      default:
+        assertNever(indicatorType);
     }
   }
 }

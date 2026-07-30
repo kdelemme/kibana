@@ -14,7 +14,7 @@ import { DefaultSLODefinitionRepository } from '../../slo_definition_repository'
 import { SummaryTransformGeneratorsFactory } from '../../summary_transform_generator/summary_transform_generator';
 import { SummaryTransformManager } from '../../summay_transform_manager';
 import { TransformGeneratorsFactory } from '../../transform_generators';
-import { TransformManager } from '../../transform_manager';
+import { RollupTransformManager } from '../../rollup_transform_manager';
 import { runBulkDelete } from './run_bulk_delete';
 
 export const TYPE = 'slo:bulk-delete-task';
@@ -71,7 +71,7 @@ export class BulkDeleteTask {
 
               const repository = new DefaultSLODefinitionRepository(scopedSoClient, this.logger);
               // We only use transform managers to delete transforms.
-              const transformManager = new TransformManager(
+              const transformManager = new RollupTransformManager(
                 new TransformGeneratorsFactory(spaceId, dataViewsService, false),
                 scopedClusterClient,
                 this.logger,

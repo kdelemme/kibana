@@ -5,25 +5,24 @@
  * 2.0.
  */
 
+import { errors as EsErrors } from '@elastic/elasticsearch';
+import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/api/types';
 import type { ScopedClusterClientMock } from '@kbn/core/server/mocks';
 import { elasticsearchServiceMock, loggingSystemMock } from '@kbn/core/server/mocks';
+import type { DataViewsService } from '@kbn/data-views-plugin/common';
+import { dataViewsService } from '@kbn/data-views-plugin/server/mocks';
 import type { MockedLogger } from '@kbn/logging-mocks';
-import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/api/types';
-import { errors as EsErrors } from '@elastic/elasticsearch';
-
-import { TransformManager } from './transform_manager';
-import {
-  ApmTransactionErrorRateTransformGenerator,
-  BaseTransformGenerator,
-} from './transform_generators';
 import type { SLODefinition } from '../domain/models';
 import {
   createAPMTransactionDurationIndicator,
   createAPMTransactionErrorRateIndicator,
   createSLO,
 } from './fixtures/slo';
-import { dataViewsService } from '@kbn/data-views-plugin/server/mocks';
-import type { DataViewsService } from '@kbn/data-views-plugin/common';
+import { RollupTransformManager } from './rollup_transform_manager';
+import {
+  ApmTransactionErrorRateTransformGenerator,
+  BaseTransformGenerator,
+} from './transform_generators';
 
 describe('TransformManager', () => {
   let scopedClusterClientMock: ScopedClusterClientMock;
@@ -39,7 +38,7 @@ describe('TransformManager', () => {
     describe('Unhappy path', () => {
       it('throws when transform generator fails', async () => {
         const generator = new FailTransformGenerator(spaceId, dataViewsService);
-        const transformManager = new TransformManager(
+        const transformManager = new RollupTransformManager(
           generator,
           scopedClusterClientMock,
           loggerMock
@@ -59,7 +58,11 @@ describe('TransformManager', () => {
         dataViewsService,
         false
       );
-      const transformManager = new TransformManager(generator, scopedClusterClientMock, loggerMock);
+      const transformManager = new RollupTransformManager(
+        generator,
+        scopedClusterClientMock,
+        loggerMock
+      );
       const slo = createSLO({ indicator: createAPMTransactionErrorRateIndicator() });
 
       const transformId = await transformManager.install(slo);
@@ -78,7 +81,11 @@ describe('TransformManager', () => {
         dataViewsService,
         false
       );
-      const transformManager = new TransformManager(generator, scopedClusterClientMock, loggerMock);
+      const transformManager = new RollupTransformManager(
+        generator,
+        scopedClusterClientMock,
+        loggerMock
+      );
 
       await transformManager.preview('slo-transform-id');
 
@@ -95,7 +102,11 @@ describe('TransformManager', () => {
         dataViewsService,
         false
       );
-      const transformManager = new TransformManager(generator, scopedClusterClientMock, loggerMock);
+      const transformManager = new RollupTransformManager(
+        generator,
+        scopedClusterClientMock,
+        loggerMock
+      );
 
       await transformManager.start('slo-transform-id');
 
@@ -112,7 +123,11 @@ describe('TransformManager', () => {
         dataViewsService,
         false
       );
-      const transformManager = new TransformManager(generator, scopedClusterClientMock, loggerMock);
+      const transformManager = new RollupTransformManager(
+        generator,
+        scopedClusterClientMock,
+        loggerMock
+      );
 
       await transformManager.stop('slo-transform-id');
 
@@ -129,7 +144,11 @@ describe('TransformManager', () => {
         dataViewsService,
         false
       );
-      const transformManager = new TransformManager(generator, scopedClusterClientMock, loggerMock);
+      const transformManager = new RollupTransformManager(
+        generator,
+        scopedClusterClientMock,
+        loggerMock
+      );
 
       await transformManager.uninstall('slo-transform-id');
 
@@ -147,7 +166,11 @@ describe('TransformManager', () => {
         dataViewsService,
         false
       );
-      const transformManager = new TransformManager(generator, scopedClusterClientMock, loggerMock);
+      const transformManager = new RollupTransformManager(
+        generator,
+        scopedClusterClientMock,
+        loggerMock
+      );
 
       await transformManager.uninstall('slo-transform-id');
 
@@ -164,7 +187,11 @@ describe('TransformManager', () => {
         dataViewsService,
         false
       );
-      const transformManager = new TransformManager(generator, scopedClusterClientMock, loggerMock);
+      const transformManager = new RollupTransformManager(
+        generator,
+        scopedClusterClientMock,
+        loggerMock
+      );
 
       scopedClusterClientMock.asSecondaryAuthUser.transform.getTransform.mockRejectedValue({
         meta: { body: { error: { type: 'resource_not_found_exception' } } },
@@ -181,7 +208,11 @@ describe('TransformManager', () => {
         dataViewsService,
         false
       );
-      const transformManager = new TransformManager(generator, scopedClusterClientMock, loggerMock);
+      const transformManager = new RollupTransformManager(
+        generator,
+        scopedClusterClientMock,
+        loggerMock
+      );
 
       scopedClusterClientMock.asSecondaryAuthUser.transform.getTransform.mockResolvedValue({
         count: 1,
@@ -209,7 +240,11 @@ describe('TransformManager', () => {
         dataViewsService,
         false
       );
-      const transformManager = new TransformManager(generator, scopedClusterClientMock, loggerMock);
+      const transformManager = new RollupTransformManager(
+        generator,
+        scopedClusterClientMock,
+        loggerMock
+      );
 
       scopedClusterClientMock.asSecondaryAuthUser.transform.getTransform.mockResolvedValue({
         count: 1,

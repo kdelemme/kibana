@@ -24,7 +24,7 @@ export interface ITransformManager {
   getVersion(transformId: TransformId): Promise<number | undefined>;
 }
 
-export class TransformManager implements ITransformManager {
+export class RollupTransformManager implements ITransformManager {
   constructor(
     private generator: ITransformGenerator,
     private scopedClusterClient: IScopedClusterClient,
