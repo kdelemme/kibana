@@ -19,7 +19,7 @@ import { getSLOSummaryTransformId, getSLOTransformId } from '../../common/consta
 import type { SLODefinition } from '../domain/models/slo';
 import { computeHealth, type SLOHealth } from '../domain/services/compute_health';
 import type { SLODefinitionRepository } from './slo_definition_repository';
-import type { ITransformManager } from './rollup_transform_manager';
+import type { ITransformManager } from './transform_manager';
 
 interface RepairActionsGroup {
   slo: SLODefinition;

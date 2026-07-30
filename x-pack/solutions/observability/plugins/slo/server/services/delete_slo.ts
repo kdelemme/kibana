@@ -6,20 +6,20 @@
  */
 
 import Boom from '@hapi/boom';
-import { addTransactionLabels } from '@kbn/apm-utils';
 import type { RulesClientApi } from '@kbn/alerting-plugin/server/types';
+import { addTransactionLabels } from '@kbn/apm-utils';
 import type { IScopedClusterClient, Logger } from '@kbn/core/server';
 import {
   SLI_DESTINATION_INDEX_PATTERN,
   SUMMARY_DESTINATION_INDEX_PATTERN,
+  getCustomSLOWildcardPipelineId,
   getSLOSummaryTransformId,
   getSLOTransformId,
-  getCustomSLOWildcardPipelineId,
   getWildcardPipelineId,
 } from '../../common/constants';
 import { retryTransientEsErrors } from '../utils/retry';
 import type { SLODefinitionRepository } from './slo_definition_repository';
-import type { ITransformManager } from './rollup_transform_manager';
+import type { ITransformManager } from './transform_manager';
 import { getSloApmLabels } from './utils';
 
 interface Options {

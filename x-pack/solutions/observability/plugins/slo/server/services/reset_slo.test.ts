@@ -29,7 +29,7 @@ import {
 } from './mocks';
 import { ResetSLO } from './reset_slo';
 import type { SLODefinitionRepository } from './slo_definition_repository';
-import type { ITransformManager } from './rollup_transform_manager';
+import type { ITransformManager } from './transform_manager';
 import type { SLODefinition } from '../domain/models';
 
 const TEST_DATE = new Date('2023-01-01T00:00:00.000Z');

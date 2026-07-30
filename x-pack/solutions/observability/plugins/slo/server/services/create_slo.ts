@@ -8,13 +8,13 @@ import type {
   IngestPutPipelineRequest,
   TransformPutTransformRequest,
 } from '@elastic/elasticsearch/lib/api/types';
+import { addTransactionLabels } from '@kbn/apm-utils';
 import type {
   IBasePath,
   IScopedClusterClient,
   Logger,
   SavedObjectsClientContract,
 } from '@kbn/core/server';
-import { addTransactionLabels } from '@kbn/apm-utils';
 import type { CreateSLOParams, CreateSLOResponse } from '@kbn/slo-schema';
 import { ALL_VALUE } from '@kbn/slo-schema';
 import { ALL_SPACES_ID } from '@kbn/spaces-plugin/common/constants';
@@ -39,10 +39,10 @@ import { SO_SLO_TYPE } from '../saved_objects';
 import { retryTransientEsErrors } from '../utils/retry';
 import type { SLODefinitionRepository } from './slo_definition_repository';
 import { createTempSummaryDocument } from './summary_transform_generator/helpers/create_temp_summary';
-import type { ITransformManager } from './rollup_transform_manager';
+import type { ITransformManager } from './transform_manager';
+import { getSloApmLabels } from './utils';
 import { assertExpectedIndicatorSourceIndexPrivileges } from './utils/assert_expected_indicator_source_index_privileges';
 import { getTransformQueryComposite } from './utils/get_transform_compite_query';
-import { getSloApmLabels } from './utils';
 
 export class CreateSLO {
   constructor(

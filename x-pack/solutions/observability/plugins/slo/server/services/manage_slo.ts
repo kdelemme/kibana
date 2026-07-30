@@ -8,7 +8,7 @@
 import { addTransactionLabels } from '@kbn/apm-utils';
 import { getSLOSummaryTransformId, getSLOTransformId } from '../../common/constants';
 import type { SLODefinitionRepository } from './slo_definition_repository';
-import type { ITransformManager } from './rollup_transform_manager';
+import type { ITransformManager } from './transform_manager';
 import { getSloApmLabels } from './utils';
 
 export class ManageSLO {

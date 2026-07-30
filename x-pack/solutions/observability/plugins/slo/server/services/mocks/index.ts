@@ -12,7 +12,7 @@ import type { SLODefinitionRepository } from '../slo_definition_repository';
 import type { SLOTemplateRepository } from '../slo_template_repository';
 import type { SummaryClient } from '../summary_client';
 import type { SummarySearchClient } from '../summary_search_client/types';
-import type { ITransformManager } from '../rollup_transform_manager';
+import type { ITransformManager } from '../transform_manager';
 
 const createResourceInstallerMock = (): jest.Mocked<ResourceInstaller> => {
   return {

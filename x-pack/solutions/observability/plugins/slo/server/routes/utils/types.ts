@@ -15,11 +15,12 @@ import type {
 import type { DataViewsService } from '@kbn/data-views-plugin/common/data_views';
 import type { AlertsClient } from '@kbn/rule-registry-plugin/server/alert_data_client/alerts_client';
 import type { DefaultRouteHandlerResources } from '@kbn/server-route-repository';
-import type { SLODefinitionRepository, ITransformManager } from '../../services';
+import type { SLODefinitionRepository } from '../../services';
 import type { CompositeSLORepository } from '../../services/composites/composite_slo_repository';
-import type { SLOPluginSetupDependencies, SLOPluginStartDependencies } from '../../types';
 import type { SLOSettingsRepository } from '../../services/slo_settings_repository';
 import type { SLOTemplateRepository } from '../../services/slo_template_repository';
+import type { ITransformManager } from '../../services/transform_manager';
+import type { SLOPluginSetupDependencies, SLOPluginStartDependencies } from '../../types';
 
 export type GetScopedClients = ({
   request,

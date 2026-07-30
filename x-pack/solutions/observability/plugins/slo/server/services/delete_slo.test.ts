@@ -8,10 +8,9 @@
 import Boom from '@hapi/boom';
 import { rulesClientMock } from '@kbn/alerting-plugin/server/rules_client.mock';
 import type { RulesClientApi } from '@kbn/alerting-plugin/server/types';
-import type { MockedLogger } from '@kbn/logging-mocks';
 import type { ScopedClusterClientMock } from '@kbn/core/server/mocks';
-import { elasticsearchServiceMock } from '@kbn/core/server/mocks';
-import { loggingSystemMock } from '@kbn/core/server/mocks';
+import { elasticsearchServiceMock, loggingSystemMock } from '@kbn/core/server/mocks';
+import type { MockedLogger } from '@kbn/logging-mocks';
 import { DeleteSLO } from './delete_slo';
 import { createAPMTransactionErrorRateIndicator, createSLO } from './fixtures/slo';
 import {
@@ -20,7 +19,7 @@ import {
   createTransformManagerMock,
 } from './mocks';
 import type { SLODefinitionRepository } from './slo_definition_repository';
-import type { ITransformManager } from './rollup_transform_manager';
+import type { ITransformManager } from './transform_manager';
 
 describe('DeleteSLO', () => {
   let mockRepository: jest.Mocked<SLODefinitionRepository>;

@@ -11,18 +11,7 @@ import type { SLODefinition } from '../domain/models';
 import { SecurityException } from '../errors';
 import { retryTransientEsErrors } from '../utils/retry';
 import type { ITransformGenerator } from './transform_generators';
-
-type TransformId = string;
-
-export interface ITransformManager {
-  install(slo: SLODefinition): Promise<TransformId>;
-  inspect(slo: SLODefinition): Promise<TransformPutTransformRequest>;
-  preview(transformId: TransformId): Promise<void>;
-  start(transformId: TransformId): Promise<void>;
-  stop(transformId: TransformId): Promise<void>;
-  uninstall(transformId: TransformId): Promise<void>;
-  getVersion(transformId: TransformId): Promise<number | undefined>;
-}
+import type { ITransformManager, TransformId } from './transform_manager';
 
 export class RollupTransformManager implements ITransformManager {
   constructor(

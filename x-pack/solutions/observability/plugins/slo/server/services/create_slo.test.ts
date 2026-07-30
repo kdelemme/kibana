@@ -24,7 +24,7 @@ import {
   createTransformManagerMock,
 } from './mocks';
 import type { SLODefinitionRepository } from './slo_definition_repository';
-import type { ITransformManager } from './rollup_transform_manager';
+import type { ITransformManager } from './transform_manager';
 
 describe('CreateSLO', () => {
   let mockScopedClusterClient: ScopedClusterClientMock;
