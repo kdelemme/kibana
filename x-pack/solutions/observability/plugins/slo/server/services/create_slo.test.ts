@@ -24,15 +24,15 @@ import {
   createTransformManagerMock,
 } from './mocks';
 import type { SLODefinitionRepository } from './slo_definition_repository';
-import type { TransformManager } from './transform_manager';
+import type { ITransformManager } from './transform_manager';
 
 describe('CreateSLO', () => {
   let mockScopedClusterClient: ScopedClusterClientMock;
   let mockSavedObjectsClient: jest.Mocked<SavedObjectsClientContract>;
   let mockLogger: jest.Mocked<MockedLogger>;
   let mockRepository: jest.Mocked<SLODefinitionRepository>;
-  let mockTransformManager: jest.Mocked<TransformManager>;
-  let mockSummaryTransformManager: jest.Mocked<TransformManager>;
+  let mockTransformManager: jest.Mocked<ITransformManager>;
+  let mockSummaryTransformManager: jest.Mocked<ITransformManager>;
   let createSLO: CreateSLO;
 
   jest.useFakeTimers().setSystemTime(new Date('2024-01-01'));

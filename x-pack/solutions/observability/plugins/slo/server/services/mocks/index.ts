@@ -12,7 +12,7 @@ import type { SLODefinitionRepository } from '../slo_definition_repository';
 import type { SLOTemplateRepository } from '../slo_template_repository';
 import type { SummaryClient } from '../summary_client';
 import type { SummarySearchClient } from '../summary_search_client/types';
-import type { TransformManager } from '../transform_manager';
+import type { ITransformManager } from '../transform_manager';
 
 const createResourceInstallerMock = (): jest.Mocked<ResourceInstaller> => {
   return {
@@ -20,7 +20,7 @@ const createResourceInstallerMock = (): jest.Mocked<ResourceInstaller> => {
   };
 };
 
-const createTransformManagerMock = (): jest.Mocked<TransformManager> => {
+const createTransformManagerMock = (): jest.Mocked<ITransformManager> => {
   return {
     install: jest.fn(),
     preview: jest.fn(),
@@ -32,7 +32,7 @@ const createTransformManagerMock = (): jest.Mocked<TransformManager> => {
   };
 };
 
-const createSummaryTransformManagerMock = (): jest.Mocked<TransformManager> => {
+const createSummaryTransformManagerMock = (): jest.Mocked<ITransformManager> => {
   return {
     install: jest.fn(),
     preview: jest.fn(),

@@ -9,7 +9,7 @@ import { createSloServerRoute } from './utils/create_slo_server_route';
 import { assertPlatinumLicense } from './utils/assert_platinum_license';
 import { RepairSLO } from '../services/repair_slo';
 import { createTransformGenerators } from '../services/transform_generators';
-import { DefaultSummaryTransformManager, DefaultTransformManager } from '../services';
+import { SummaryTransformManager, TransformManager } from '../services';
 import { SummaryTransformGenerator } from '../services/summary_transform_generator/summary_transform_generator';
 
 export const repairSLORoute = createSloServerRoute({
@@ -31,13 +31,9 @@ export const repairSLORoute = createSloServerRoute({
 
     const transformGenerators = createTransformGenerators(spaceId, dataViewsService, false);
 
-    const transformManager = new DefaultTransformManager(
-      transformGenerators,
-      scopedClusterClient,
-      logger
-    );
+    const transformManager = new TransformManager(transformGenerators, scopedClusterClient, logger);
 
-    const summaryTransformManager = new DefaultSummaryTransformManager(
+    const summaryTransformManager = new SummaryTransformManager(
       new SummaryTransformGenerator(),
       scopedClusterClient,
       logger

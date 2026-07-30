@@ -19,7 +19,7 @@ import {
 } from '../../common/constants';
 import { retryTransientEsErrors } from '../utils/retry';
 import type { SLODefinitionRepository } from './slo_definition_repository';
-import type { TransformManager } from './transform_manager';
+import type { ITransformManager } from './transform_manager';
 import { getSloApmLabels } from './utils';
 
 interface Options {
@@ -30,8 +30,8 @@ interface Options {
 export class DeleteSLO {
   constructor(
     private repository: SLODefinitionRepository,
-    private transformManager: TransformManager,
-    private summaryTransformManager: TransformManager,
+    private transformManager: ITransformManager,
+    private summaryTransformManager: ITransformManager,
     private scopedClusterClient: IScopedClusterClient,
     private rulesClient: RulesClientApi,
     private logger: Logger,

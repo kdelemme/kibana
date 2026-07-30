@@ -13,9 +13,9 @@ import type { SLOPluginStartDependencies } from '../../../types';
 import { DeleteSLO } from '../../delete_slo';
 import { DefaultSLODefinitionRepository } from '../../slo_definition_repository';
 import { SummaryTransformGenerator } from '../../summary_transform_generator/summary_transform_generator';
-import { DefaultSummaryTransformManager } from '../../summay_transform_manager';
+import { SummaryTransformManager } from '../../summay_transform_manager';
 import type { TransformGenerator } from '../../transform_generators';
-import { DefaultTransformManager } from '../../transform_manager';
+import { TransformManager } from '../../transform_manager';
 import { runBulkDelete } from './run_bulk_delete';
 
 export const TYPE = 'slo:bulk-delete-task';
@@ -64,13 +64,13 @@ export class BulkDeleteTask {
               const rulesClient = await pluginStart.alerting.getRulesClientWithRequest(fakeRequest);
 
               const repository = new DefaultSLODefinitionRepository(scopedSoClient, this.logger);
-              const transformManager = new DefaultTransformManager(
+              const transformManager = new TransformManager(
                 {} as Record<IndicatorTypes, TransformGenerator>,
                 scopedClusterClient,
                 this.logger,
                 signal
               );
-              const summaryTransformManager = new DefaultSummaryTransformManager(
+              const summaryTransformManager = new SummaryTransformManager(
                 new SummaryTransformGenerator(),
                 scopedClusterClient,
                 this.logger,

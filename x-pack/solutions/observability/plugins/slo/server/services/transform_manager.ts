@@ -14,7 +14,7 @@ import type { TransformGenerator } from './transform_generators';
 
 type TransformId = string;
 
-export interface TransformManager {
+export interface ITransformManager {
   install(slo: SLODefinition): Promise<TransformId>;
   inspect(slo: SLODefinition): Promise<TransformPutTransformRequest>;
   preview(transformId: TransformId): Promise<void>;
@@ -24,7 +24,7 @@ export interface TransformManager {
   getVersion(transformId: TransformId): Promise<number | undefined>;
 }
 
-export class DefaultTransformManager implements TransformManager {
+export class TransformManager implements ITransformManager {
   constructor(
     private generators: Record<IndicatorTypes, TransformGenerator>,
     private scopedClusterClient: IScopedClusterClient,

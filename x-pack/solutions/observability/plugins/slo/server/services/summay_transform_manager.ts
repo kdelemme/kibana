@@ -11,11 +11,11 @@ import type { SLODefinition } from '../domain/models';
 import { SecurityException } from '../errors';
 import { retryTransientEsErrors } from '../utils/retry';
 import type { ISummaryTransformGenerator } from './summary_transform_generator/summary_transform_generator';
-import type { TransformManager } from './transform_manager';
+import type { ITransformManager } from './transform_manager';
 
 type TransformId = string;
 
-export class DefaultSummaryTransformManager implements TransformManager {
+export class SummaryTransformManager implements ITransformManager {
   constructor(
     private generator: ISummaryTransformGenerator,
     private scopedClusterClient: IScopedClusterClient,

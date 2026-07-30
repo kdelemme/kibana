@@ -12,7 +12,7 @@ import type { MockedLogger } from '@kbn/logging-mocks';
 import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/api/types';
 import { errors as EsErrors } from '@elastic/elasticsearch';
 
-import { DefaultTransformManager } from './transform_manager';
+import { TransformManager } from './transform_manager';
 import {
   ApmTransactionErrorRateTransformGenerator,
   TransformGenerator,
@@ -43,11 +43,7 @@ describe('TransformManager', () => {
         const generators: Record<IndicatorTypes, TransformGenerator> = {
           'sli.apm.transactionDuration': new DummyTransformGenerator(spaceId, dataViewsService),
         };
-        const service = new DefaultTransformManager(
-          generators,
-          scopedClusterClientMock,
-          loggerMock
-        );
+        const service = new TransformManager(generators, scopedClusterClientMock, loggerMock);
 
         await expect(
           service.install(createSLO({ indicator: createAPMTransactionErrorRateIndicator() }))
@@ -59,7 +55,7 @@ describe('TransformManager', () => {
         const generators: Record<IndicatorTypes, TransformGenerator> = {
           'sli.apm.transactionDuration': new FailTransformGenerator(spaceId, dataViewsService),
         };
-        const transformManager = new DefaultTransformManager(
+        const transformManager = new TransformManager(
           generators,
           scopedClusterClientMock,
           loggerMock
@@ -82,7 +78,7 @@ describe('TransformManager', () => {
           false
         ),
       };
-      const transformManager = new DefaultTransformManager(
+      const transformManager = new TransformManager(
         generators,
         scopedClusterClientMock,
         loggerMock
@@ -108,7 +104,7 @@ describe('TransformManager', () => {
           false
         ),
       };
-      const transformManager = new DefaultTransformManager(
+      const transformManager = new TransformManager(
         generators,
         scopedClusterClientMock,
         loggerMock
@@ -132,7 +128,7 @@ describe('TransformManager', () => {
           false
         ),
       };
-      const transformManager = new DefaultTransformManager(
+      const transformManager = new TransformManager(
         generators,
         scopedClusterClientMock,
         loggerMock
@@ -156,7 +152,7 @@ describe('TransformManager', () => {
           false
         ),
       };
-      const transformManager = new DefaultTransformManager(
+      const transformManager = new TransformManager(
         generators,
         scopedClusterClientMock,
         loggerMock
@@ -180,7 +176,7 @@ describe('TransformManager', () => {
           false
         ),
       };
-      const transformManager = new DefaultTransformManager(
+      const transformManager = new TransformManager(
         generators,
         scopedClusterClientMock,
         loggerMock
@@ -205,7 +201,7 @@ describe('TransformManager', () => {
           false
         ),
       };
-      const transformManager = new DefaultTransformManager(
+      const transformManager = new TransformManager(
         generators,
         scopedClusterClientMock,
         loggerMock
@@ -229,7 +225,7 @@ describe('TransformManager', () => {
           false
         ),
       };
-      const transformManager = new DefaultTransformManager(
+      const transformManager = new TransformManager(
         generators,
         scopedClusterClientMock,
         loggerMock
@@ -253,7 +249,7 @@ describe('TransformManager', () => {
           false
         ),
       };
-      const transformManager = new DefaultTransformManager(
+      const transformManager = new TransformManager(
         generators,
         scopedClusterClientMock,
         loggerMock
@@ -288,7 +284,7 @@ describe('TransformManager', () => {
           false
         ),
       };
-      const transformManager = new DefaultTransformManager(
+      const transformManager = new TransformManager(
         generators,
         scopedClusterClientMock,
         loggerMock

@@ -37,15 +37,15 @@ import {
   createTransformManagerMock,
 } from './mocks';
 import type { SLODefinitionRepository } from './slo_definition_repository';
-import type { TransformManager } from './transform_manager';
+import type { ITransformManager } from './transform_manager';
 import { UpdateSLO } from './update_slo';
 
 describe('UpdateSLO', () => {
   let mockRepository: jest.Mocked<SLODefinitionRepository>;
-  let mockTransformManager: jest.Mocked<TransformManager>;
+  let mockTransformManager: jest.Mocked<ITransformManager>;
   let mockScopedClusterClient: ScopedClusterClientMock;
   let mockLogger: jest.Mocked<MockedLogger>;
-  let mockSummaryTransformManager: jest.Mocked<TransformManager>;
+  let mockSummaryTransformManager: jest.Mocked<ITransformManager>;
   let updateSLO: UpdateSLO;
 
   beforeEach(() => {

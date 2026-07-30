@@ -15,7 +15,7 @@ import type {
 import type { DataViewsService } from '@kbn/data-views-plugin/common/data_views';
 import type { AlertsClient } from '@kbn/rule-registry-plugin/server/alert_data_client/alerts_client';
 import type { DefaultRouteHandlerResources } from '@kbn/server-route-repository';
-import type { SLODefinitionRepository, TransformManager } from '../../services';
+import type { SLODefinitionRepository, ITransformManager } from '../../services';
 import type { CompositeSLORepository } from '../../services/composites/composite_slo_repository';
 import type { SLOPluginSetupDependencies, SLOPluginStartDependencies } from '../../types';
 import type { SLOSettingsRepository } from '../../services/slo_settings_repository';
@@ -41,8 +41,8 @@ export interface RouteHandlerScopedClients {
   compositeRepository: CompositeSLORepository;
   settingsRepository: SLOSettingsRepository;
   templateRepository: SLOTemplateRepository;
-  transformManager: TransformManager;
-  summaryTransformManager: TransformManager;
+  transformManager: ITransformManager;
+  summaryTransformManager: ITransformManager;
 }
 
 export interface SLORoutesDependencies {

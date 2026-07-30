@@ -43,8 +43,8 @@ import {
 import {
   DefaultResourceInstaller,
   DefaultSLODefinitionRepository,
-  DefaultSummaryTransformManager,
-  DefaultTransformManager,
+  SummaryTransformManager,
+  TransformManager,
 } from './services';
 import { DefaultCompositeSLORepository } from './services/composites/composite_slo_repository';
 import { DefaultSLOSettingsRepository } from './services/slo_settings_repository';
@@ -223,12 +223,12 @@ export class SLOPlugin
           const settingsRepository = new DefaultSLOSettingsRepository(soClient);
           const templateRepository = new DefaultSLOTemplateRepository(soClient);
 
-          const transformManager = new DefaultTransformManager(
+          const transformManager = new TransformManager(
             createTransformGenerators(spaceId, dataViewsService, this.isServerless),
             scopedClusterClient,
             logger
           );
-          const summaryTransformManager = new DefaultSummaryTransformManager(
+          const summaryTransformManager = new SummaryTransformManager(
             new SummaryTransformGenerator(),
             scopedClusterClient,
             logger
