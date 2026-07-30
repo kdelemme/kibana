@@ -11,6 +11,7 @@ import type {
   KibanaRequest,
   Logger,
   SavedObjectsClientContract,
+  IBasePath,
 } from '@kbn/core/server';
 import type { DataViewsService } from '@kbn/data-views-plugin/common/data_views';
 import type { AlertsClient } from '@kbn/rule-registry-plugin/server/alert_data_client/alerts_client';
@@ -34,6 +35,8 @@ export interface RouteHandlerScopedClients {
   soClient: SavedObjectsClientContract;
   internalSoClient: SavedObjectsClientContract;
   spaceId: string;
+  basePath: IBasePath;
+  userId: string | undefined;
   dataViewsService: DataViewsService;
   rulesClient: RulesClientApi;
   racClient: AlertsClient;

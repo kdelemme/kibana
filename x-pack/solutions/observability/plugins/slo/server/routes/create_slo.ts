@@ -19,7 +19,7 @@ export const createSLORoute = createSloServerRoute({
     },
   },
   params: createSLOParamsSchema,
-  handler: async ({ context, params, logger, request, plugins, corePlugins, getScopedClients }) => {
+  handler: async ({ params, logger, request, plugins, getScopedClients }) => {
     await assertPlatinumLicense(plugins);
 
     const {
@@ -29,11 +29,9 @@ export const createSLORoute = createSloServerRoute({
       repository,
       transformManager,
       summaryTransformManager,
+      basePath,
+      userId,
     } = await getScopedClients({ request, logger });
-
-    const core = await context.core;
-    const userId = core.security.authc.getCurrentUser()?.username!;
-    const basePath = corePlugins.http.basePath;
 
     const createSLO = new CreateSLO(
       scopedClusterClient,
@@ -44,7 +42,7 @@ export const createSLORoute = createSloServerRoute({
       logger,
       spaceId,
       basePath,
-      userId
+      userId ?? ''
     );
 
     return await createSLO.execute(params.body);

@@ -241,6 +241,8 @@ export class SLOPlugin
             dataViewsService,
             rulesClient,
             spaceId,
+            basePath: core.http.basePath,
+            userId: coreStart.security.authc.getCurrentUser(request)?.username,
             repository,
             compositeRepository,
             settingsRepository,
