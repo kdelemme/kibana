@@ -21,7 +21,7 @@ const generator = new ApmTransactionDurationTransformGenerator(SPACE_ID, dataVie
 describe('APM Transaction Duration Transform Generator', () => {
   it('returns the expected transform params with every specified indicator params', async () => {
     const slo = createSLO({ id: 'irrelevant', indicator: createAPMTransactionDurationIndicator() });
-    const transform = await generator.getTransformParams(slo);
+    const transform = await generator.generate(slo);
 
     expect(transform).toMatchSnapshot();
   });
@@ -31,7 +31,7 @@ describe('APM Transaction Duration Transform Generator', () => {
       id: 'irrelevant',
       indicator: createAPMTransactionDurationIndicator(),
     });
-    const transform = await generator.getTransformParams(slo);
+    const transform = await generator.generate(slo);
 
     expect(transform).toMatchSnapshot();
   });
@@ -46,7 +46,7 @@ describe('APM Transaction Duration Transform Generator', () => {
         timesliceWindow: twoMinute(),
       },
     });
-    const transform = await generator.getTransformParams(slo);
+    const transform = await generator.generate(slo);
 
     expect(transform).toMatchSnapshot();
   });
@@ -60,7 +60,7 @@ describe('APM Transaction Duration Transform Generator', () => {
         transactionType: ALL_VALUE,
       }),
     });
-    const transform = await generator.getTransformParams(slo);
+    const transform = await generator.generate(slo);
 
     expect(transform.source.query).toMatchSnapshot();
   });
@@ -72,7 +72,7 @@ describe('APM Transaction Duration Transform Generator', () => {
         index,
       }),
     });
-    const transform = await generator.getTransformParams(slo);
+    const transform = await generator.generate(slo);
 
     expect(transform.source.index).toEqual(index);
   });
@@ -84,7 +84,7 @@ describe('APM Transaction Duration Transform Generator', () => {
         filter,
       }),
     });
-    const transform = await generator.getTransformParams(slo);
+    const transform = await generator.generate(slo);
 
     expect(transform.source.query).toMatchSnapshot();
   });
@@ -99,7 +99,7 @@ describe('APM Transaction Duration Transform Generator', () => {
       }),
     });
 
-    const transform = await generator.getTransformParams(slo);
+    const transform = await generator.generate(slo);
 
     expect(transform.source.query).toMatchSnapshot();
     expect(transform.pivot?.group_by).toMatchSnapshot();
@@ -115,7 +115,7 @@ describe('APM Transaction Duration Transform Generator', () => {
       }),
     });
 
-    const transform = await generator.getTransformParams(slo);
+    const transform = await generator.generate(slo);
 
     expect(transform.source.query).toMatchSnapshot();
     expect(transform.pivot?.group_by).toMatchSnapshot();
@@ -131,7 +131,7 @@ describe('APM Transaction Duration Transform Generator', () => {
       }),
     });
 
-    const transform = await generator.getTransformParams(slo);
+    const transform = await generator.generate(slo);
 
     expect(transform.source.query).toMatchSnapshot();
     expect(transform.pivot?.group_by).toMatchSnapshot();
@@ -147,7 +147,7 @@ describe('APM Transaction Duration Transform Generator', () => {
       }),
     });
 
-    const transform = await generator.getTransformParams(slo);
+    const transform = await generator.generate(slo);
 
     expect(transform.source.query).toMatchSnapshot();
     expect(transform.pivot?.group_by).toMatchSnapshot();
@@ -163,7 +163,7 @@ describe('APM Transaction Duration Transform Generator', () => {
       },
     });
 
-    const transform = await generator.getTransformParams(slo);
+    const transform = await generator.generate(slo);
 
     // @ts-ignore
     const rangeFilter = transform.source.query.bool.filter.find((f) => 'range' in f);

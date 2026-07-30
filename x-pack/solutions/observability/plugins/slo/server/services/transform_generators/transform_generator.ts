@@ -21,7 +21,7 @@ export abstract class TransformGenerator {
     protected isServerless: boolean = false
   ) {}
 
-  public abstract getTransformParams(slo: SLODefinition): Promise<TransformPutTransformRequest>;
+  public abstract generate(slo: SLODefinition): Promise<TransformPutTransformRequest>;
 
   public buildCommonRuntimeMappings(dataView?: DataView): MappingRuntimeFields {
     return dataView?.getRuntimeMappings?.() ?? {};

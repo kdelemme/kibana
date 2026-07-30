@@ -46,7 +46,7 @@ export class DefaultTransformManager implements TransformManager {
       throw new Error(`Unsupported indicator type [${slo.indicator.type}]`);
     }
 
-    const transformParams = await generator.getTransformParams(slo);
+    const transformParams = await generator.generate(slo);
     try {
       await retryTransientEsErrors(
         () =>
@@ -82,7 +82,7 @@ export class DefaultTransformManager implements TransformManager {
       throw new Error(`Unsupported indicator type [${slo.indicator.type}]`);
     }
 
-    return await generator.getTransformParams(slo);
+    return await generator.generate(slo);
   }
 
   async preview(transformId: string): Promise<void> {

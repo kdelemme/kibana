@@ -28,7 +28,7 @@ export class MetricCustomTransformGenerator extends TransformGenerator {
     super(spaceId, dataViewService, isServerless);
   }
 
-  public async getTransformParams(slo: SLODefinition): Promise<TransformPutTransformRequest> {
+  public async generate(slo: SLODefinition): Promise<TransformPutTransformRequest> {
     if (!metricCustomIndicatorSchema.is(slo.indicator)) {
       throw new InvalidTransformError(`Cannot handle SLO of indicator type: ${slo.indicator.type}`);
     }

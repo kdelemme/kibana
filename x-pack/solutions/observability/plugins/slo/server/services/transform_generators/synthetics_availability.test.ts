@@ -27,7 +27,7 @@ describe('Synthetics Availability Transform Generator', () => {
         id: 'irrelevant',
         indicator: createSyntheticsAvailabilityIndicator(),
       });
-      const transform = await generator.getTransformParams(slo);
+      const transform = await generator.generate(slo);
 
       expect(transform).toMatchSnapshot();
       expect(transform.source.query?.bool?.filter).toContainEqual({
@@ -42,7 +42,7 @@ describe('Synthetics Availability Transform Generator', () => {
         id: 'irrelevant',
         indicator: createSyntheticsAvailabilityIndicator(),
       });
-      const transform = await generator.getTransformParams(slo);
+      const transform = await generator.generate(slo);
 
       expect(transform.pivot?.group_by).toEqual(
         expect.objectContaining({
@@ -66,7 +66,7 @@ describe('Synthetics Availability Transform Generator', () => {
         indicator: createSyntheticsAvailabilityIndicator(),
         groupBy: ['host.name'],
       });
-      const transform = await generator.getTransformParams(slo);
+      const transform = await generator.generate(slo);
 
       expect(transform.pivot?.group_by).not.toEqual(
         expect.objectContaining({
@@ -102,7 +102,7 @@ describe('Synthetics Availability Transform Generator', () => {
           indicator: createSyntheticsAvailabilityIndicator(),
           groupBy,
         });
-        const transform = await generator.getTransformParams(slo);
+        const transform = await generator.generate(slo);
 
         expect(transform.pivot?.group_by).toEqual(
           expect.objectContaining({
@@ -129,7 +129,7 @@ describe('Synthetics Availability Transform Generator', () => {
           indicator: createSyntheticsAvailabilityIndicator(),
           groupBy,
         });
-        const transform = await generator.getTransformParams(slo);
+        const transform = await generator.generate(slo);
 
         expect(transform.pivot?.group_by).toEqual(
           expect.objectContaining({
@@ -156,7 +156,7 @@ describe('Synthetics Availability Transform Generator', () => {
           indicator: createSyntheticsAvailabilityIndicator(),
           groupBy,
         });
-        const transform = await generator.getTransformParams(slo);
+        const transform = await generator.generate(slo);
 
         expect(transform.pivot?.group_by).toEqual(
           expect.objectContaining({
@@ -175,7 +175,7 @@ describe('Synthetics Availability Transform Generator', () => {
         id: 'irrelevant',
         indicator: createSyntheticsAvailabilityIndicator(),
       });
-      const transform = await generator.getTransformParams(slo);
+      const transform = await generator.generate(slo);
 
       expect(transform.source.query?.bool?.filter).toContainEqual({
         term: {
@@ -200,7 +200,7 @@ describe('Synthetics Availability Transform Generator', () => {
           },
         } as SLODefinition['indicator'],
       });
-      const transform = await generator.getTransformParams(slo);
+      const transform = await generator.generate(slo);
 
       expect(transform.source.query?.bool?.filter).toContainEqual({
         terms: {
@@ -230,7 +230,7 @@ describe('Synthetics Availability Transform Generator', () => {
           },
         } as SLODefinition['indicator'],
       });
-      const transform = await generator.getTransformParams(slo);
+      const transform = await generator.generate(slo);
 
       expect(transform.source.query?.bool?.filter).toContainEqual({
         terms: {
@@ -260,7 +260,7 @@ describe('Synthetics Availability Transform Generator', () => {
           },
         } as SLODefinition['indicator'],
       });
-      const transform = await generator.getTransformParams(slo);
+      const transform = await generator.generate(slo);
 
       expect(transform.source.query?.bool?.filter).toContainEqual({
         terms: {
@@ -279,7 +279,7 @@ describe('Synthetics Availability Transform Generator', () => {
         id: 'irrelevant',
         indicator: createSyntheticsAvailabilityIndicator(),
       });
-      const transform = await generator.getTransformParams(slo);
+      const transform = await generator.generate(slo);
 
       expect(transform.source.query?.bool?.filter).toContainEqual({
         term: {
@@ -298,7 +298,7 @@ describe('Synthetics Availability Transform Generator', () => {
         },
       });
 
-      const transform = await generator.getTransformParams(slo);
+      const transform = await generator.generate(slo);
 
       // @ts-ignore
       const rangeFilter = transform.source.query.bool.filter.find((f) => 'range' in f);
@@ -316,7 +316,7 @@ describe('Synthetics Availability Transform Generator', () => {
       const slo = createSLO({
         indicator: createSyntheticsAvailabilityIndicator(),
       });
-      const transform = await generator.getTransformParams(slo);
+      const transform = await generator.generate(slo);
 
       expect(transform.sync?.time?.field).toEqual('event.ingested');
     });
@@ -333,7 +333,7 @@ describe('Synthetics Availability Transform Generator', () => {
       const slo = createSLO({
         indicator: createSyntheticsAvailabilityIndicator(),
       });
-      const transform = await generator.getTransformParams(slo);
+      const transform = await generator.generate(slo);
 
       expect(transform.sync?.time?.field).toEqual('@timestamp');
     });

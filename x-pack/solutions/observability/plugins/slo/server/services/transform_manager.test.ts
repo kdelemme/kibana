@@ -320,7 +320,7 @@ class DummyTransformGenerator extends TransformGenerator {
   constructor(spaceId: string, dataViewService: DataViewsService) {
     super(spaceId, dataViewService);
   }
-  async getTransformParams(slo: SLODefinition): Promise<TransformPutTransformRequest> {
+  async generate(slo: SLODefinition): Promise<TransformPutTransformRequest> {
     return {} as TransformPutTransformRequest;
   }
 }
@@ -330,7 +330,7 @@ class FailTransformGenerator extends TransformGenerator {
     super(spaceId, dataViewService);
   }
 
-  getTransformParams(slo: SLODefinition): Promise<TransformPutTransformRequest> {
+  generate(slo: SLODefinition): Promise<TransformPutTransformRequest> {
     throw new Error('Some error');
   }
 }
