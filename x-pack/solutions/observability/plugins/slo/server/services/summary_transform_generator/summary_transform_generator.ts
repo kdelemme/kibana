@@ -11,11 +11,11 @@ import { generateSummaryTransformForOccurrences } from './generators/occurrences
 import { generateSummaryTransformForTimeslicesAndCalendarAligned } from './generators/timeslices_calendar_aligned';
 import { generateSummaryTransformForTimeslicesAndRolling } from './generators/timeslices_rolling';
 
-export interface SummaryTransformGenerator {
+export interface ISummaryTransformGenerator {
   generate(slo: SLODefinition): TransformPutTransformRequest;
 }
 
-export class DefaultSummaryTransformGenerator implements SummaryTransformGenerator {
+export class SummaryTransformGenerator implements ISummaryTransformGenerator {
   public generate(slo: SLODefinition): TransformPutTransformRequest {
     if (slo.budgetingMethod === 'occurrences') {
       return generateSummaryTransformForOccurrences(slo);

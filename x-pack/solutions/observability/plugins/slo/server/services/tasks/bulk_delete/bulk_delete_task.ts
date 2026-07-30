@@ -12,7 +12,7 @@ import type { IndicatorTypes } from '../../../domain/models';
 import type { SLOPluginStartDependencies } from '../../../types';
 import { DeleteSLO } from '../../delete_slo';
 import { DefaultSLODefinitionRepository } from '../../slo_definition_repository';
-import { DefaultSummaryTransformGenerator } from '../../summary_transform_generator/summary_transform_generator';
+import { SummaryTransformGenerator } from '../../summary_transform_generator/summary_transform_generator';
 import { DefaultSummaryTransformManager } from '../../summay_transform_manager';
 import type { TransformGenerator } from '../../transform_generators';
 import { DefaultTransformManager } from '../../transform_manager';
@@ -71,7 +71,7 @@ export class BulkDeleteTask {
                 signal
               );
               const summaryTransformManager = new DefaultSummaryTransformManager(
-                new DefaultSummaryTransformGenerator(),
+                new SummaryTransformGenerator(),
                 scopedClusterClient,
                 this.logger,
                 signal

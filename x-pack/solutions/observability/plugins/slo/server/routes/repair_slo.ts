@@ -10,7 +10,7 @@ import { assertPlatinumLicense } from './utils/assert_platinum_license';
 import { RepairSLO } from '../services/repair_slo';
 import { createTransformGenerators } from '../services/transform_generators';
 import { DefaultSummaryTransformManager, DefaultTransformManager } from '../services';
-import { DefaultSummaryTransformGenerator } from '../services/summary_transform_generator/summary_transform_generator';
+import { SummaryTransformGenerator } from '../services/summary_transform_generator/summary_transform_generator';
 
 export const repairSLORoute = createSloServerRoute({
   endpoint: 'POST /api/observability/slos/_repair',
@@ -38,7 +38,7 @@ export const repairSLORoute = createSloServerRoute({
     );
 
     const summaryTransformManager = new DefaultSummaryTransformManager(
-      new DefaultSummaryTransformGenerator(),
+      new SummaryTransformGenerator(),
       scopedClusterClient,
       logger
     );
