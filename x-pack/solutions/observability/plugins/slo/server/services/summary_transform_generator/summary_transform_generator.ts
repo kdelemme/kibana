@@ -12,17 +12,17 @@ import { generateSummaryTransformForTimeslicesAndCalendarAligned } from './gener
 import { generateSummaryTransformForTimeslicesAndRolling } from './generators/timeslices_rolling';
 
 export interface ISummaryTransformGenerator {
-  generate(slo: SLODefinition): TransformPutTransformRequest;
+  generate(slo: SLODefinition): Promise<TransformPutTransformRequest>;
 }
 
 export class SummaryTransformGenerator implements ISummaryTransformGenerator {
-  public generate(slo: SLODefinition): TransformPutTransformRequest {
+  public async generate(slo: SLODefinition): Promise<TransformPutTransformRequest> {
     if (slo.budgetingMethod === 'occurrences') {
-      return generateSummaryTransformForOccurrences(slo);
+      return Promise.resolve(generateSummaryTransformForOccurrences(slo));
     } else if (slo.budgetingMethod === 'timeslices' && slo.timeWindow.type === 'rolling') {
-      return generateSummaryTransformForTimeslicesAndRolling(slo);
+      return Promise.resolve(generateSummaryTransformForTimeslicesAndRolling(slo));
     } else if (slo.budgetingMethod === 'timeslices' && slo.timeWindow.type === 'calendarAligned') {
-      return generateSummaryTransformForTimeslicesAndCalendarAligned(slo);
+      return Promise.resolve(generateSummaryTransformForTimeslicesAndCalendarAligned(slo));
     }
 
     throw new Error('Not supported SLO');
