@@ -6,9 +6,9 @@
  */
 
 import { createSLOParamsSchema } from '@kbn/slo-schema';
-import { createSloServerRoute } from './utils/create_slo_server_route';
-import { assertPlatinumLicense } from './utils/assert_platinum_license';
 import { createSloServerClient } from '../client/slo_server_client';
+import { assertPlatinumLicense } from './utils/assert_platinum_license';
+import { createSloServerRoute } from './utils/create_slo_server_route';
 
 export const createSLORoute = createSloServerRoute({
   endpoint: 'POST /api/observability/slos 2023-10-31',
@@ -22,7 +22,7 @@ export const createSLORoute = createSloServerRoute({
   handler: async ({ params, logger, request, plugins, getScopedClients }) => {
     await assertPlatinumLicense(plugins);
 
-    const sloServerClient = await createSloServerClient({
+    const sloServerClient = createSloServerClient({
       scopedClients: await getScopedClients({ request, logger }),
       logger,
     });

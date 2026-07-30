@@ -19,9 +19,7 @@ interface SloServerClientContext {
   logger: Logger;
 }
 
-export async function createSloServerClient(
-  context: SloServerClientContext
-): Promise<SloServerClient> {
+export function createSloServerClient(context: SloServerClientContext): SloServerClient {
   return {
     createSlo: async (params: CreateSLOParams): Promise<CreateSLOResponse> => {
       const { scopedClients, logger } = context;
