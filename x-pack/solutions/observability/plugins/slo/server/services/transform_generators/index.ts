@@ -14,4 +14,4 @@ export * from './metric_custom';
 export * from './histogram';
 export * from './timeslice_metric';
 export * from './common';
-export * from './transform_generators_factory';
+export * from './rollup_transform_generators_factory';

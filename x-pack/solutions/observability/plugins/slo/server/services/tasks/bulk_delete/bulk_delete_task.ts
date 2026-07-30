@@ -11,9 +11,9 @@ import type { RunContext, TaskManagerSetupContract } from '@kbn/task-manager-plu
 import type { SLOPluginStartDependencies } from '../../../types';
 import { DeleteSLO } from '../../delete_slo';
 import { DefaultSLODefinitionRepository } from '../../slo_definition_repository';
-import { SummaryTransformGeneratorsFactory } from '../../summary_transform_generator/summary_transform_generator';
+import { SummaryTransformGeneratorsFactory } from '../../summary_transform_generator/summary_transform_generator_factory';
 import { SummaryTransformManager } from '../../summay_transform_manager';
-import { TransformGeneratorsFactory } from '../../transform_generators';
+import { RollupTransformGeneratorsFactory } from '../../transform_generators';
 import { RollupTransformManager } from '../../rollup_transform_manager';
 import { runBulkDelete } from './run_bulk_delete';
 
@@ -72,7 +72,7 @@ export class BulkDeleteTask {
               const repository = new DefaultSLODefinitionRepository(scopedSoClient, this.logger);
               // We only use transform managers to delete transforms.
               const transformManager = new RollupTransformManager(
-                new TransformGeneratorsFactory(spaceId, dataViewsService, false),
+                new RollupTransformGeneratorsFactory(spaceId, dataViewsService, false),
                 scopedClusterClient,
                 this.logger,
                 signal

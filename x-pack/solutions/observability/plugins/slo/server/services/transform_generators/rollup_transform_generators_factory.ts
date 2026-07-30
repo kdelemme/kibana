@@ -20,7 +20,7 @@ import {
 import type { SLODefinition } from '../../domain/models';
 import type { ITransformGenerator } from './transform_generator';
 
-export class TransformGeneratorsFactory implements ITransformGenerator {
+export class RollupTransformGeneratorsFactory implements ITransformGenerator {
   constructor(
     private spaceId: string,
     private dataViewsService: DataViewsService,
