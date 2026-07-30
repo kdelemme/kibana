@@ -9,7 +9,7 @@ import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/ap
 import { metricCustomIndicatorSchema, timeslicesBudgetingMethodSchema } from '@kbn/slo-schema';
 
 import type { DataViewsService } from '@kbn/data-views-plugin/common';
-import { getElasticsearchQueryOrThrow, parseIndex, TransformGenerator } from '.';
+import { getElasticsearchQueryOrThrow, parseIndex, BaseTransformGenerator } from '.';
 import {
   getSLOPipelineId,
   getSLOTransformId,
@@ -23,7 +23,7 @@ import { getFilterRange, getTimesliceTargetComparator } from './common';
 
 export const INVALID_EQUATION_REGEX = /[^A-Z|+|\-|\s|\d+|\.|\(|\)|\/|\*|>|<|=|\?|\:|&|\!|\|]+/g;
 
-export class MetricCustomTransformGenerator extends TransformGenerator {
+export class MetricCustomTransformGenerator extends BaseTransformGenerator {
   constructor(spaceId: string, dataViewService: DataViewsService, isServerless: boolean) {
     super(spaceId, dataViewService, isServerless);
   }

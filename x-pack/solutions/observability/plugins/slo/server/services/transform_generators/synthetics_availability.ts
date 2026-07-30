@@ -14,7 +14,7 @@ import {
   occurrencesBudgetingMethodSchema,
   syntheticsAvailabilityIndicatorSchema,
 } from '@kbn/slo-schema';
-import { getElasticsearchQueryOrThrow, TransformGenerator } from '.';
+import { getElasticsearchQueryOrThrow, BaseTransformGenerator } from '.';
 import {
   getSLOPipelineId,
   getSLOTransformId,
@@ -27,7 +27,7 @@ import type { SLODefinition } from '../../domain/models';
 import { InvalidTransformError } from '../../errors';
 import { getFilterRange } from './common';
 
-export class SyntheticsAvailabilityTransformGenerator extends TransformGenerator {
+export class SyntheticsAvailabilityTransformGenerator extends BaseTransformGenerator {
   constructor(spaceId: string, dataViewService: DataViewsService, isServerless: boolean) {
     super(spaceId, dataViewService, isServerless);
   }

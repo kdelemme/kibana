@@ -5,8 +5,8 @@
  * 2.0.
  */
 
+import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/api/types';
 import type { DataViewsService } from '@kbn/data-views-plugin/server';
-import type { TransformGenerator } from '.';
 import {
   ApmTransactionDurationTransformGenerator,
   ApmTransactionErrorRateTransformGenerator,
@@ -16,44 +16,60 @@ import {
   SyntheticsAvailabilityTransformGenerator,
   TimesliceMetricTransformGenerator,
 } from '.';
-import type { IndicatorTypes } from '../../domain/models';
+import type { SLODefinition } from '../../domain/models';
+import type { ITransformGenerator } from './transform_generator';
 
-export function createTransformGenerators(
-  spaceId: string,
-  dataViewsService: DataViewsService,
-  isServerless: boolean
-): Record<IndicatorTypes, TransformGenerator> {
-  return {
-    'sli.apm.transactionDuration': new ApmTransactionDurationTransformGenerator(
-      spaceId,
-      dataViewsService,
-      isServerless
-    ),
-    'sli.apm.transactionErrorRate': new ApmTransactionErrorRateTransformGenerator(
-      spaceId,
-      dataViewsService,
-      isServerless
-    ),
-    'sli.synthetics.availability': new SyntheticsAvailabilityTransformGenerator(
-      spaceId,
-      dataViewsService,
-      isServerless
-    ),
-    'sli.kql.custom': new KQLCustomTransformGenerator(spaceId, dataViewsService, isServerless),
-    'sli.metric.custom': new MetricCustomTransformGenerator(
-      spaceId,
-      dataViewsService,
-      isServerless
-    ),
-    'sli.histogram.custom': new HistogramTransformGenerator(
-      spaceId,
-      dataViewsService,
-      isServerless
-    ),
-    'sli.metric.timeslice': new TimesliceMetricTransformGenerator(
-      spaceId,
-      dataViewsService,
-      isServerless
-    ),
-  };
+export class TransformGeneratorsFactory implements ITransformGenerator {
+  constructor(
+    private spaceId: string,
+    private dataViewsService: DataViewsService,
+    private isServerless: boolean
+  ) {}
+
+  public async generate(slo: SLODefinition): Promise<TransformPutTransformRequest> {
+    switch (slo.indicator.type) {
+      case 'sli.apm.transactionDuration':
+        return new ApmTransactionDurationTransformGenerator(
+          this.spaceId,
+          this.dataViewsService,
+          this.isServerless
+        ).generate(slo);
+      case 'sli.apm.transactionErrorRate':
+        return new ApmTransactionErrorRateTransformGenerator(
+          this.spaceId,
+          this.dataViewsService,
+          this.isServerless
+        ).generate(slo);
+      case 'sli.synthetics.availability':
+        return new SyntheticsAvailabilityTransformGenerator(
+          this.spaceId,
+          this.dataViewsService,
+          this.isServerless
+        ).generate(slo);
+      case 'sli.kql.custom':
+        return new KQLCustomTransformGenerator(
+          this.spaceId,
+          this.dataViewsService,
+          this.isServerless
+        ).generate(slo);
+      case 'sli.metric.custom':
+        return new MetricCustomTransformGenerator(
+          this.spaceId,
+          this.dataViewsService,
+          this.isServerless
+        ).generate(slo);
+      case 'sli.histogram.custom':
+        return new HistogramTransformGenerator(
+          this.spaceId,
+          this.dataViewsService,
+          this.isServerless
+        ).generate(slo);
+      case 'sli.metric.timeslice':
+        return new TimesliceMetricTransformGenerator(
+          this.spaceId,
+          this.dataViewsService,
+          this.isServerless
+        ).generate(slo);
+    }
+  }
 }

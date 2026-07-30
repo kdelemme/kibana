@@ -10,14 +10,14 @@ import type { IScopedClusterClient, Logger } from '@kbn/core/server';
 import type { SLODefinition } from '../domain/models';
 import { SecurityException } from '../errors';
 import { retryTransientEsErrors } from '../utils/retry';
-import type { ISummaryTransformGenerator } from './summary_transform_generator/summary_transform_generator';
 import type { ITransformManager } from './transform_manager';
+import type { ITransformGenerator } from './transform_generators';
 
 type TransformId = string;
 
 export class SummaryTransformManager implements ITransformManager {
   constructor(
-    private generator: ISummaryTransformGenerator,
+    private generator: ITransformGenerator,
     private scopedClusterClient: IScopedClusterClient,
     private logger: Logger,
     private signal: AbortSignal = new AbortController().signal

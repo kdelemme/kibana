@@ -49,12 +49,12 @@ import {
 import { DefaultCompositeSLORepository } from './services/composites/composite_slo_repository';
 import { DefaultSLOSettingsRepository } from './services/slo_settings_repository';
 import { DefaultSLOTemplateRepository } from './services/slo_template_repository';
-import { SummaryTransformGenerator } from './services/summary_transform_generator/summary_transform_generator';
+import { SummaryTransformGeneratorsFactory } from './services/summary_transform_generator/summary_transform_generator';
 import { BulkDeleteTask } from './services/tasks/bulk_delete/bulk_delete_task';
 import { HealthScanTask } from './services/tasks/health_scan_task/health_scan_task';
 import { OrphanSummaryCleanupTask } from './services/tasks/orphan_summary_cleanup_task/orphan_summary_cleanup_task';
 import { TempSummaryCleanupTask } from './services/tasks/temp_summary_cleanup_task/temp_summary_cleanup_task';
-import { createTransformGenerators } from './services/transform_generators';
+import { TransformGeneratorsFactory } from './services/transform_generators';
 import type {
   SLOConfig,
   SLOPluginSetupDependencies,
@@ -224,12 +224,12 @@ export class SLOPlugin
           const templateRepository = new DefaultSLOTemplateRepository(soClient);
 
           const transformManager = new TransformManager(
-            createTransformGenerators(spaceId, dataViewsService, this.isServerless),
+            new TransformGeneratorsFactory(spaceId, dataViewsService, this.isServerless),
             scopedClusterClient,
             logger
           );
           const summaryTransformManager = new SummaryTransformManager(
-            new SummaryTransformGenerator(),
+            new SummaryTransformGeneratorsFactory(),
             scopedClusterClient,
             logger
           );

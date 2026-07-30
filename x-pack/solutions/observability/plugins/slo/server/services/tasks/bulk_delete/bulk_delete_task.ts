@@ -8,13 +8,12 @@
 import { type CoreSetup, type Logger, type LoggerFactory } from '@kbn/core/server';
 import type { BulkDeleteParams, BulkDeleteStatusResponse } from '@kbn/slo-schema';
 import type { RunContext, TaskManagerSetupContract } from '@kbn/task-manager-plugin/server';
-import type { IndicatorTypes } from '../../../domain/models';
 import type { SLOPluginStartDependencies } from '../../../types';
 import { DeleteSLO } from '../../delete_slo';
 import { DefaultSLODefinitionRepository } from '../../slo_definition_repository';
-import { SummaryTransformGenerator } from '../../summary_transform_generator/summary_transform_generator';
+import { SummaryTransformGeneratorsFactory } from '../../summary_transform_generator/summary_transform_generator';
 import { SummaryTransformManager } from '../../summay_transform_manager';
-import type { TransformGenerator } from '../../transform_generators';
+import { TransformGeneratorsFactory } from '../../transform_generators';
 import { TransformManager } from '../../transform_manager';
 import { runBulkDelete } from './run_bulk_delete';
 
@@ -62,16 +61,24 @@ export class BulkDeleteTask {
               const scopedClusterClient = coreStart.elasticsearch.client.asScoped(fakeRequest);
               const scopedSoClient = coreStart.savedObjects.getScopedClient(fakeRequest);
               const rulesClient = await pluginStart.alerting.getRulesClientWithRequest(fakeRequest);
+              const spaceId =
+                (await pluginStart.spaces?.spacesService.getActiveSpace(fakeRequest))?.id ??
+                'default';
+              const dataViewsService = await pluginStart.dataViews.dataViewsServiceFactory(
+                scopedSoClient,
+                scopedClusterClient.asCurrentUser
+              );
 
               const repository = new DefaultSLODefinitionRepository(scopedSoClient, this.logger);
+              // We only use transform managers to delete transforms.
               const transformManager = new TransformManager(
-                {} as Record<IndicatorTypes, TransformGenerator>,
+                new TransformGeneratorsFactory(spaceId, dataViewsService, false),
                 scopedClusterClient,
                 this.logger,
                 signal
               );
               const summaryTransformManager = new SummaryTransformManager(
-                new SummaryTransformGenerator(),
+                new SummaryTransformGeneratorsFactory(),
                 scopedClusterClient,
                 this.logger,
                 signal

@@ -16,7 +16,7 @@ import {
   apmTransactionDurationIndicatorSchema,
   timeslicesBudgetingMethodSchema,
 } from '@kbn/slo-schema';
-import { TransformGenerator, getElasticsearchQueryOrThrow } from '.';
+import { BaseTransformGenerator, getElasticsearchQueryOrThrow } from '.';
 import {
   SLI_DESTINATION_INDEX_NAME,
   getSLOPipelineId,
@@ -27,7 +27,7 @@ import type { APMTransactionDurationIndicator, SLODefinition } from '../../domai
 import { InvalidTransformError } from '../../errors';
 import { getFilterRange, getTimesliceTargetComparator, parseIndex } from './common';
 
-export class ApmTransactionDurationTransformGenerator extends TransformGenerator {
+export class ApmTransactionDurationTransformGenerator extends BaseTransformGenerator {
   constructor(spaceId: string, dataViewService: DataViewsService, isServerless: boolean) {
     super(spaceId, dataViewService, isServerless);
   }

@@ -9,7 +9,7 @@ import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/ap
 import type { DataViewsService } from '@kbn/data-views-plugin/common';
 import type { HistogramIndicator } from '@kbn/slo-schema';
 import { histogramIndicatorSchema, timeslicesBudgetingMethodSchema } from '@kbn/slo-schema';
-import { TransformGenerator, getElasticsearchQueryOrThrow, parseIndex } from '.';
+import { BaseTransformGenerator, getElasticsearchQueryOrThrow, parseIndex } from '.';
 import {
   SLI_DESTINATION_INDEX_NAME,
   getSLOPipelineId,
@@ -21,7 +21,7 @@ import { InvalidTransformError } from '../../errors';
 import { GetHistogramIndicatorAggregation } from '../aggregations';
 import { getFilterRange, getTimesliceTargetComparator } from './common';
 
-export class HistogramTransformGenerator extends TransformGenerator {
+export class HistogramTransformGenerator extends BaseTransformGenerator {
   constructor(spaceId: string, dataViewService: DataViewsService, isServerless: boolean) {
     super(spaceId, dataViewService, isServerless);
   }

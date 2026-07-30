@@ -5,12 +5,9 @@
  * 2.0.
  */
 import { repairParamsSchema } from '@kbn/slo-schema';
-import { createSloServerRoute } from './utils/create_slo_server_route';
-import { assertPlatinumLicense } from './utils/assert_platinum_license';
 import { RepairSLO } from '../services/repair_slo';
-import { createTransformGenerators } from '../services/transform_generators';
-import { SummaryTransformManager, TransformManager } from '../services';
-import { SummaryTransformGenerator } from '../services/summary_transform_generator/summary_transform_generator';
+import { assertPlatinumLicense } from './utils/assert_platinum_license';
+import { createSloServerRoute } from './utils/create_slo_server_route';
 
 export const repairSLORoute = createSloServerRoute({
   endpoint: 'POST /api/observability/slos/_repair',
@@ -24,20 +21,11 @@ export const repairSLORoute = createSloServerRoute({
   handler: async ({ request, response, params, logger, plugins, getScopedClients }) => {
     await assertPlatinumLicense(plugins);
 
-    const { dataViewsService, scopedClusterClient, spaceId, repository } = await getScopedClients({
-      request,
-      logger,
-    });
-
-    const transformGenerators = createTransformGenerators(spaceId, dataViewsService, false);
-
-    const transformManager = new TransformManager(transformGenerators, scopedClusterClient, logger);
-
-    const summaryTransformManager = new SummaryTransformManager(
-      new SummaryTransformGenerator(),
-      scopedClusterClient,
-      logger
-    );
+    const { scopedClusterClient, repository, transformManager, summaryTransformManager } =
+      await getScopedClients({
+        request,
+        logger,
+      });
 
     const repairSlo = new RepairSLO(
       logger,
@@ -46,6 +34,7 @@ export const repairSLORoute = createSloServerRoute({
       transformManager,
       summaryTransformManager
     );
+
     const results = await repairSlo.execute(params.body);
     return response.multiStatus({ body: results });
   },

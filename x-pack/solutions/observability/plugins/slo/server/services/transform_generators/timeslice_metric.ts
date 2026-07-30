@@ -13,7 +13,7 @@ import {
   timesliceMetricIndicatorSchema,
   timeslicesBudgetingMethodSchema,
 } from '@kbn/slo-schema';
-import { getElasticsearchQueryOrThrow, parseIndex, TransformGenerator } from '.';
+import { getElasticsearchQueryOrThrow, parseIndex, BaseTransformGenerator } from '.';
 import {
   getSLOPipelineId,
   getSLOTransformId,
@@ -27,7 +27,7 @@ import { getFilterRange } from './common';
 
 const INVALID_EQUATION_REGEX = /[^A-Z|+|\-|\s|\d+|\.|\(|\)|\/|\*|>|<|=|\?|\:|&|\!|\|]+/g;
 
-export class TimesliceMetricTransformGenerator extends TransformGenerator {
+export class TimesliceMetricTransformGenerator extends BaseTransformGenerator {
   constructor(spaceId: string, dataViewService: DataViewsService, isServerless: boolean) {
     super(spaceId, dataViewService, isServerless);
   }

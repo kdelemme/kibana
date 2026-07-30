@@ -13,7 +13,7 @@ import {
   apmTransactionErrorRateIndicatorSchema,
   timeslicesBudgetingMethodSchema,
 } from '@kbn/slo-schema';
-import { TransformGenerator, getElasticsearchQueryOrThrow } from '.';
+import { BaseTransformGenerator, getElasticsearchQueryOrThrow } from '.';
 import {
   SLI_DESTINATION_INDEX_NAME,
   getSLOPipelineId,
@@ -24,7 +24,7 @@ import type { APMTransactionErrorRateIndicator, SLODefinition } from '../../doma
 import { InvalidTransformError } from '../../errors';
 import { getFilterRange, getTimesliceTargetComparator, parseIndex } from './common';
 
-export class ApmTransactionErrorRateTransformGenerator extends TransformGenerator {
+export class ApmTransactionErrorRateTransformGenerator extends BaseTransformGenerator {
   constructor(spaceId: string, dataViewService: DataViewsService, isServerless: boolean) {
     super(spaceId, dataViewService, isServerless);
   }

@@ -7,10 +7,10 @@
 
 import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/api/types';
 import type { IScopedClusterClient, Logger } from '@kbn/core/server';
-import type { IndicatorTypes, SLODefinition } from '../domain/models';
+import type { SLODefinition } from '../domain/models';
 import { SecurityException } from '../errors';
 import { retryTransientEsErrors } from '../utils/retry';
-import type { TransformGenerator } from './transform_generators';
+import type { ITransformGenerator } from './transform_generators';
 
 type TransformId = string;
 
@@ -26,27 +26,14 @@ export interface ITransformManager {
 
 export class TransformManager implements ITransformManager {
   constructor(
-    private generators: Record<IndicatorTypes, TransformGenerator>,
+    private generator: ITransformGenerator,
     private scopedClusterClient: IScopedClusterClient,
     private logger: Logger,
     private signal: AbortSignal = new AbortController().signal
   ) {}
 
   async install(slo: SLODefinition): Promise<TransformId> {
-    const generator = this.generators[slo.indicator.type];
-    if (!generator) {
-      this.logger.debug('No transform generator found for indicator type.', {
-        service: { name: 'transform_manager' },
-        labels: {
-          slo_id: slo.id,
-          indicator_type: slo.indicator.type,
-          error_type: 'unsupported_indicator_type',
-        },
-      });
-      throw new Error(`Unsupported indicator type [${slo.indicator.type}]`);
-    }
-
-    const transformParams = await generator.generate(slo);
+    const transformParams = await this.generator.generate(slo);
     try {
       await retryTransientEsErrors(
         () =>
@@ -76,13 +63,7 @@ export class TransformManager implements ITransformManager {
   }
 
   async inspect(slo: SLODefinition): Promise<TransformPutTransformRequest> {
-    const generator = this.generators[slo.indicator.type];
-    if (!generator) {
-      this.logger.debug(`No transform generator found for indicator type [${slo.indicator.type}]`);
-      throw new Error(`Unsupported indicator type [${slo.indicator.type}]`);
-    }
-
-    return await generator.generate(slo);
+    return await this.generator.generate(slo);
   }
 
   async preview(transformId: string): Promise<void> {

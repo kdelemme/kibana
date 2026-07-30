@@ -8,7 +8,7 @@
 import type { TransformPutTransformRequest } from '@elastic/elasticsearch/lib/api/types';
 import type { DataViewsService } from '@kbn/data-views-plugin/common';
 import { kqlCustomIndicatorSchema, timeslicesBudgetingMethodSchema } from '@kbn/slo-schema';
-import { TransformGenerator, getElasticsearchQueryOrThrow, parseIndex } from '.';
+import { BaseTransformGenerator, getElasticsearchQueryOrThrow, parseIndex } from '.';
 import {
   SLI_DESTINATION_INDEX_NAME,
   getSLOPipelineId,
@@ -19,7 +19,7 @@ import type { KQLCustomIndicator, SLODefinition } from '../../domain/models';
 import { InvalidTransformError } from '../../errors';
 import { getFilterRange, getTimesliceTargetComparator } from './common';
 
-export class KQLCustomTransformGenerator extends TransformGenerator {
+export class KQLCustomTransformGenerator extends BaseTransformGenerator {
   constructor(spaceId: string, dataViewService: DataViewsService, isServerless: boolean) {
     super(spaceId, dataViewService, isServerless);
   }

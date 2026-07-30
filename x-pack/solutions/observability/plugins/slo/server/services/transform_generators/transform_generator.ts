@@ -14,7 +14,11 @@ import { ALL_VALUE, timeslicesBudgetingMethodSchema } from '@kbn/slo-schema';
 import type { TransformSettings } from '../../assets/transform_templates/slo_transform_template';
 import type { SLODefinition } from '../../domain/models';
 
-export abstract class TransformGenerator {
+export interface ITransformGenerator {
+  generate(slo: SLODefinition): Promise<TransformPutTransformRequest>;
+}
+
+export abstract class BaseTransformGenerator implements ITransformGenerator {
   constructor(
     protected spaceId: string,
     protected dataViewService: DataViewsService,
