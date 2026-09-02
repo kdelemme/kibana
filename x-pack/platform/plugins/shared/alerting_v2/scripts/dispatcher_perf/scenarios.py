@@ -364,6 +364,68 @@ def build_all_policy_specs(
 
 
 # -------------------------------------------------------------------------
+# Episode-flood scenario
+# -------------------------------------------------------------------------
+
+# Returns individual log events (no STATS), so each row → distinct episode hash.
+# With no grouping, buildGroupHash uses executionUuid|row:N|rowContent as the
+# fallback seed, making every row unique across every tick.
+# LIMIT 10000 raises the ES|QL default (1000) for maximum throughput.
+QUERY_ADMIN_CONSOLE_FLOOD = (
+    "FROM kbn-data-forge-fake_stack.admin-console-* "
+    "| WHERE @timestamp IS NOT NULL "
+    "| KEEP @timestamp, host.name, log.level "
+    "| LIMIT 10000"
+)
+
+FLOOD_RULE_ID = "perf-episode-flood"
+
+
+def build_episode_flood_rule_body(
+    rule_interval: str = "1m",
+    lookback: str = "5m",
+) -> Dict[str, Any]:
+    """
+    Rule body that generates the maximum possible episode count.
+
+    Mechanics (ungrouped + recovery_strategy none):
+      - No grouping.fields → buildGroupHash falls back to
+        sha256(executionUuid|row:N|rowContent), which is unique per row per tick.
+      - maxGroupsPerExecution cap only applies when hasGroupingFields is True →
+        no cap here.
+      - recovery_strategy "none" → ClassifyAbsentGroupsStep returns early,
+        no recovery events emitted → episodes never transition away from active.
+      - Net rate: rows_per_tick × ticks_elapsed episodes total.
+    """
+    return {
+        "kind": "alert",
+        "metadata": {
+            "name": "perf-episode-flood",
+            "description": (
+                "Flood rule: no grouping + recovery_strategy none. "
+                "Each result row in each tick mints a permanent new episode."
+            ),
+            "tags": [PERF_TAG, "perf-flood"],
+        },
+        "time_field": "@timestamp",
+        "schedule": {
+            "every": rule_interval,
+            "lookback": lookback,
+        },
+        "recovery_strategy": "none",
+        "state_transition": {
+            "pending_count": 0,
+            "recovering_count": 0,
+        },
+        "query": {
+            "format": "standalone",
+            "breach": {"query": QUERY_ADMIN_CONSOLE_FLOOD},
+        },
+        # Intentionally no "grouping" key.
+    }
+
+
+# -------------------------------------------------------------------------
 # Unique ES|QL queries for dry-run preflight
 # -------------------------------------------------------------------------
 
